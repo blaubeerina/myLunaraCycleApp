@@ -8,122 +8,69 @@ body {
 
 @layer base {
   :root {
-    --background: 276 60% 97%; /* Light lilac (#F4F0F9) */
-    --foreground: 248 39% 39%; /* Dark indigo (#483D8B) for text, titles, icons */
+    /* Dark Feminine Energy Theme based on user's palette */
+    --background: 217 70% 13%;      /* Moonshadow Blue (#0B1C3A) */
+    --foreground: 216 11% 80%;      /* Lunar Silver (#C7CCD1) - Primary Text */
 
-    --card: 0 0% 100%; /* White for general cards */
-    --card-foreground: 248 39% 39%;
+    --card: 314 26% 29%;             /* Velvet Plum (#5D3754) - Card Background */
+    --card-foreground: 216 11% 80%; /* Lunar Silver (#C7CCD1) - Text on Cards */
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 248 39% 39%;
+    --popover: 314 26% 29%;          /* Velvet Plum (#5D3754) - Popover Background */
+    --popover-foreground: 216 11% 80%;/* Lunar Silver (#C7CCD1) - Text on Popovers */
 
-    --primary: 270 50% 80%; /* Soft purple (#D0B8E8) for buttons, progress bars */
-    --primary-foreground: 248 39% 39%; /* Dark indigo text on soft purple buttons */
+    --primary: 298 96% 15%;          /* Eclipse Violet (#4B014E) - Main interactive elements */
+    --primary-foreground: 216 11% 80%;/* Lunar Silver (#C7CCD1) - Text on primary elements */
 
-    --secondary: 270 50% 90%; /* Lighter variant of soft purple for secondary elements */
-    --secondary-foreground: 248 39% 39%;
+    --secondary: 314 26% 29%;       /* Velvet Plum (#5D3754) - Highlight/Secondary interactive */
+    --secondary-foreground: 216 11% 80%;/* Lunar Silver (#C7CCD1) - Text on secondary */
 
-    --muted: 0 0% 85%;     /* Neutral UI/disabled (#DADADA) */
-    --muted-foreground: 0 0% 40%; /* Slightly darker muted text */
+    --muted: 268 11% 63%;            /* Ashen Lilac (#A89BAE) - Muted backgrounds / elements */
+    --muted-foreground: 313 19% 70%; /* Mystic Rose (#BFA3B8) - Muted text (textSecondary) */
 
-    --accent: 248 39% 39%; /* Plum (#483D8B) - User requested for accent */
-    --accent-foreground: 0 0% 100%; /* White text on this accent */
+    --accent: 45 52% 64%;            /* Golden Smoke (#D1B679) - Primary Accent */
+    --accent-foreground: 217 70% 13%;/* Moonshadow Blue (#0B1C3A) - Text on Accent */
 
-    --destructive: 348 68% 70%; /* Bleeding days, energy peaks (#E88DA1) */
-    --destructive-foreground: 0 0% 100%; /* White text for destructive elements */
+    /* Thematic Destructive Colors */
+    --destructive: 314 26% 29%;        /* Velvet Plum (#5D3754) */
+    --destructive-foreground: 45 52% 64%;/* Golden Smoke (#D1B679) */
 
-    --border: 270 30% 88%; /* Softer border color */
-    --input: 270 30% 92%;   /* Input background */
-    --ring: 270 50% 70%;    /* Ring color */
+    --border: 314 26% 29%;           /* Velvet Plum (#5D3754) - Subtle borders */
+    --input: 217 70% 18%;            /* Slightly lighter Moonshadow Blue for input background */
+    --ring: 45 52% 64%;              /* Golden Smoke (#D1B679) - Focus rings */
 
     --radius: 0.5rem;
 
-    /* Custom colors specific to myLunaraCycle */
-    --lunara-dark-blue: 247 52% 21%;       /* #1E1A4E */
-    --lunara-night-blue: 250 61% 10%;      /* #0D0B26 */
-    --lunara-light-yellow: 51 100% 91%;    /* #FFF7D6 */
-    --lunara-light-green: 120 73% 90%;     /* #D5F8D5 */
-    --lunara-grey: 0 0% 71%;               /* #B4B4B4 */
-    --lunara-modal-background: 227 29% 24%; /* #2D3250 - Kept from original, can be reviewed */
-    --lunara-mood-card-background: 228 27% 13%; /* #191D2B - Kept */
-    --lunara-ovulation-glow: 55 100% 85%;        /* #FFF2B2 - Kept */
-    --lunara-pregnancy-growth: 125 50% 88%;      /* #C6E8CA - Kept */
-    --lunara-calendar-bg: 276 60% 97%; /* Specific for calendar if needed, same as --background */
+    /* Custom colors specific to myLunaraCycle, mapped to the new theme */
+    --lunara-dark-blue: 217 70% 13%;       /* Moonshadow Blue */
+    --lunara-night-blue: 217 70% 13%;      /* Moonshadow Blue */
+    --lunara-light-yellow: 45 52% 64%;     /* Golden Smoke */
+    --lunara-light-green: 313 19% 70%;     /* Mystic Rose (as a stand-in, original green not in new palette) */
+    --lunara-grey: 216 11% 80%;            /* Lunar Silver */
+    --lunara-modal-background: 314 26% 20%;/* Darker Velvet Plum or very dark Moonshadow */
+    --lunara-mood-card-background: 314 26% 29%;/* Velvet Plum */
+    --lunara-ovulation-glow: 45 52% 64%;   /* Golden Smoke */
+    --lunara-pregnancy-growth: 313 19% 70%;/* Mystic Rose */
+    --lunara-calendar-bg: 217 70% 13%;     /* Moonshadow Blue */
 
+    /* Chart colors mapped to new theme */
+    --chart-1: 298 96% 15%; /* Eclipse Violet */
+    --chart-2: 45 52% 64%;  /* Golden Smoke */
+    --chart-3: 314 26% 29%; /* Velvet Plum */
+    --chart-4: 313 19% 70%; /* Mystic Rose */
+    --chart-5: 216 11% 80%; /* Lunar Silver */
 
-    /* Chart colors */
-    --chart-1: 270 50% 80%; /* Soft purple */
-    --chart-2: 248 39% 39%; /* Dark indigo */
-    --chart-3: 55 100% 85%;  /* Ovulation glow */
-    --chart-4: 125 50% 88%;  /* Pregnancy growth */
-    --chart-5: 348 68% 70%;  /* Bleeding days */
-
-    /* Sidebar specific colors from shadcn/ui, adjusted for myLunaraCycle theme */
-    --sidebar-background: 270 50% 95%; /* Lighter Lilac for sidebar background */
-    --sidebar-foreground: 248 39% 39%; /* Dark Indigo for sidebar text */
-    --sidebar-primary: 270 50% 80%;    /* Soft Purple for active/primary items in sidebar */
-    --sidebar-primary-foreground: 248 39% 39%; /* Dark Indigo for text on primary items */
-    --sidebar-accent: 270 50% 90%;     /* Lighter Purple for hover/accent in sidebar */
-    --sidebar-accent-foreground: 248 39% 39%;
-    --sidebar-border: 270 30% 88%;
-    --sidebar-ring: 270 50% 70%;
+    /* Sidebar specific colors adjusted for the new theme */
+    --sidebar-background: 217 70% 13%;       /* Moonshadow Blue */
+    --sidebar-foreground: 216 11% 80%;       /* Lunar Silver */
+    --sidebar-primary: 298 96% 15%;           /* Eclipse Violet */
+    --sidebar-primary-foreground: 216 11% 80%;/* Lunar Silver */
+    --sidebar-accent: 314 26% 29%;            /* Velvet Plum (for hover) */
+    --sidebar-accent-foreground: 216 11% 80%; /* Lunar Silver */
+    --sidebar-border: 314 26% 29%;            /* Velvet Plum */
+    --sidebar-ring: 45 52% 64%;               /* Golden Smoke */
   }
 
-  .dark {
-    --background: 248 39% 10%; /* Very Dark Indigo */
-    --foreground: 276 60% 90%; /* Light lilac text */
-
-    --card: 248 39% 15%;
-    --card-foreground: 276 60% 90%;
-
-    --popover: 248 39% 12%;
-    --popover-foreground: 276 60% 90%;
-
-    --primary: 270 50% 70%; /* Soft purple, slightly adjusted for dark mode */
-    --primary-foreground: 0 0% 100%; /* White text on soft purple */
-
-    --secondary: 270 50% 60%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 248 39% 25%;
-    --muted-foreground: 276 60% 70%;
-
-    --accent: 248 39% 60%; /* Plum for dark mode, lighter */
-    --accent-foreground: 0 0% 98%;
-
-    --destructive: 348 68% 60%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 248 39% 20%;
-    --input: 248 39% 18%;
-    --ring: 270 50% 65%;
-    
-    --lunara-dark-blue: 247 52% 70%;
-    --lunara-night-blue: 250 61% 80%;
-    --lunara-light-yellow: 51 100% 80%;
-    --lunara-light-green: 120 60% 75%;
-    --lunara-grey: 0 0% 40%;
-    --lunara-modal-background: 227 29% 15%;
-    --lunara-mood-card-background: 228 27% 8%;
-    --lunara-ovulation-glow: 55 100% 75%;
-    --lunara-pregnancy-growth: 125 50% 78%;
-    --lunara-calendar-bg: 248 39% 10%;
-
-    --chart-1: 270 50% 70%;
-    --chart-2: 276 60% 90%;
-    --chart-3: 55 100% 75%;
-    --chart-4: 125 50% 78%;
-    --chart-5: 348 68% 60%;
-
-    --sidebar-background: 248 39% 12%;
-    --sidebar-foreground: 276 60% 85%;
-    --sidebar-primary: 270 50% 70%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 248 39% 20%;
-    --sidebar-accent-foreground: 276 60% 90%;
-    --sidebar-border: 248 39% 20%;
-    --sidebar-ring: 270 50% 65%;
-  }
+  /* Removed .dark block as the new theme is inherently dark and set as default */
 }
 
 @layer base {
