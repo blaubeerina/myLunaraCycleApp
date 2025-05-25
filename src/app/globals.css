@@ -8,66 +8,74 @@ body {
 
 @layer base {
   :root {
-    /* Dark Feminine Energy Theme - Updated */
-    --background: 217 70% 13%;      /* Moonshadow Blue (#0B1C3A) */
-    --foreground: 216 11% 80%;      /* Lunar Silver (#C7CCD1) - Primary Text */
+    /* Dark Feminine Energy Theme - Conceptual Mapping */
+    /* Backgrounds: Obsidian Black and Midnight Teal */
+    --background: 0 0% 5%;             /* Obsidian Black (e.g., #0D0D0D) */
+    --foreground: 0 0% 94%;           /* Moon Dust (e.g., #F0F0F0) - Primary Text */
 
-    --card: 314 26% 29%;             /* Velvet Plum (#5D3754) - Card Background */
-    --card-foreground: 216 11% 80%; /* Lunar Silver (#C7CCD1) - Text on Cards */
+    /* Cards & Popovers using Midnight Teal */
+    --card: 180 100% 15%;           /* Midnight Teal (e.g., #004D4D) */
+    --card-foreground: 0 0% 94%;      /* Moon Dust */
 
-    --popover: 314 26% 29%;          /* Velvet Plum (#5D3754) - Popover Background */
-    --popover-foreground: 216 11% 80%;/* Lunar Silver (#C7CCD1) - Text on Popovers */
+    --popover: 180 100% 15%;          /* Midnight Teal */
+    --popover-foreground: 0 0% 94%;   /* Moon Dust */
 
-    --primary: 298 96% 15%;          /* Eclipse Violet (#4B014E) - Main interactive elements */
-    --primary-foreground: 216 11% 80%;/* Lunar Silver (#C7CCD1) - Text on primary elements */
+    /* Buttons & Elements: Ink Orchid + Crimson Veil */
+    --primary: 275 51% 42%;           /* Ink Orchid (e.g., #6A0DAD) */
+    --primary-foreground: 0 0% 94%;   /* Moon Dust - Text on Ink Orchid */
 
-    --secondary: 314 26% 29%;       /* Velvet Plum (#5D3754) - Highlight/Secondary interactive */
-    --secondary-foreground: 216 11% 80%;/* Lunar Silver (#C7CCD1) - Text on secondary */
+    --secondary: 348 83% 47%;         /* Crimson Veil (e.g., #DC143C) */
+    --secondary-foreground: 0 0% 94%; /* Moon Dust - Text on Crimson Veil */
 
-    --muted: 268 11% 63%;            /* Ashen Lilac (#A89BAE) - Muted backgrounds / "leichte Elemente" */
-    --muted-foreground: 313 19% 70%; /* Mystic Rose (#BFA3B8) - Muted text / "Highlight-Texte" */
+    /* Muted elements and text */
+    --muted: 180 100% 10%;            /* Darker Midnight Teal for muted backgrounds */
+    --muted-foreground: 300 24% 76%;  /* Rose Smoke (e.g., #D8BFD8) - Muted text */
 
-    --accent: 45 52% 64%;            /* Golden Smoke (#D1B679) - Primary Accent, some buttons */
-    --accent-foreground: 217 70% 13%;/* Moonshadow Blue (#0B1C3A) - Text on Accent (Golden Smoke is light) */
+    /* Accent: Celestial Gold */
+    --accent: 46 100% 50%;            /* Celestial Gold (e.g., #FFC300) */
+    --accent-foreground: 0 0% 5%;     /* Obsidian Black - Text on Celestial Gold */
 
-    /* Thematic Destructive Colors */
-    --destructive: 314 26% 29%;        /* Velvet Plum (#5D3754) */
-    --destructive-foreground: 45 52% 64%;/* Golden Smoke (#D1B679) */
+    /* Destructive state using Crimson Veil */
+    --destructive: 348 83% 47%;       /* Crimson Veil */
+    --destructive-foreground: 0 0% 94%;/* Moon Dust */
 
-    --border: 314 26% 29%;           /* Velvet Plum (#5D3754) - Subtle borders */
-    --input: 217 70% 18%;            /* Slightly lighter Moonshadow Blue for input background (#1A2C4A) */
-    --ring: 45 52% 64%;              /* Golden Smoke (#D1B679) - Focus rings */
+    /* Borders, Inputs, Rings */
+    --border: 180 50% 20%;            /* Muted Teal for borders */
+    --input: 0 0% 10%;                /* Slightly Lighter Obsidian Black for input background */
+    --ring: 46 100% 50%;              /* Celestial Gold - Focus rings */
 
     --radius: 0.5rem;
 
     /* Custom colors specific to myLunaraCycle, mapped to the new theme */
-    --lunara-dark-blue: 217 70% 13%;       /* Moonshadow Blue */
-    --lunara-night-blue: 217 70% 13%;      /* Moonshadow Blue */
-    --lunara-light-yellow: 45 52% 64%;     /* Golden Smoke */
-    --lunara-light-green: 313 19% 70%;     /* Mystic Rose (as a stand-in for soft green) */
-    --lunara-grey: 216 11% 80%;            /* Lunar Silver */
-    --lunara-modal-background: 314 26% 20%;/* Darker Velvet Plum */
-    --lunara-mood-card-background: 314 26% 29%;/* Velvet Plum */
-    --lunara-ovulation-glow: 45 52% 64%;   /* Golden Smoke */
-    --lunara-pregnancy-growth: 313 19% 70%;/* Mystic Rose */
-    --lunara-calendar-bg: 217 70% 13%;     /* Moonshadow Blue */
+    /* Stimmungen/Phasen: Shadow Amethyst + Rose Smoke for Flow & Cycle */
+    --lunara-ovulation-glow: 267 31% 50%;   /* Shadow Amethyst (e.g., #7D5BA6) */
+    --lunara-pregnancy-growth: 300 24% 76%; /* Rose Smoke (e.g., #D8BFD8) */
+    
+    --lunara-dark-blue: 0 0% 5%;          /* Obsidian Black */
+    --lunara-night-blue: 0 0% 5%;         /* Obsidian Black */
+    --lunara-light-yellow: 46 100% 50%;    /* Celestial Gold */
+    --lunara-light-green: 300 24% 76%;    /* Rose Smoke (as a soft nature tone) */
+    --lunara-grey: 0 0% 94%;               /* Moon Dust */
+    --lunara-modal-background: 180 100% 15%;/* Midnight Teal */
+    --lunara-mood-card-background: 180 100% 15%;/* Midnight Teal */
+    --lunara-calendar-bg: 0 0% 5%;        /* Obsidian Black */
 
     /* Chart colors mapped to new theme */
-    --chart-1: 298 96% 15%; /* Eclipse Violet */
-    --chart-2: 45 52% 64%;  /* Golden Smoke */
-    --chart-3: 314 26% 29%; /* Velvet Plum */
-    --chart-4: 313 19% 70%; /* Mystic Rose */
-    --chart-5: 216 11% 80%; /* Lunar Silver */
+    --chart-1: 275 51% 42%; /* Ink Orchid */
+    --chart-2: 46 100% 50%;  /* Celestial Gold */
+    --chart-3: 348 83% 47%; /* Crimson Veil */
+    --chart-4: 267 31% 50%; /* Shadow Amethyst */
+    --chart-5: 300 24% 76%; /* Rose Smoke */
 
     /* Sidebar specific colors adjusted for the new theme */
-    --sidebar-background: 217 70% 13%;       /* Moonshadow Blue */
-    --sidebar-foreground: 216 11% 80%;       /* Lunar Silver */
-    --sidebar-primary: 298 96% 15%;           /* Eclipse Violet */
-    --sidebar-primary-foreground: 216 11% 80%;/* Lunar Silver */
-    --sidebar-accent: 314 26% 29%;            /* Velvet Plum (for hover on sidebar items) */
-    --sidebar-accent-foreground: 216 11% 80%; /* Lunar Silver */
-    --sidebar-border: 314 26% 29%;            /* Velvet Plum */
-    --sidebar-ring: 45 52% 64%;               /* Golden Smoke */
+    --sidebar-background: 0 0% 5%;          /* Obsidian Black */
+    --sidebar-foreground: 0 0% 94%;          /* Moon Dust */
+    --sidebar-primary: 275 51% 42%;          /* Ink Orchid */
+    --sidebar-primary-foreground: 0 0% 94%;  /* Moon Dust */
+    --sidebar-accent: 180 100% 20%;          /* Slightly Lighter Midnight Teal for hover */
+    --sidebar-accent-foreground: 0 0% 94%;   /* Moon Dust */
+    --sidebar-border: 180 50% 20%;           /* Muted Teal */
+    --sidebar-ring: 46 100% 50%;             /* Celestial Gold */
   }
 
   /* No .dark block, as this theme is inherently dark and set as default */
