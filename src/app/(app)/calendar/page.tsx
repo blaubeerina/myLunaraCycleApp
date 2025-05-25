@@ -7,7 +7,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import type { Locale } from 'date-fns';
-import { format, addMonths, subMonths, getYear, getMonth, parseISO, startOfDay, isEqual, addDays } from 'date-fns';
+import { format, addMonths, subMonths, getYear, getMonth, parseISO, startOfDay, isEqual, addDays as dateFnsAddDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { Modifier } from 'react-day-picker';
 import { ChevronLeft, ChevronRight, Search, HelpCircle, Settings, GripVertical, CalendarDays as CalendarIconLucide, CheckSquare, Loader2, Droplet, Star } from 'lucide-react';
@@ -30,12 +30,10 @@ async function saveDailyEntryToFirestore(userId: string, entry: DailyEntryData):
 
 async function fetchDailyEntriesForMonthRange(userId: string, startDate: Date, endDate: Date): Promise<Map<string, DailyEntryData>> {
   await new Promise(resolve => setTimeout(resolve, MOCK_DB_LATENCY));
-  // console.log(`[Mock Firestore] Fetching entries for user ${userId} from ${format(startDate, 'yyyy-MM-dd')} to ${format(endDate, 'yyyy-MM-dd')}`);
   const storedEntries = JSON.parse(localStorage.getItem(`myLunaraCycle_entries_${userId}`) || '{}');
   const entriesMap = new Map<string, DailyEntryData>();
   
   Object.keys(storedEntries).forEach(dateKey => {
-    // Ensure dateKey is valid before parsing
     if (dateKey && /^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
         try {
             const entryDate = parseISO(dateKey);
@@ -50,24 +48,26 @@ async function fetchDailyEntriesForMonthRange(userId: string, startDate: Date, e
   return entriesMap;
 }
 
-const moonPhaseEmojisList = ['🌑', '🌒', '🌓', '🌔', '🌕', '🌖', '🌗', '🌘'];
+const moonPhaseEmojisList = ['🌑', '🌒', '🌓', '🌔', '🌕', '🌖', '🌗', '🌘']; // New, Waxing Crescent, First Quarter, Waxing Gibbous, Full, Waning Gibbous, Last Quarter, Waning Crescent
 const moonPhaseNamesList = ["New Moon", "Waxing Crescent", "First Quarter", "Waxing Gibbous", "Full Moon", "Waning Gibbous", "Last Quarter", "Waning Crescent"];
 
+
 async function fetchMoonDataForDateRange(startDate: Date, endDate: Date): Promise<Map<string, MoonPhaseData>> {
-  await new Promise(resolve => setTimeout(resolve, MOCK_DB_LATENCY / 2));
+  await new Promise(resolve => setTimeout(resolve, MOCK_DB_LATENCY / 2)); // Simulate API call
   const moonDataMap = new Map<string, MoonPhaseData>();
   let currentDateIter = new Date(startDate);
 
   while (currentDateIter <= endDate) {
     const dateKey = format(currentDateIter, 'yyyy-MM-dd');
-    const dayOfMonth = currentDateIter.getDate();
-    const month = currentDateIter.getMonth();
-    const phaseIndex = (dayOfMonth - 1 + month * 3 + currentDateIter.getFullYear() * 2) % moonPhaseEmojisList.length;
+    // Simple deterministic mock based on day of year for variety
+    const dayOfYear = (parseISO(dateKey).valueOf() - new Date(currentDateIter.getFullYear(), 0, 0).valueOf()) / (1000 * 60 * 60 * 24);
+    const phaseIndex = Math.floor(dayOfYear % moonPhaseEmojisList.length);
+    
     moonDataMap.set(dateKey, {
       emoji: moonPhaseEmojisList[phaseIndex],
       phaseName: moonPhaseNamesList[phaseIndex],
     });
-    currentDateIter.setDate(currentDateIter.getDate() + 1);
+    currentDateIter = dateFnsAddDays(currentDateIter, 1);
   }
   return moonDataMap;
 }
@@ -85,9 +85,8 @@ export default function CalendarPage() {
   const [entriesMap, setEntriesMap] = useState<Map<string, DailyEntryData>>(new Map());
   const [isLoadingEntries, setIsLoadingEntries] = useState(false);
   const [moonDataMap, setMoonDataMap] = useState<Map<string, MoonPhaseData>>(new Map());
-  const [isLoadingMoonData, setIsLoadingMoonData] = useState(true); // Start true
+  const [isLoadingMoonData, setIsLoadingMoonData] = useState(false); 
   
-  // Store cycle info for each day in the currently viewed range
   const [cycleInfoMap, setCycleInfoMap] = useState<Map<string, CycleInfo>>(new Map());
 
   const today = useMemo(() => startOfDay(new Date()), []);
@@ -100,30 +99,36 @@ export default function CalendarPage() {
     const year = getYear(currentDisplayMonth);
     const month = getMonth(currentDisplayMonth);
     
-    // Fetch for a wider range to cover outside days and cycle calculations
-    const fetchStartDate = subMonths(new Date(year, month, 1), 2); // Go back 2 months for cycle history
-    const fetchEndDate = addMonths(new Date(year, month + 1, 0), 2); // Go forward 2 months for predictions
+    const firstDayOfMonth = new Date(year, month, 1);
+    const lastDayOfMonth = new Date(year, month + 1, 0);
+
+    // Fetch for a wider range: current month + padding for outside days and cycle calculations
+    // Pad by approx 42 days before start and 42 days after end to cover typical 6-week display window for cycle calc
+    const fetchStartDate = dateFnsAddDays(firstDayOfMonth, -42); 
+    const fetchEndDate = dateFnsAddDays(lastDayOfMonth, 42);
 
     try {
       const [fetchedEntries, fetchedMoonData] = await Promise.all([
         fetchDailyEntriesForMonthRange(user.id, fetchStartDate, fetchEndDate),
-        fetchMoonDataForDateRange(fetchStartDate, fetchEndDate)
+        fetchMoonDataForDateRange(fetchStartDate, fetchEndDate) // Fetch for the same wide range
       ]);
       
       setEntriesMap(fetchedEntries);
       setMoonDataMap(fetchedMoonData);
 
-      // Calculate CycleInfo for all days in the current display month and padding
       const newCycleInfoMap = new Map<string, CycleInfo>();
       const allFetchedEntriesArray = Array.from(fetchedEntries.values());
       
-      let dayToCalc = new Date(subMonths(new Date(year, month, 1),1));
-      const endDayToCalc = new Date(addMonths(new Date(year, month+1,0),1));
+      // Calculate CycleInfo for all days visible in the calendar grid (approx -7 to +42 from month start)
+      // This needs to cover days from previous/next month shown in the grid.
+      // The DayPicker will render about 6 weeks.
+      let dayToCalc = dateFnsAddDays(firstDayOfMonth, - (firstDayOfMonth.getDay() === 0 ? 6 : firstDayOfMonth.getDay() -1) - 7 ); // Start a bit before visible
+      const endDayToCalc = dateFnsAddDays(lastDayOfMonth, 14); // End a bit after visible
 
       while(dayToCalc <= endDayToCalc) {
         const dateKey = format(dayToCalc, 'yyyy-MM-dd');
         newCycleInfoMap.set(dateKey, calculateCycleInfo(dateKey, allFetchedEntriesArray));
-        dayToCalc = addDays(dayToCalc, 1);
+        dayToCalc = dateFnsAddDays(dayToCalc, 1);
       }
       setCycleInfoMap(newCycleInfoMap);
 
@@ -164,21 +169,21 @@ export default function CalendarPage() {
     if (!user) return;
     try {
       await saveDailyEntryToFirestore(user.id, entryData);
-      // Optimistically update local entriesMap
       const newEntriesMap = new Map(entriesMap).set(entryData.date, entryData);
       setEntriesMap(newEntriesMap);
       
-      // Re-calculate cycle info for the display based on new entry
-      await loadDataForDisplayMonth(); // This will re-calculate and update cycleInfoMap
+      await loadDataForDisplayMonth(); 
 
       const currentCycleInfo = calculateCycleInfo(entryData.date, Array.from(newEntriesMap.values()));
-      const moonPhase = moonDataMap.get(entryData.date)?.phaseName || "Unknown";
+      const moonPhaseForDay = moonDataMap.get(entryData.date);
+      const moonPhaseName = moonPhaseForDay?.phaseName || "Unknown";
+
 
       if (userPreferences.appMode === 'cycle') {
         const impulseInput: GenerateCycleImpulseInput = {
           cyclePhase: currentCycleInfo.phase,
           cycleDay: currentCycleInfo.cycleDay,
-          moonPhaseName: moonPhase,
+          moonPhaseName: moonPhaseName,
           userMood: entryData.mood,
           userEnergyLevel: entryData.energyLevel,
           userNotes: entryData.notes,
@@ -188,8 +193,8 @@ export default function CalendarPage() {
           const newImpulse: GeneratedImpulse = {
             date: entryData.date,
             text: impulseResult.impulseText,
-            cyclePhase: currentCycleInfo.phase as CyclePhase, // Cast if necessary, ensure type compatibility
-            moonPhase: moonPhase,
+            cyclePhase: currentCycleInfo.phase as CyclePhase, 
+            moonPhase: moonPhaseName,
           };
           localStorage.setItem('myLunaraCycle-latestImpulse', JSON.stringify(newImpulse));
           toast({ title: t('newImpulseGenerated') });
@@ -226,7 +231,7 @@ export default function CalendarPage() {
         return (
           <Calendar
             mode="single"
-            selected={selectedDateForDialog} // Keeps selected day visually marked
+            selected={selectedDateForDialog} 
             month={currentDisplayMonth}
             onMonthChange={setCurrentDisplayMonth}
             onDayClick={handleDayClick}
@@ -248,9 +253,9 @@ export default function CalendarPage() {
               head_row: "flex border-b border-border",
               head_cell: cn("text-muted-foreground font-normal text-[0.70rem] flex items-center justify-center uppercase py-2 w-[calc(100%/7)] h-10 border-r border-border", "sm:text-xs"),
               row: "flex w-full border-b border-border last:border-b-0", 
-              cell: cn("text-sm p-1 relative border-r border-border text-right flex flex-col items-end justify-start min-h-[7rem] md:min-h-[9rem]", "focus-within:relative focus-within:z-10 w-[calc(100%/7)]"),
-              day: cn(buttonVariants({ variant: "ghost" }), "h-full w-full p-1 font-normal flex flex-col items-end justify-start focus:z-10 rounded-none text-left hover:bg-accent/10 data-[selected=true]:bg-accent/20"),
-              day_today: "data-[selected=false]:bg-transparent", // Remove default DayPicker today style if not selected
+              cell: cn("text-sm p-0 relative border-r border-border text-left flex flex-col items-stretch justify-stretch min-h-[7rem] md:min-h-[9rem]", "focus-within:relative focus-within:z-10 w-[calc(100%/7)]"),
+              day: cn(buttonVariants({ variant: "ghost" }), "h-full w-full p-0 font-normal flex flex-col items-stretch justify-stretch focus:z-10 rounded-none text-left hover:bg-accent/10 data-[selected=true]:bg-accent/20"),
+              day_today: "data-[selected=false]:bg-transparent", 
               day_outside: "text-muted-foreground/70 data-[selected=false]:bg-transparent",
               day_disabled: "text-muted-foreground opacity-40 pointer-events-none",
               day_hidden: "invisible",
@@ -300,33 +305,49 @@ export default function CalendarPage() {
                 const dateKey = format(dayDate, 'yyyy-MM-dd');
                 const isTodayDate = isEqual(startOfDay(dayDate), today);
                 
-                let dayNumberStyle = "text-xs w-6 h-6 flex items-center justify-center rounded-full relative z-10"; 
-                let dayText: React.ReactNode = dayDate.getDate();
+                let dayTextNode: React.ReactNode = dayDate.getDate();
                 
                 const entry = entriesMap.get(dateKey);
-                const moonPhase = moonDataMap.get(dateKey);
+                const moonPhaseForDay = moonDataMap.get(dateKey);
                 const cycleDayInfo = cycleInfoMap.get(dateKey);
 
-                if (isTodayDate) {
-                  dayNumberStyle = cn(dayNumberStyle, "bg-primary text-primary-foreground font-semibold");
-                } else if (!isCurrentMonthDay) {
-                    dayNumberStyle = cn(dayNumberStyle, "text-muted-foreground/70");
-                     if (dayDate.getDate() === 1) { // Display '1. Mmm' for first day of outside month
-                        dayText = format(dayDate, 'd. MMM', { locale: userPreferences.language === 'de' ? (require('date-fns/locale/de') as any).default : (require('date-fns/locale/en-US') as any).default });
-                    }
-                } else {
-                   dayNumberStyle = cn(dayNumberStyle, "text-foreground");
-                }
+                let baseDayNumberClasses = "text-xs font-medium relative z-10";
+                let dayNumberContainerClasses = "";
 
+                if (isTodayDate) {
+                  dayNumberContainerClasses = "bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center";
+                  // dayTextNode is already dayDate.getDate()
+                } else if (!isCurrentMonthDay) {
+                  baseDayNumberClasses = cn(baseDayNumberClasses, "text-muted-foreground/70");
+                  if (dayDate.getDate() === 1) {
+                    dayTextNode = format(dayDate, 'd. MMM', { locale: userPreferences.language === 'de' ? (require('date-fns/locale/de') as any).default : (require('date-fns/locale/en-US') as any).default });
+                  }
+                } else {
+                  baseDayNumberClasses = cn(baseDayNumberClasses, "text-foreground");
+                }
+                
                 return (
-                  <div className={cn("w-full h-full flex flex-col items-start justify-start p-1 pt-0 text-left")}>
-                    <div className="w-full flex justify-end">
-                        <span className={cn(dayNumberStyle, "mt-1 mr-1")}>{dayText}</span>
-                    </div>
-                    <div className="flex-grow w-full flex flex-col items-start justify-end space-y-1 mt-1 pl-1 pb-1"> {/* Content at bottom-left */}
-                      {moonPhase && userPreferences.appMode === 'cycle' && (
-                        <span className="text-xl leading-none" style={{filter: 'grayscale(1) invert(1) brightness(1.5)'}}>{moonPhase.emoji}</span>
+                  <div className={cn("w-full h-full flex flex-col justify-between p-1 text-left")}>
+                    {/* Top section: Moon and Day Number */}
+                    <div className="flex items-center space-x-1 self-start">
+                      {moonPhaseForDay && userPreferences.appMode === 'cycle' && (
+                        <span className="text-lg leading-none" style={{filter: 'grayscale(1) invert(1) brightness(1.5)'}}>
+                          {moonPhaseForDay.emoji}
+                        </span>
                       )}
+                      {isTodayDate ? (
+                        <div className={cn(baseDayNumberClasses, dayNumberContainerClasses)}>
+                          <span>{dayDate.getDate()}</span>
+                        </div>
+                      ) : (
+                        <span className={cn(baseDayNumberClasses, "pt-[2px]")}> {/* Adjusted padding for better alignment */}
+                          {dayTextNode}
+                        </span>
+                      )}
+                    </div>
+                
+                    {/* Bottom section: Cycle indicators */}
+                    <div className="flex flex-col items-start space-y-0.5 self-start w-full">
                       {userPreferences.appMode === 'cycle' && cycleDayInfo && (
                         <div className="flex items-center space-x-1">
                             {entry?.isBleeding && <Droplet className="h-3.5 w-3.5 text-destructive" />}
@@ -335,7 +356,7 @@ export default function CalendarPage() {
                                 <div className="w-2 h-2 rounded-full bg-[hsl(var(--lunara-ovulation-glow))]"></div>
                             )}
                             {entry && !entry.isBleeding && !cycleDayInfo.isOvulationDay && !cycleDayInfo.isFertile && (
-                                 <div className="w-2 h-2 bg-accent rounded-full"></div> // General entry indicator
+                                 <div className="w-2 h-2 bg-accent rounded-full"></div>
                             )}
                         </div>
                       )}
@@ -378,4 +399,3 @@ export default function CalendarPage() {
     </div>
   );
 }
-
