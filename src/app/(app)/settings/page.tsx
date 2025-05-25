@@ -91,8 +91,8 @@ export default function SettingsPage() {
               key={theme.id}
               variant={activeTheme === theme.id ? "secondary" : "outline"}
               className={cn(
-                "w-full justify-start h-auto py-3 text-left",
-                theme.id === 'fairy-fields' && activeTheme === theme.id ? "fairy-fields-active-button-bg" : ""
+                "w-full justify-start h-auto py-3 text-left"
+                // Removed: theme.id === 'fairy-fields' && activeTheme === theme.id ? "fairy-fields-active-button-bg" : ""
               )}
               onClick={() => handleThemeChange(theme.id)}
             >

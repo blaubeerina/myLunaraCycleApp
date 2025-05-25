@@ -7,20 +7,7 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
-@layer components {
-  .fairy-fields-active-button-bg {
-    /* Original Fairy Fields --secondary was hsl(300 33% 90%) */
-    /* New background with L=23% (approx. 90/4) */
-    background-color: hsl(300 33% 23%) !important; 
-    /* Fairy Fields --primary-foreground for text contrast */
-    color: hsl(60 40% 96%) !important; 
-  }
-  .fairy-fields-active-button-bg:hover {
-     /* Slightly lighter for hover, e.g., L=28% */
-    background-color: hsl(300 33% 28%) !important;
-    color: hsl(60 40% 96%) !important;
-  }
-}
+/* Removed .fairy-fields-active-button-bg as it's no longer used */
 
 @layer base {
   :root,
