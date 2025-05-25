@@ -26,6 +26,10 @@ export function Header({ onToggleSidebar }: HeaderProps) {
   const { t } = useAppContext();
   const { user, logout, isLoading } = useAuth();
 
+  const avatarLetter = user?.displayName ? user.displayName[0].toUpperCase() : (user?.email ? user.email[0].toUpperCase() : 'U');
+  const avatarSrc = user?.photoURL || `https://placehold.co/100x100.png?text=${avatarLetter}`;
+
+
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-4 md:px-6">
@@ -48,8 +52,8 @@ export function Header({ onToggleSidebar }: HeaderProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={`https://placehold.co/100x100.png?text=${user.displayName?.[0] || 'U'}`} alt={user.displayName || "User"} data-ai-hint="avatar person" />
-                    <AvatarFallback>{user.displayName?.[0] || 'U'}</AvatarFallback>
+                    <AvatarImage src={avatarSrc} alt={user.displayName || "User"} data-ai-hint="avatar person" />
+                    <AvatarFallback>{avatarLetter}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>

@@ -7,6 +7,7 @@ interface User {
   id: string;
   email: string;
   displayName?: string;
+  photoURL?: string;
 }
 
 interface AuthContextType {
@@ -14,8 +15,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email?: string, password?: string) => Promise<void>; // Mock login
   logout: () => Promise<void>;
-  // signUp: (email?: string, password?: string) => Promise<void>; // Mock signup
-  // signInWithGoogle: () => Promise<void>; // Mock Google sign-in
+  signInWithGoogle: () => Promise<void>; // Mock Google sign-in
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,9 +38,30 @@ export const AuthContextProvider: React.FC<{ children: ReactNode }> = ({ childre
     setIsLoading(true);
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
-    const mockUserData = { id: '123', email: email || 'user@example.com', displayName: 'Lunar User' };
+    const mockUserData: User = { 
+      id: '123', 
+      email: email || 'user@example.com', 
+      displayName: 'Lunar User',
+      photoURL: `https://placehold.co/100x100.png?text=${(email || 'U')[0].toUpperCase()}`
+    };
     setUser(mockUserData);
     localStorage.setItem('myLunaraCycle-user', JSON.stringify(mockUserData));
+    setIsLoading(false);
+    router.push('/dashboard');
+  };
+
+  const signInWithGoogle = async () => {
+    setIsLoading(true);
+    // Simulate Google Sign-In
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    const mockGoogleUserData: User = {
+      id: 'google-456',
+      email: 'googleuser@example.com',
+      displayName: 'Google User',
+      photoURL: 'https://placehold.co/100x100.png?text=G'
+    };
+    setUser(mockGoogleUserData);
+    localStorage.setItem('myLunaraCycle-user', JSON.stringify(mockGoogleUserData));
     setIsLoading(false);
     router.push('/dashboard');
   };
@@ -55,7 +76,7 @@ export const AuthContextProvider: React.FC<{ children: ReactNode }> = ({ childre
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, logout, signInWithGoogle }}>
       {children}
     </AuthContext.Provider>
   );
