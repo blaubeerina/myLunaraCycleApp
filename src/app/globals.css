@@ -8,77 +8,75 @@ body {
 
 @layer base {
   :root {
-    /* Dark Feminine Energy Theme - Conceptual Mapping */
-    /* Backgrounds: Obsidian Black and Midnight Teal */
-    --background: 0 0% 5%;             /* Obsidian Black (e.g., #0D0D0D) */
-    --foreground: 0 0% 94%;           /* Moon Dust (e.g., #F0F0F0) - Primary Text */
+    /* Light Feminine Energy Theme - Cloud Whisper & Pastels */
+    /* Backgrounds */
+    --background: 220 25% 96%;         /* Cloud Whisper (Very light greyish blue) */
+    --foreground: 230 35% 25%;         /* Moonlit Indigo (Primary text) */
 
-    /* Cards & Popovers using Midnight Teal */
-    --card: 180 100% 15%;           /* Midnight Teal (e.g., #004D4D) */
-    --card-foreground: 0 0% 94%;      /* Moon Dust */
+    /* Cards & Popovers */
+    --card: 240 20% 94%;               /* Dream Mist (Pale lavender tint for cards) */
+    --card-foreground: 230 35% 25%;   /* Moonlit Indigo */
 
-    --popover: 180 100% 15%;          /* Midnight Teal */
-    --popover-foreground: 0 0% 94%;   /* Moon Dust */
+    --popover: 250 30% 92%;            /* Lavender Fog (Pale lavender for popovers) */
+    --popover-foreground: 230 35% 25%;/* Moonlit Indigo */
 
-    /* Buttons & Elements: Ink Orchid + Crimson Veil */
-    --primary: 275 51% 42%;           /* Ink Orchid (e.g., #6A0DAD) */
-    --primary-foreground: 0 0% 94%;   /* Moon Dust - Text on Ink Orchid */
+    /* Buttons & Interactive Elements */
+    --primary: 28 100% 85%;            /* First Light Peach (Button background) */
+    --primary-foreground: 230 35% 25%; /* Moonlit Indigo (Text on primary buttons) */
 
-    --secondary: 348 83% 47%;         /* Crimson Veil (e.g., #DC143C) */
-    --secondary-foreground: 0 0% 94%; /* Moon Dust - Text on Crimson Veil */
+    --secondary: 220 15% 88%;          /* Light Grey (Alternative button / muted interactive) */
+    --secondary-foreground: 230 35% 25%; /* Moonlit Indigo */
 
     /* Muted elements and text */
-    --muted: 180 100% 10%;            /* Darker Midnight Teal for muted backgrounds */
-    --muted-foreground: 300 24% 76%;  /* Rose Smoke (e.g., #D8BFD8) - Muted text */
+    --muted: 250 30% 92%;              /* Lavender Fog (Muted backgrounds) */
+    --muted-foreground: 230 25% 55%;  /* Moonlit Indigo (Lighter, for muted text) */
 
-    /* Accent: Celestial Gold */
-    --accent: 46 100% 50%;            /* Celestial Gold (e.g., #FFC300) */
-    --accent-foreground: 0 0% 5%;     /* Obsidian Black - Text on Celestial Gold */
+    /* Accent: Links, Focus Rings */
+    --accent: 33 100% 75%;             /* Sun Haze Apricot (Slightly saturated for accent) */
+    --accent-foreground: 230 35% 25%;  /* Moonlit Indigo (Text on accent elements) */
 
-    /* Destructive state using Crimson Veil */
-    --destructive: 348 83% 47%;       /* Crimson Veil */
-    --destructive-foreground: 0 0% 94%;/* Moon Dust */
+    /* Destructive state */
+    --destructive: 350 70% 80%;         /* Soft Pink/Rose for destructive actions */
+    --destructive-foreground: 230 35% 15%;/* Dark Indigo for text on destructive */
 
     /* Borders, Inputs, Rings */
-    --border: 180 50% 20%;            /* Muted Teal for borders */
-    --input: 0 0% 10%;                /* Slightly Lighter Obsidian Black for input background */
-    --ring: 46 100% 50%;              /* Celestial Gold - Focus rings */
+    --border: 250 20% 85%;             /* Slightly darker Lavender Fog for borders */
+    --input: 220 25% 93%;              /* Very light shade for input backgrounds */
+    --ring: 33 100% 75%;               /* Sun Haze Apricot (Focus rings) */
 
     --radius: 0.5rem;
 
     /* Custom colors specific to myLunaraCycle, mapped to the new theme */
-    /* Stimmungen/Phasen: Shadow Amethyst + Rose Smoke for Flow & Cycle */
-    --lunara-ovulation-glow: 267 31% 50%;   /* Shadow Amethyst (e.g., #7D5BA6) */
-    --lunara-pregnancy-growth: 300 24% 76%; /* Rose Smoke (e.g., #D8BFD8) */
+    --lunara-ovulation-glow: 210 40% 88%; /* Dream Mist (for Ovulation highlight) */
+    --lunara-pregnancy-growth: 260 50% 85%;/* Horizon Lilac (for other cycle/growth highlights) */
     
-    --lunara-dark-blue: 0 0% 5%;          /* Obsidian Black */
-    --lunara-night-blue: 0 0% 5%;         /* Obsidian Black */
-    --lunara-light-yellow: 46 100% 50%;    /* Celestial Gold */
-    --lunara-light-green: 300 24% 76%;    /* Rose Smoke (as a soft nature tone) */
-    --lunara-grey: 0 0% 94%;               /* Moon Dust */
-    --lunara-modal-background: 180 100% 15%;/* Midnight Teal */
-    --lunara-mood-card-background: 180 100% 15%;/* Midnight Teal */
-    --lunara-calendar-bg: 0 0% 5%;        /* Obsidian Black */
+    /* Retaining conceptual names from previous dark theme for compatibility, remapped to light */
+    --lunara-dark-blue: 220 25% 96%;      /* (was Obsidian Black) -> Cloud Whisper */
+    --lunara-night-blue: 220 25% 96%;     /* (was Obsidian Black) -> Cloud Whisper */
+    --lunara-light-yellow: 33 100% 75%;   /* (was Celestial Gold) -> Sun Haze Apricot */
+    --lunara-light-green: 120 40% 88%;    /* A new soft green for light themes */
+    --lunara-grey: 230 15% 65%;           /* A neutral grey text color */
+    --lunara-modal-background: 240 20% 94%; /* Dream Mist (for modals) */
+    --lunara-mood-card-background: 240 20% 94%;/* Dream Mist (for mood cards) */
+    --lunara-calendar-bg: 220 25% 96%;   /* Cloud Whisper (calendar background) */
 
     /* Chart colors mapped to new theme */
-    --chart-1: 275 51% 42%; /* Ink Orchid */
-    --chart-2: 46 100% 50%;  /* Celestial Gold */
-    --chart-3: 348 83% 47%; /* Crimson Veil */
-    --chart-4: 267 31% 50%; /* Shadow Amethyst */
-    --chart-5: 300 24% 76%; /* Rose Smoke */
+    --chart-1: 28 100% 85%; /* First Light Peach */
+    --chart-2: 33 100% 75%;  /* Sun Haze Apricot */
+    --chart-3: 260 50% 75%; /* Horizon Lilac (variant) */
+    --chart-4: 210 40% 78%; /* Dream Mist (variant) */
+    --chart-5: 230 25% 65%; /* Muted Indigo */
 
-    /* Sidebar specific colors adjusted for the new theme */
-    --sidebar-background: 0 0% 5%;          /* Obsidian Black */
-    --sidebar-foreground: 0 0% 94%;          /* Moon Dust */
-    --sidebar-primary: 275 51% 42%;          /* Ink Orchid */
-    --sidebar-primary-foreground: 0 0% 94%;  /* Moon Dust */
-    --sidebar-accent: 180 100% 20%;          /* Slightly Lighter Midnight Teal for hover */
-    --sidebar-accent-foreground: 0 0% 94%;   /* Moon Dust */
-    --sidebar-border: 180 50% 20%;           /* Muted Teal */
-    --sidebar-ring: 46 100% 50%;             /* Celestial Gold */
+    /* Sidebar specific colors adjusted for the new light theme */
+    --sidebar-background: 230 20% 95%;          /* Slightly off-white, like Dream Mist or Lavender Fog variant */
+    --sidebar-foreground: 230 35% 25%;          /* Moonlit Indigo */
+    --sidebar-primary: 28 100% 85%;             /* First Light Peach */
+    --sidebar-primary-foreground: 230 35% 25%;  /* Moonlit Indigo */
+    --sidebar-accent: 28 100% 90%;              /* Lighter Peach for hover/active */
+    --sidebar-accent-foreground: 230 35% 25%;   /* Moonlit Indigo */
+    --sidebar-border: 250 20% 88%;              /* Light border for sidebar */
+    --sidebar-ring: 33 100% 75%;                /* Sun Haze Apricot */
   }
-
-  /* No .dark block, as this theme is inherently dark and set as default */
 }
 
 @layer base {
