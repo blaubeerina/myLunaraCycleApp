@@ -8,7 +8,7 @@ body {
 
 @layer base {
   :root {
-    /* Dark Feminine Energy Theme based on user's palette */
+    /* Dark Feminine Energy Theme - Updated */
     --background: 217 70% 13%;      /* Moonshadow Blue (#0B1C3A) */
     --foreground: 216 11% 80%;      /* Lunar Silver (#C7CCD1) - Primary Text */
 
@@ -24,18 +24,18 @@ body {
     --secondary: 314 26% 29%;       /* Velvet Plum (#5D3754) - Highlight/Secondary interactive */
     --secondary-foreground: 216 11% 80%;/* Lunar Silver (#C7CCD1) - Text on secondary */
 
-    --muted: 268 11% 63%;            /* Ashen Lilac (#A89BAE) - Muted backgrounds / elements */
-    --muted-foreground: 313 19% 70%; /* Mystic Rose (#BFA3B8) - Muted text (textSecondary) */
+    --muted: 268 11% 63%;            /* Ashen Lilac (#A89BAE) - Muted backgrounds / "leichte Elemente" */
+    --muted-foreground: 313 19% 70%; /* Mystic Rose (#BFA3B8) - Muted text / "Highlight-Texte" */
 
-    --accent: 45 52% 64%;            /* Golden Smoke (#D1B679) - Primary Accent */
-    --accent-foreground: 217 70% 13%;/* Moonshadow Blue (#0B1C3A) - Text on Accent */
+    --accent: 45 52% 64%;            /* Golden Smoke (#D1B679) - Primary Accent, some buttons */
+    --accent-foreground: 217 70% 13%;/* Moonshadow Blue (#0B1C3A) - Text on Accent (Golden Smoke is light) */
 
     /* Thematic Destructive Colors */
     --destructive: 314 26% 29%;        /* Velvet Plum (#5D3754) */
     --destructive-foreground: 45 52% 64%;/* Golden Smoke (#D1B679) */
 
     --border: 314 26% 29%;           /* Velvet Plum (#5D3754) - Subtle borders */
-    --input: 217 70% 18%;            /* Slightly lighter Moonshadow Blue for input background */
+    --input: 217 70% 18%;            /* Slightly lighter Moonshadow Blue for input background (#1A2C4A) */
     --ring: 45 52% 64%;              /* Golden Smoke (#D1B679) - Focus rings */
 
     --radius: 0.5rem;
@@ -44,9 +44,9 @@ body {
     --lunara-dark-blue: 217 70% 13%;       /* Moonshadow Blue */
     --lunara-night-blue: 217 70% 13%;      /* Moonshadow Blue */
     --lunara-light-yellow: 45 52% 64%;     /* Golden Smoke */
-    --lunara-light-green: 313 19% 70%;     /* Mystic Rose (as a stand-in, original green not in new palette) */
+    --lunara-light-green: 313 19% 70%;     /* Mystic Rose (as a stand-in for soft green) */
     --lunara-grey: 216 11% 80%;            /* Lunar Silver */
-    --lunara-modal-background: 314 26% 20%;/* Darker Velvet Plum or very dark Moonshadow */
+    --lunara-modal-background: 314 26% 20%;/* Darker Velvet Plum */
     --lunara-mood-card-background: 314 26% 29%;/* Velvet Plum */
     --lunara-ovulation-glow: 45 52% 64%;   /* Golden Smoke */
     --lunara-pregnancy-growth: 313 19% 70%;/* Mystic Rose */
@@ -64,13 +64,13 @@ body {
     --sidebar-foreground: 216 11% 80%;       /* Lunar Silver */
     --sidebar-primary: 298 96% 15%;           /* Eclipse Violet */
     --sidebar-primary-foreground: 216 11% 80%;/* Lunar Silver */
-    --sidebar-accent: 314 26% 29%;            /* Velvet Plum (for hover) */
+    --sidebar-accent: 314 26% 29%;            /* Velvet Plum (for hover on sidebar items) */
     --sidebar-accent-foreground: 216 11% 80%; /* Lunar Silver */
     --sidebar-border: 314 26% 29%;            /* Velvet Plum */
     --sidebar-ring: 45 52% 64%;               /* Golden Smoke */
   }
 
-  /* Removed .dark block as the new theme is inherently dark and set as default */
+  /* No .dark block, as this theme is inherently dark and set as default */
 }
 
 @layer base {
