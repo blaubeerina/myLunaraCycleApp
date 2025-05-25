@@ -10,6 +10,7 @@ import type { Language, AppMode } from '@/lib/types';
 import { useAuth } from '@/components/auth/AuthContext';
 import { themes } from '@/lib/themes'; // Import theme definitions
 import { CheckCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function SettingsPage() {
   const { t, userPreferences, setUserPreferences, activeTheme, setActiveTheme } = useAppContext();
@@ -89,7 +90,10 @@ export default function SettingsPage() {
             <Button
               key={theme.id}
               variant={activeTheme === theme.id ? "secondary" : "outline"}
-              className="w-full justify-start h-auto py-3 text-left"
+              className={cn(
+                "w-full justify-start h-auto py-3 text-left",
+                theme.id === 'fairy-fields' && activeTheme === theme.id ? "fairy-fields-active-button-bg" : ""
+              )}
               onClick={() => handleThemeChange(theme.id)}
             >
               <div className="flex items-center w-full">
