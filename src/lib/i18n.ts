@@ -1,3 +1,4 @@
+
 import type { Language } from '@/lib/types';
 
 type Translations = {
@@ -50,9 +51,14 @@ const translations: Translations = {
   openJournal: { en: 'Open Journal', de: 'Tagebuch öffnen' },
   viewCalendar: { en: 'View Calendar', de: 'Kalender ansehen' },
   // Day Entry Dialog
-  dayEntry: { en: 'Log Entry for {date}', de: 'Eintrag für {date}' },
+  dayEntryTitle: { en: 'Log Entry for {date}', de: 'Eintrag für {date}' }, // Renamed from dayEntry for clarity
   dayEntryMood: { en: 'Mood', de: 'Stimmung' },
   dayEntryBleeding: { en: 'Bleeding', de: 'Blutung' },
+  dayEntryBleedingStrength: { en: 'Bleeding Strength', de: 'Stärke der Blutung' },
+  dayEntryBleedingStrengthNone: { en: 'None', de: 'Keine' },
+  dayEntryBleedingStrengthLight: { en: 'Light', de: 'Leicht' },
+  dayEntryBleedingStrengthMedium: { en: 'Medium', de: 'Mittel' },
+  dayEntryBleedingStrengthHeavy: { en: 'Heavy', de: 'Stark' },
   dayEntryEnergyLevel: { en: 'Energy Level', de: 'Energielevel' },
   dayEntryNotes: { en: 'Notes', de: 'Notizen' },
   dayEntrySave: { en: 'Save Entry', de: 'Eintrag Speichern' },
@@ -60,7 +66,7 @@ const translations: Translations = {
   dayEntryEnergyLow: { en: 'Low', de: 'Niedrig' },
   dayEntryEnergyMedium: { en: 'Medium', de: 'Mittel' },
   dayEntryEnergyHigh: { en: 'High', de: 'Hoch' },
-  // Add more translations here
+  loadingData: { en: 'Loading data...', de: 'Lade Daten...' },
 };
 
 export const getTranslations = (lang: Language) => {

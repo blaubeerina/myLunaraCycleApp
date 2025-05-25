@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { DailyEntryData, Language } from '@/lib/types';
+import type { DailyEntryData, Language, BleedingStrength } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -16,13 +16,15 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from 'react';
-import { MoodSelector } from './MoodSelector'; // Create this component
+import { MoodSelector } from './MoodSelector';
 
 interface DayEntryDialogProps {
   isOpen: boolean;
   onClose: () => void;
   selectedDate: Date;
+  initialData?: Partial<DailyEntryData>; // To prefill form if editing
   onSaveEntry: (entry: DailyEntryData) => void;
   language: Language;
   t: (key: string, params?: Record<string, string | number>) => string;
@@ -34,35 +36,44 @@ const moods = [
   { emoji: '😕', label: 'Confused' }, { emoji: '😟', label: 'Worried'}
 ];
 
-
 export function DayEntryDialog({
   isOpen,
   onClose,
   selectedDate,
+  initialData,
   onSaveEntry,
   language,
   t,
 }: DayEntryDialogProps) {
-  const [mood, setMood] = useState<string>('');
-  const [isBleeding, setIsBleeding] = useState<boolean>(false);
-  const [energyLevel, setEnergyLevel] = useState<'low' | 'medium' | 'high'>('medium');
-  const [notes, setNotes] = useState<string>('');
+  const [mood, setMood] = useState<string>(initialData?.mood || '');
+  const [isBleeding, setIsBleeding] = useState<boolean>(initialData?.isBleeding || false);
+  const [bleedingStrength, setBleedingStrength] = useState<BleedingStrength>(initialData?.bleedingStrength || 'none');
+  const [energyLevel, setEnergyLevel] = useState<'low' | 'medium' | 'high'>(initialData?.energyLevel || 'medium');
+  const [notes, setNotes] = useState<string>(initialData?.notes || '');
 
   useEffect(() => {
-    // Reset form when dialog opens for a new date or reopens
     if (isOpen) {
-      setMood('');
-      setIsBleeding(false);
-      setEnergyLevel('medium');
-      setNotes('');
+      setMood(initialData?.mood || '');
+      setIsBleeding(initialData?.isBleeding || false);
+      setBleedingStrength(initialData?.bleedingStrength || 'none');
+      setEnergyLevel(initialData?.energyLevel || 'medium');
+      setNotes(initialData?.notes || '');
     }
-  }, [isOpen, selectedDate]);
+  }, [isOpen, initialData]);
+
+  useEffect(() => {
+    // If bleeding is toggled off, reset strength to 'none'
+    if (!isBleeding) {
+      setBleedingStrength('none');
+    }
+  }, [isBleeding]);
 
   const handleSave = () => {
     const entryData: DailyEntryData = {
       date: selectedDate.toISOString().split('T')[0], // YYYY-MM-DD
       mood,
       isBleeding,
+      bleedingStrength: isBleeding ? bleedingStrength : 'none',
       energyLevel,
       notes,
     };
@@ -77,7 +88,7 @@ export function DayEntryDialog({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[480px] bg-background">
         <DialogHeader>
-          <DialogTitle>{t('dayEntry', { date: formattedDate })}</DialogTitle>
+          <DialogTitle>{t('dayEntryTitle', { date: formattedDate })}</DialogTitle>
           <DialogDescription>
             {t('howAreYouFeeling')}
           </DialogDescription>
@@ -100,6 +111,27 @@ export function DayEntryDialog({
             />
             <Label htmlFor="bleeding">{t('dayEntryBleeding')}</Label>
           </div>
+
+          {isBleeding && (
+            <div className="grid gap-2">
+              <Label htmlFor="bleeding-strength">{t('dayEntryBleedingStrength')}</Label>
+              <Select 
+                value={bleedingStrength} 
+                onValueChange={(value) => setBleedingStrength(value as BleedingStrength)}
+              >
+                <SelectTrigger id="bleeding-strength" className="w-full">
+                  <SelectValue placeholder={t('dayEntryBleedingStrengthNone')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">{t('dayEntryBleedingStrengthNone')}</SelectItem>
+                  <SelectItem value="light">{t('dayEntryBleedingStrengthLight')}</SelectItem>
+                  <SelectItem value="medium">{t('dayEntryBleedingStrengthMedium')}</SelectItem>
+                  <SelectItem value="heavy">{t('dayEntryBleedingStrengthHeavy')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="grid gap-2">
             <Label>{t('dayEntryEnergyLevel')}</Label>
             <RadioGroup

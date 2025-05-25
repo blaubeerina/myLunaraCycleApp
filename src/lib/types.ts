@@ -24,10 +24,19 @@ export interface Reminder {
 }
 
 // For the new Day Entry Dialog
+export type BleedingStrength = 'light' | 'medium' | 'heavy' | 'none';
+
 export interface DailyEntryData {
   date: string; // YYYY-MM-DD
   mood: string; // emoji
   isBleeding: boolean;
+  bleedingStrength: BleedingStrength;
   energyLevel: 'low' | 'medium' | 'high';
   notes: string;
+}
+
+// For mock moon data
+export interface MoonPhaseData {
+  phaseName: string; // e.g., "New Moon", "Waxing Crescent"
+  emoji: string;
 }
