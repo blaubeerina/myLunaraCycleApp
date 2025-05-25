@@ -16,9 +16,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+// Removed Select import as it's no longer used for bleeding strength
 import { useState, useEffect } from 'react';
-import { MoodSelector } from './MoodSelector'; // Ensure this path is correct
+import { MoodSelector } from './MoodSelector'; 
 
 interface DayEntryDialogProps {
   isOpen: boolean;
@@ -28,7 +28,7 @@ interface DayEntryDialogProps {
   onSaveEntry: (entry: DailyEntryData) => void;
   language: Language;
   t: (key: string, params?: Record<string, string | number>) => string;
-  appMode: AppMode; // To conditionally show cycle-specific fields
+  appMode: AppMode; 
 }
 
 const moods = [
@@ -71,7 +71,7 @@ export function DayEntryDialog({
 
   const handleSave = () => {
     const entryData: DailyEntryData = {
-      date: selectedDate.toISOString().split('T')[0], // YYYY-MM-DD
+      date: selectedDate.toISOString().split('T')[0], 
       mood,
       isBleeding: appMode === 'cycle' ? isBleeding : false,
       bleedingStrength: appMode === 'cycle' && isBleeding ? bleedingStrength : 'none',
@@ -119,21 +119,29 @@ export function DayEntryDialog({
 
               {isBleeding && (
                 <div className="grid gap-2">
-                  <Label htmlFor="bleeding-strength">{t('dayEntryBleedingStrength')}</Label>
-                  <Select 
-                    value={bleedingStrength} 
-                    onValueChange={(value) => setBleedingStrength(value as BleedingStrength)}
+                  <Label>{t('dayEntryBleedingStrength')}</Label>
+                  <RadioGroup
+                    value={bleedingStrength}
+                    onValueChange={(value: BleedingStrength) => setBleedingStrength(value)}
+                    className="flex space-x-2 sm:space-x-4" // Adjusted spacing for potentially longer labels
                   >
-                    <SelectTrigger id="bleeding-strength" className="w-full">
-                      <SelectValue placeholder={t('dayEntryBleedingStrengthNone')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">{t('dayEntryBleedingStrengthNone')}</SelectItem>
-                      <SelectItem value="light">{t('dayEntryBleedingStrengthLight')}</SelectItem>
-                      <SelectItem value="medium">{t('dayEntryBleedingStrengthMedium')}</SelectItem>
-                      <SelectItem value="heavy">{t('dayEntryBleedingStrengthHeavy')}</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="none" id="strength-none" />
+                      <Label htmlFor="strength-none" className="font-normal">{t('dayEntryBleedingStrengthNone')}</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="light" id="strength-light" />
+                      <Label htmlFor="strength-light" className="font-normal">{t('dayEntryBleedingStrengthLight')}</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="medium" id="strength-medium" />
+                      <Label htmlFor="strength-medium" className="font-normal">{t('dayEntryBleedingStrengthMedium')}</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="heavy" id="strength-heavy" />
+                      <Label htmlFor="strength-heavy" className="font-normal">{t('dayEntryBleedingStrengthHeavy')}</Label>
+                    </div>
+                  </RadioGroup>
                 </div>
               )}
             </>
@@ -148,15 +156,15 @@ export function DayEntryDialog({
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="low" id="energy-low" />
-                <Label htmlFor="energy-low">{t('dayEntryEnergyLow')}</Label>
+                <Label htmlFor="energy-low" className="font-normal">{t('dayEntryEnergyLow')}</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="medium" id="energy-medium" />
-                <Label htmlFor="energy-medium">{t('dayEntryEnergyMedium')}</Label>
+                <Label htmlFor="energy-medium" className="font-normal">{t('dayEntryEnergyMedium')}</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="high" id="energy-high" />
-                <Label htmlFor="energy-high">{t('dayEntryEnergyHigh')}</Label>
+                <Label htmlFor="energy-high" className="font-normal">{t('dayEntryEnergyHigh')}</Label>
               </div>
             </RadioGroup>
           </div>
