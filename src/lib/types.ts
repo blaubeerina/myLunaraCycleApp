@@ -23,7 +23,6 @@ export interface Reminder {
   isEnabled: boolean;
 }
 
-// For the new Day Entry Dialog
 export type BleedingStrength = 'light' | 'medium' | 'heavy' | 'none';
 
 export interface DailyEntryData {
@@ -35,8 +34,24 @@ export interface DailyEntryData {
   notes: string;
 }
 
-// For mock moon data
 export interface MoonPhaseData {
   phaseName: string; // e.g., "New Moon", "Waxing Crescent"
   emoji: string;
+}
+
+// New types for Cycle Calculation and AI Impulse
+export type CyclePhase = 'Menstruation' | 'Follicular' | 'Ovulation' | 'Luteal' | 'Unknown';
+
+export interface CycleInfo {
+  phase: CyclePhase;
+  cycleDay: number; // Day in cycle, e.g., 1, 15, 28. 0 if unknown.
+  lastPeriodStartDate?: string; // YYYY-MM-DD
+  estimatedCycleLength: number; // e.g. 28
+}
+
+export interface GeneratedImpulse {
+  date: string; // YYYY-MM-DD of the entry it's for
+  text: string;
+  cyclePhase: CyclePhase;
+  moonPhase: string;
 }

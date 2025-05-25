@@ -67,6 +67,20 @@ const translations: Translations = {
   dayEntryEnergyMedium: { en: 'Medium', de: 'Mittel' },
   dayEntryEnergyHigh: { en: 'High', de: 'Hoch' },
   loadingData: { en: 'Loading data...', de: 'Lade Daten...' },
+
+  // Cycle Phases
+  cyclePhaseMenstruation: { en: 'Menstruation', de: 'Menstruation' },
+  cyclePhaseFollicular: { en: 'Follicular Phase', de: 'Follikelphase' },
+  cyclePhaseOvulation: { en: 'Ovulation', de: 'Eisprung' },
+  cyclePhaseLuteal: { en: 'Luteal Phase', de: 'Lutealphase' },
+  cyclePhaseUnknown: { en: 'Unknown Cycle Phase', de: 'Unbekannte Zyklusphase' },
+
+  // Dashboard Impulse
+  dailyImpulseTitle: { en: 'Your Daily Impulse', de: 'Dein täglicher Impuls' },
+  dailyImpulseLoading: { en: 'Generating your impulse...', de: 'Dein Impuls wird generiert...' },
+  dailyImpulseUnavailable: { en: 'No impulse available yet. Log an entry in your calendar!', de: 'Noch kein Impuls verfügbar. Mache einen Eintrag in deinem Kalender!' },
+  newImpulseGenerated: { en: 'New impulse generated!', de: 'Neuer Impuls generiert!' },
+  appMode: {en: 'App Mode', de: 'App-Modus'},
 };
 
 export const getTranslations = (lang: Language) => {

@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { DailyEntryData, Language, BleedingStrength } from '@/lib/types';
+import type { DailyEntryData, Language, BleedingStrength, AppMode } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -18,16 +18,17 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from 'react';
-import { MoodSelector } from './MoodSelector';
+import { MoodSelector } from './MoodSelector'; // Ensure this path is correct
 
 interface DayEntryDialogProps {
   isOpen: boolean;
   onClose: () => void;
   selectedDate: Date;
-  initialData?: Partial<DailyEntryData>; // To prefill form if editing
+  initialData?: Partial<DailyEntryData>;
   onSaveEntry: (entry: DailyEntryData) => void;
   language: Language;
   t: (key: string, params?: Record<string, string | number>) => string;
+  appMode: AppMode; // To conditionally show cycle-specific fields
 }
 
 const moods = [
@@ -44,6 +45,7 @@ export function DayEntryDialog({
   onSaveEntry,
   language,
   t,
+  appMode,
 }: DayEntryDialogProps) {
   const [mood, setMood] = useState<string>(initialData?.mood || '');
   const [isBleeding, setIsBleeding] = useState<boolean>(initialData?.isBleeding || false);
@@ -54,26 +56,25 @@ export function DayEntryDialog({
   useEffect(() => {
     if (isOpen) {
       setMood(initialData?.mood || '');
-      setIsBleeding(initialData?.isBleeding || false);
-      setBleedingStrength(initialData?.bleedingStrength || 'none');
+      setIsBleeding(appMode === 'cycle' ? (initialData?.isBleeding || false) : false);
+      setBleedingStrength(appMode === 'cycle' ? (initialData?.bleedingStrength || 'none') : 'none');
       setEnergyLevel(initialData?.energyLevel || 'medium');
       setNotes(initialData?.notes || '');
     }
-  }, [isOpen, initialData]);
+  }, [isOpen, initialData, appMode]);
 
   useEffect(() => {
-    // If bleeding is toggled off, reset strength to 'none'
-    if (!isBleeding) {
+    if (appMode === 'pregnancy' || !isBleeding) {
       setBleedingStrength('none');
     }
-  }, [isBleeding]);
+  }, [isBleeding, appMode]);
 
   const handleSave = () => {
     const entryData: DailyEntryData = {
       date: selectedDate.toISOString().split('T')[0], // YYYY-MM-DD
       mood,
-      isBleeding,
-      bleedingStrength: isBleeding ? bleedingStrength : 'none',
+      isBleeding: appMode === 'cycle' ? isBleeding : false,
+      bleedingStrength: appMode === 'cycle' && isBleeding ? bleedingStrength : 'none',
       energyLevel,
       notes,
     };
@@ -95,7 +96,7 @@ export function DayEntryDialog({
         </DialogHeader>
         <div className="grid gap-6 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="mood">{t('dayEntryMood')}</Label>
+            <Label htmlFor="mood-selector">{t('dayEntryMood')}</Label>
             <MoodSelector 
               moods={moods} 
               selectedMood={mood} 
@@ -103,33 +104,39 @@ export function DayEntryDialog({
               t={t}
             />
           </div>
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="bleeding"
-              checked={isBleeding}
-              onCheckedChange={setIsBleeding}
-            />
-            <Label htmlFor="bleeding">{t('dayEntryBleeding')}</Label>
-          </div>
 
-          {isBleeding && (
-            <div className="grid gap-2">
-              <Label htmlFor="bleeding-strength">{t('dayEntryBleedingStrength')}</Label>
-              <Select 
-                value={bleedingStrength} 
-                onValueChange={(value) => setBleedingStrength(value as BleedingStrength)}
-              >
-                <SelectTrigger id="bleeding-strength" className="w-full">
-                  <SelectValue placeholder={t('dayEntryBleedingStrengthNone')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">{t('dayEntryBleedingStrengthNone')}</SelectItem>
-                  <SelectItem value="light">{t('dayEntryBleedingStrengthLight')}</SelectItem>
-                  <SelectItem value="medium">{t('dayEntryBleedingStrengthMedium')}</SelectItem>
-                  <SelectItem value="heavy">{t('dayEntryBleedingStrengthHeavy')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          {appMode === 'cycle' && (
+            <>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="bleeding"
+                  checked={isBleeding}
+                  onCheckedChange={setIsBleeding}
+                  aria-label={t('dayEntryBleeding')}
+                />
+                <Label htmlFor="bleeding">{t('dayEntryBleeding')}</Label>
+              </div>
+
+              {isBleeding && (
+                <div className="grid gap-2">
+                  <Label htmlFor="bleeding-strength">{t('dayEntryBleedingStrength')}</Label>
+                  <Select 
+                    value={bleedingStrength} 
+                    onValueChange={(value) => setBleedingStrength(value as BleedingStrength)}
+                  >
+                    <SelectTrigger id="bleeding-strength" className="w-full">
+                      <SelectValue placeholder={t('dayEntryBleedingStrengthNone')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">{t('dayEntryBleedingStrengthNone')}</SelectItem>
+                      <SelectItem value="light">{t('dayEntryBleedingStrengthLight')}</SelectItem>
+                      <SelectItem value="medium">{t('dayEntryBleedingStrengthMedium')}</SelectItem>
+                      <SelectItem value="heavy">{t('dayEntryBleedingStrengthHeavy')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </>
           )}
 
           <div className="grid gap-2">
