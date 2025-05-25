@@ -16,7 +16,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
-// Removed Select import as it's no longer used for bleeding strength
 import { useState, useEffect } from 'react';
 import { MoodSelector } from './MoodSelector'; 
 
@@ -47,27 +46,65 @@ export function DayEntryDialog({
   t,
   appMode,
 }: DayEntryDialogProps) {
-  const [mood, setMood] = useState<string>(initialData?.mood || '');
-  const [isBleeding, setIsBleeding] = useState<boolean>(initialData?.isBleeding || false);
-  const [bleedingStrength, setBleedingStrength] = useState<BleedingStrength>(initialData?.bleedingStrength || 'none');
-  const [energyLevel, setEnergyLevel] = useState<'low' | 'medium' | 'high'>(initialData?.energyLevel || 'medium');
-  const [notes, setNotes] = useState<string>(initialData?.notes || '');
+  const [mood, setMood] = useState<string>('');
+  const [isBleeding, setIsBleeding] = useState<boolean>(false);
+  const [bleedingStrength, setBleedingStrength] = useState<BleedingStrength>('none');
+  const [energyLevel, setEnergyLevel] = useState<'low' | 'medium' | 'high'>('medium');
+  const [notes, setNotes] = useState<string>('');
 
+  // Effect for setting initial state when dialog opens or initialData/appMode changes
   useEffect(() => {
     if (isOpen) {
       setMood(initialData?.mood || '');
-      setIsBleeding(appMode === 'cycle' ? (initialData?.isBleeding || false) : false);
-      setBleedingStrength(appMode === 'cycle' ? (initialData?.bleedingStrength || 'none') : 'none');
       setEnergyLevel(initialData?.energyLevel || 'medium');
       setNotes(initialData?.notes || '');
+
+      const initialIsBleedingSetting = appMode === 'cycle' ? (initialData?.isBleeding || false) : false;
+      setIsBleeding(initialIsBleedingSetting);
+
+      if (appMode === 'cycle' && initialIsBleedingSetting) {
+        // If bleeding is on in cycle mode, strength cannot be 'none'.
+        // Default to 'light' if initialData.strength was 'none' or undefined, or is not a valid selectable option.
+        const validStrengths: BleedingStrength[] = ['light', 'medium', 'heavy'];
+        const initialStrength = initialData?.bleedingStrength;
+        if (initialStrength && validStrengths.includes(initialStrength)) {
+          setBleedingStrength(initialStrength);
+        } else {
+          setBleedingStrength('light');
+        }
+      } else {
+        // Not cycle mode, or bleeding is off
+        setBleedingStrength('none');
+      }
     }
   }, [isOpen, initialData, appMode]);
 
+  // Effect for handling changes to the isBleeding switch *after* initial load
   useEffect(() => {
-    if (appMode === 'pregnancy' || !isBleeding) {
+    if (!isOpen) return; // Only run if dialog is open and was already initialized
+
+    if (appMode === 'cycle') {
+      if (isBleeding) {
+        // If bleeding is turned ON, and strength is currently 'none' (e.g., it was just toggled from off)
+        // set it to 'light' as a default.
+        if (bleedingStrength === 'none') {
+          setBleedingStrength('light');
+        }
+      } else {
+        // If bleeding is turned OFF
+        setBleedingStrength('none');
+      }
+    } else { // Pregnancy mode
+      if (isBleeding) { // Should not happen, but as a safeguard
+         setIsBleeding(false); 
+      }
       setBleedingStrength('none');
     }
-  }, [isBleeding, appMode]);
+  // NOTE: `bleedingStrength` is intentionally omitted from deps here for this specific logic
+  // to avoid re-triggering when `setBleedingStrength` is called within.
+  // The logic path ensures that if isBleeding turns true and strength was 'none', it gets updated.
+  }, [isBleeding, appMode, isOpen]);
+
 
   const handleSave = () => {
     const entryData: DailyEntryData = {
@@ -123,12 +160,8 @@ export function DayEntryDialog({
                   <RadioGroup
                     value={bleedingStrength}
                     onValueChange={(value: BleedingStrength) => setBleedingStrength(value)}
-                    className="flex space-x-2 sm:space-x-4" // Adjusted spacing for potentially longer labels
+                    className="flex space-x-2 sm:space-x-4"
                   >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="none" id="strength-none" />
-                      <Label htmlFor="strength-none" className="font-normal">{t('dayEntryBleedingStrengthNone')}</Label>
-                    </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="light" id="strength-light" />
                       <Label htmlFor="strength-light" className="font-normal">{t('dayEntryBleedingStrengthLight')}</Label>
