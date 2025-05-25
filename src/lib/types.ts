@@ -7,13 +7,13 @@ export interface UserPreferences {
   appMode: AppMode;
 }
 
-export interface JournalEntry {
-  id: string;
-  date: string; // ISO Date string YYYY-MM-DD
-  mood: string; // emoji or string identifier
-  text: string;
-  createdAt: number; // timestamp
-}
+// export interface JournalEntry { // Old journal entry, can be removed or renamed if not used elsewhere
+//   id: string;
+//   date: string; // ISO Date string YYYY-MM-DD
+//   mood: string; // emoji or string identifier
+//   text: string;
+//   createdAt: number; // timestamp
+// }
 
 export interface Reminder {
   id: string;
@@ -39,7 +39,6 @@ export interface MoonPhaseData {
   emoji: string;
 }
 
-// Updated types for Cycle Calculation and AI Impulse
 export type CyclePhase = 'Menstruation' | 'Follicular' | 'Ovulation' | 'Luteal' | 'Premenstrual' | 'Unknown';
 
 export interface CycleInfo {
@@ -47,25 +46,37 @@ export interface CycleInfo {
   cycleDay: number;
   lastPeriodStartDate?: string;
   estimatedCycleLength: number;
-  // For more detailed phase display and logic
-  isFertile?: boolean; // Indicates if the day falls within the fertile window
-  isOvulationDay?: boolean; // Specifically marks the estimated ovulation day
-  nextPeriodStartDate?: string; // Predicted start of the next cycle
-
-  // Optional: Boundaries for internal logic or detailed display, if needed
+  isFertile?: boolean;
+  isOvulationDay?: boolean;
+  nextPeriodStartDate?: string;
   menstrualPhaseEndDay?: number;
   follicularPhaseEndDay?: number;
-  ovulationDayEstimated?: number; // The exact estimated day number for ovulation
+  ovulationDayEstimated?: number;
   fertileWindowStartDay?: number;
   fertileWindowEndDay?: number;
   lutealPhaseStartDay?: number;
   premenstrualPhaseStartDay?: number;
 }
 
-
 export interface GeneratedImpulse {
   date: string; // YYYY-MM-DD of the entry it's for
   text: string;
   cyclePhase: CyclePhase;
   moonPhase: string;
+}
+
+// New types for Editable Journal
+export type FirebaseTimestamp = Date; // Mocking Firestore Timestamp with JS Date
+
+export const journalEntryMoods = ['happy', 'sad', 'energetic', 'tired'] as const;
+export type JournalEntryMood = typeof journalEntryMoods[number];
+
+export interface JournalEntry {
+  id: string;
+  date: string; // ISO-Format YYYY-MM-DD
+  mood: JournalEntryMood;
+  notes: string;
+  symptoms: string[]; // Array of symptom strings
+  lastUpdated: FirebaseTimestamp;
+  userId?: string; // Optional: for mock ownership
 }

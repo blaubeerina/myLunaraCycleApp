@@ -1,20 +1,24 @@
+
 'use client';
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+// Textarea and Label are not directly used here anymore since mood/journalText are props
 import { Loader2, Sparkles } from 'lucide-react';
 import { generateAffirmation, type GenerateAffirmationInput } from '@/ai/flows/generate-affirmation';
 import { useAppContext } from '@/contexts/AppContext';
 import { toast } from '@/hooks/use-toast';
 
 interface AffirmationGeneratorProps {
-  mood: string;
+  mood: string; // This could be an emoji or a string like 'happy'
   journalText: string;
   onAffirmationGenerated: (affirmation: string) => void;
 }
+
+// This component is kept for potential re-integration.
+// The new editable journal system doesn't directly use this.
+// It was part of the old journal page.
 
 export function AffirmationGenerator({ mood, journalText, onAffirmationGenerated }: AffirmationGeneratorProps) {
   const { t } = useAppContext();
@@ -25,7 +29,7 @@ export function AffirmationGenerator({ mood, journalText, onAffirmationGenerated
     if (!mood && !journalText) {
       toast({
         title: "Input Missing",
-        description: "Please select a mood or write a journal entry to generate an affirmation.",
+        description: "Please provide a mood or journal entry to generate an affirmation.",
         variant: "destructive",
       });
       return;
@@ -34,8 +38,8 @@ export function AffirmationGenerator({ mood, journalText, onAffirmationGenerated
     setAffirmation(null);
     try {
       const input: GenerateAffirmationInput = {
-        mood: mood || "neutral", // Provide a default if mood is empty
-        journalEntry: journalText || "No journal entry today.", // Provide a default
+        mood: mood || "neutral", 
+        journalEntry: journalText || "No journal entry today.",
       };
       const result = await generateAffirmation(input);
       if (result.affirmation) {
@@ -88,3 +92,6 @@ export function AffirmationGenerator({ mood, journalText, onAffirmationGenerated
     </Card>
   );
 }
+
+// Need to import Label if we re-enable the display part
+import { Label } from '@/components/ui/label';

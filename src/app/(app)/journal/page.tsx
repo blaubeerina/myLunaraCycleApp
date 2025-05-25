@@ -1,84 +1,186 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAppContext } from '@/contexts/AppContext';
+import { useAuth } from '@/components/auth/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MoodTracker } from '@/components/journal/MoodTracker';
-import { AffirmationGenerator } from '@/components/journal/AffirmationGenerator';
-import { Save } from 'lucide-react';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { PlusCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import type { JournalEntry } from '@/lib/types';
+import { JournalEntryList } from '@/components/journal/JournalEntryList';
+import { EditJournalEntryDialog } from '@/components/journal/EditJournalEntryDialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { format, parseISO, compareDesc } from 'date-fns';
+
+// Mock Firestore interactions
+const MOCK_DB_LATENCY = 300;
+
+async function fetchJournalEntriesFromFirestore(userId: string): Promise<JournalEntry[]> {
+  await new Promise(resolve => setTimeout(resolve, MOCK_DB_LATENCY));
+  console.log(`[Mock Firestore] Fetching entries for user ${userId}`);
+  const storedEntries = JSON.parse(localStorage.getItem(`myLunaraCycle_journal_${userId}`) || '[]');
+  // Ensure dates are JS Date objects for sorting and display
+  return storedEntries.map((e: any) => ({
+    ...e,
+    date: e.date, // Keep as string for form binding
+    lastUpdated: parseISO(e.lastUpdated), // Convert to Date object
+  })).sort((a: JournalEntry, b: JournalEntry) => compareDesc(parseISO(a.date), parseISO(b.date)));
+}
+
+async function saveJournalEntryToFirestore(userId: string, entry: JournalEntry, isNew: boolean): Promise<JournalEntry> {
+  await new Promise(resolve => setTimeout(resolve, MOCK_DB_LATENCY));
+  console.log(`[Mock Firestore] ${isNew ? 'Adding new' : 'Updating'} entry for user ${userId}:`, entry.id);
+  let entries = await fetchJournalEntriesFromFirestore(userId);
+  if (isNew) {
+    entries = [{ ...entry, lastUpdated: entry.lastUpdated.toISOString() as any }, ...entries];
+  } else {
+    entries = entries.map(e => (e.id === entry.id ? { ...entry, lastUpdated: entry.lastUpdated.toISOString() as any } : e));
+  }
+  localStorage.setItem(`myLunaraCycle_journal_${userId}`, JSON.stringify(entries));
+  return { ...entry, lastUpdated: entry.lastUpdated }; // Return with Date object
+}
+
+async function deleteJournalEntryFromFirestore(userId: string, entryId: string): Promise<void> {
+  await new Promise(resolve => setTimeout(resolve, MOCK_DB_LATENCY));
+  console.log(`[Mock Firestore] Deleting entry ${entryId} for user ${userId}`);
+  let entries = await fetchJournalEntriesFromFirestore(userId);
+  entries = entries.filter(e => e.id !== entryId);
+  localStorage.setItem(`myLunaraCycle_journal_${userId}`, JSON.stringify(entries.map(e => ({...e, lastUpdated: e.lastUpdated.toISOString()}))));
+}
+
 
 export default function JournalPage() {
   const { t } = useAppContext();
-  const [mood, setMood] = useState<string>(''); // Stores the emoji
-  const [journalText, setJournalText] = useState<string>('');
-  const [generatedAffirmation, setGeneratedAffirmation] = useState<string>('');
+  const { user } = useAuth();
+  const [entries, setEntries] = useState<JournalEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [currentEditingEntry, setCurrentEditingEntry] = useState<JournalEntry | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [entryToDeleteId, setEntryToDeleteId] = useState<string | null>(null);
 
-  const handleSaveEntry = () => {
-    // TODO: Implement actual save logic (e.g., to Firebase Firestore)
-    // This would involve password protection if needed for the journal.
-    console.log('Saving journal entry:', { mood, journalText, affirmation: generatedAffirmation, date: new Date().toISOString() });
-    toast({
-      title: "Entry Saved (Mock)",
-      description: "Your journal entry has been saved (simulated).",
-    });
-    // Optionally clear fields after save
-    // setMood('');
-    // setJournalText('');
-    // setGeneratedAffirmation('');
+
+  const loadEntries = useCallback(async () => {
+    if (!user) return;
+    setIsLoading(true);
+    try {
+      const fetchedEntries = await fetchJournalEntriesFromFirestore(user.id);
+      setEntries(fetchedEntries);
+    } catch (error) {
+      console.error("Error fetching journal entries:", error);
+      toast({ title: "Error", description: "Could not load journal entries.", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    loadEntries();
+  }, [loadEntries]);
+
+  const handleOpenEditModal = (entry: JournalEntry | null) => {
+    setCurrentEditingEntry(entry); // null for new entry, object for editing
+    setIsEditModalOpen(true);
   };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setCurrentEditingEntry(null);
+  };
+
+  const handleSaveEntry = async (data: JournalEntry, isNew: boolean) => {
+    if (!user) return;
+    // The data.lastUpdated is already a Date object from the form
+    const savedEntry = await saveJournalEntryToFirestore(user.id, data, isNew);
+    
+    // Update local state correctly
+    if (isNew) {
+      setEntries(prev => [savedEntry, ...prev].sort((a,b) => compareDesc(parseISO(a.date), parseISO(b.date))));
+    } else {
+      setEntries(prev => prev.map(e => e.id === savedEntry.id ? savedEntry : e).sort((a,b) => compareDesc(parseISO(a.date), parseISO(b.date))));
+    }
+  };
+
+  const handleDeleteConfirmation = (entryId: string) => {
+    setEntryToDeleteId(entryId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteEntry = async () => {
+    if (!user || !entryToDeleteId) return;
+    try {
+      await deleteJournalEntryFromFirestore(user.id, entryToDeleteId);
+      setEntries(prev => prev.filter(e => e.id !== entryToDeleteId));
+      toast({ title: t('entryDeletedSuccess') });
+    } catch (error) {
+      console.error("Failed to delete entry:", error);
+      toast({ title: t('entryDeletedError'), variant: "destructive" });
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setEntryToDeleteId(null);
+    }
+  };
+
 
   return (
     <div className="space-y-8">
       <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-3xl font-bold">{t('journal')}</CardTitle>
-          <CardDescription>
-            {t('howAreYouFeeling')} {t('writeYourThoughts')}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <MoodTracker selectedMood={mood} onMoodSelect={setMood} />
-
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <div>
-            <Textarea
-              placeholder={t('writeYourThoughts')}
-              value={journalText}
-              onChange={(e) => setJournalText(e.target.value)}
-              rows={8}
-              className="bg-input shadow-inner"
-            />
+            <CardTitle className="text-3xl font-bold">{t('journalEntriesTitle')}</CardTitle>
+            <CardDescription>{t('journalEntriesDescription')}</CardDescription>
           </div>
-          
-          <AffirmationGenerator 
-            mood={mood} 
-            journalText={journalText} 
-            onAffirmationGenerated={setGeneratedAffirmation}
-          />
-
-          <Button onClick={handleSaveEntry} className="w-full md:w-auto" size="lg">
-            <Save className="mr-2 h-5 w-5" />
-            {t('saveEntry')}
+          <Button onClick={() => handleOpenEditModal(null)} variant="outline">
+            <PlusCircle className="mr-2 h-5 w-5" />
+            {t('addNewEntry')}
           </Button>
-        </CardContent>
-      </Card>
-
-      {/* Display saved entries list (placeholder) */}
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle>Past Entries</CardTitle>
-          <CardDescription>A list of your previous journal entries would appear here.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="border border-dashed border-border p-8 rounded-md text-center text-muted-foreground">
-            <p>Journal history not implemented yet.</p>
-            <p>Imagine your beautifully recorded thoughts and feelings listed here, securely stored.</p>
-          </div>
+          <JournalEntryList
+            entries={entries}
+            onEditEntry={handleOpenEditModal}
+            onDeleteEntry={handleDeleteConfirmation}
+            isLoading={isLoading}
+          />
         </CardContent>
       </Card>
 
+      {isEditModalOpen && (
+        <EditJournalEntryDialog
+          isOpen={isEditModalOpen}
+          onClose={handleCloseEditModal}
+          entry={currentEditingEntry}
+          onSave={handleSaveEntry}
+        />
+      )}
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('confirmDeleteEntryTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('confirmDeleteEntryDescription')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteEntry} className={Button({variant: "destructive"}).className}>
+              {t('deleteEntry')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

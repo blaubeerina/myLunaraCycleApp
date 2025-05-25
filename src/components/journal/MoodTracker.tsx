@@ -1,9 +1,12 @@
+
 'use client';
 
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+
+// This component is not directly used by the new editable journal system which uses string moods.
+// It's kept here if you want to use an emoji-based mood selector elsewhere.
 
 const moods = [
   { emoji: '😊', label: 'Happy' },
@@ -17,7 +20,7 @@ const moods = [
 ];
 
 interface MoodTrackerProps {
-  selectedMood: string;
+  selectedMood: string; // Emoji string
   onMoodSelect: (moodEmoji: string) => void;
 }
 
