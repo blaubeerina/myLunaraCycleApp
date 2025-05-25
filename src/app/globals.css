@@ -26,7 +26,7 @@ body {
     --muted: 0 0% 85%;     /* Neutral UI/disabled (#DADADA) */
     --muted-foreground: 0 0% 40%; /* Slightly darker muted text */
 
-    --accent: 270 50% 70%; /* A slightly deeper purple for accent */
+    --accent: 248 39% 39%; /* Plum (#483D8B) - User requested for accent */
     --accent-foreground: 0 0% 100%; /* White text on this accent */
 
     --destructive: 348 68% 70%; /* Bleeding days, energy peaks (#E88DA1) */
@@ -39,11 +39,17 @@ body {
     --radius: 0.5rem;
 
     /* Custom colors specific to myLunaraCycle */
-    --lunara-modal-background: 227 29% 24%;       /* #2D3250 */
-    --lunara-mood-card-background: 228 27% 13%;  /* #191D2B */
-    --lunara-ovulation-glow: 55 100% 85%;        /* #FFF2B2 */
-    --lunara-pregnancy-growth: 125 50% 88%;      /* #C6E8CA */
+    --lunara-dark-blue: 247 52% 21%;       /* #1E1A4E */
+    --lunara-night-blue: 250 61% 10%;      /* #0D0B26 */
+    --lunara-light-yellow: 51 100% 91%;    /* #FFF7D6 */
+    --lunara-light-green: 120 73% 90%;     /* #D5F8D5 */
+    --lunara-grey: 0 0% 71%;               /* #B4B4B4 */
+    --lunara-modal-background: 227 29% 24%; /* #2D3250 - Kept from original, can be reviewed */
+    --lunara-mood-card-background: 228 27% 13%; /* #191D2B - Kept */
+    --lunara-ovulation-glow: 55 100% 85%;        /* #FFF2B2 - Kept */
+    --lunara-pregnancy-growth: 125 50% 88%;      /* #C6E8CA - Kept */
     --lunara-calendar-bg: 276 60% 97%; /* Specific for calendar if needed, same as --background */
+
 
     /* Chart colors */
     --chart-1: 270 50% 80%; /* Soft purple */
@@ -82,7 +88,7 @@ body {
     --muted: 248 39% 25%;
     --muted-foreground: 276 60% 70%;
 
-    --accent: 270 50% 65%;
+    --accent: 248 39% 60%; /* Plum for dark mode, lighter */
     --accent-foreground: 0 0% 98%;
 
     --destructive: 348 68% 60%;
@@ -92,6 +98,11 @@ body {
     --input: 248 39% 18%;
     --ring: 270 50% 65%;
     
+    --lunara-dark-blue: 247 52% 70%;
+    --lunara-night-blue: 250 61% 80%;
+    --lunara-light-yellow: 51 100% 80%;
+    --lunara-light-green: 120 60% 75%;
+    --lunara-grey: 0 0% 40%;
     --lunara-modal-background: 227 29% 15%;
     --lunara-mood-card-background: 228 27% 8%;
     --lunara-ovulation-glow: 55 100% 75%;

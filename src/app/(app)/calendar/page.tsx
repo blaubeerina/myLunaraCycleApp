@@ -8,13 +8,40 @@ import { useState, useEffect, useMemo } from 'react';
 import type { Locale } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { Modifier } from 'react-day-picker';
-import { ChevronLeft, ChevronRight, Search, HelpCircle, Settings, GripVertical, CalendarDays as CalendarIconLucide, CheckSquare } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, HelpCircle, Settings, GripVertical, CalendarDays as CalendarIconLucide, CheckSquare, Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DayEntryDialog } from '@/components/calendar/DayEntryDialog';
+import type { DailyEntryData } from '@/lib/types';
+
+// Mock moon phase data (replace with actual API call if available)
+interface MoonData {
+  [date: string]: { phase: string }; // e.g., "2024-07-25": { phase: "New Moon" }
+}
+
+// Simplified mock moon data generation
+const getMockMoonPhaseEmoji = (date: Date): string => {
+  const day = date.getDate();
+  // Simple cycle for demonstration, not astronomically accurate
+  if (day >= 1 && day <= 3) return '🌑'; // New Moon
+  if (day >= 4 && day <= 7) return '🌒'; // Waxing Crescent
+  if (day >= 8 && day <= 11) return '🌓'; // First Quarter
+  if (day >= 12 && day <= 15) return '🌔'; // Waxing Gibbous
+  if (day >= 16 && day <= 18) return '🌕'; // Full Moon
+  if (day >= 19 && day <= 22) return '🌖'; // Waning Gibbous
+  if (day >= 23 && day <= 26) return '🌗'; // Last Quarter
+  if (day >= 27 && day <= 31) return '🌘'; // Waning Crescent
+  return '🌑'; // Default
+};
+
 
 export default function CalendarPage() {
   const { t, userPreferences } = useAppContext();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [currentDisplayMonth, setCurrentDisplayMonth] = useState(new Date());
+  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
+
+  const [isEntryDialogOpen, setIsEntryDialogOpen] = useState(false);
+  const [dateForEntry, setDateForEntry] = useState<Date | undefined>(undefined);
 
   const today = useMemo(() => new Date(), []);
 
@@ -27,45 +54,71 @@ export default function CalendarPage() {
   const todayModifier: Modifier = { date: today, disabled: false };
 
   const handleTodayClick = () => {
-    const newToday = new Date(); // Ensure we get the current date
+    const newToday = new Date();
     setCurrentDisplayMonth(newToday);
     setSelectedDate(newToday);
   };
 
-  return (
-    <div className="flex-grow flex flex-col h-full w-full"> {/* Occupy available space */}
-        <Calendar
+  const handleDayClick = (date: Date | undefined) => {
+    if (!date) return;
+    setSelectedDate(date);
+    setDateForEntry(date);
+    setIsEntryDialogOpen(true);
+  };
+
+  const handleSaveEntry = (entry: DailyEntryData) => {
+    console.log('Saving entry:', entry);
+    // Here you would typically save to a backend/Firestore
+    // For now, just log it and close the dialog
+    setDateForEntry(undefined);
+    setIsEntryDialogOpen(false);
+  };
+
+  const handleCloseDialog = () => {
+    setDateForEntry(undefined);
+    setIsEntryDialogOpen(false);
+  };
+
+
+  // Note: Full week/day view rendering is not implemented here.
+  // This switch would eventually control which calendar component is rendered.
+  const renderCalendarView = () => {
+    switch (viewMode) {
+      case 'month':
+        return (
+          <Calendar
             mode="single"
             selected={selectedDate}
-            onSelect={setSelectedDate}
+            onSelect={handleDayClick}
             month={currentDisplayMonth}
             onMonthChange={setCurrentDisplayMonth}
-            className="w-full flex-grow flex flex-col" // Calendar takes full width and grows
+            className="w-full flex-grow flex flex-col"
             formatters={{ formatWeekdayName }}
             modifiers={{ today: todayModifier }}
             showOutsideDays={true}
+            weekStartsOn={1} // Monday
             classNames={{
               root: "flex flex-col flex-grow w-full", 
               months: "flex flex-col sm:flex-row flex-grow",
               month: "space-y-0 flex flex-col flex-grow p-0", 
               
-              caption_layout: 'flex items-center justify-between py-2 px-1 md:px-2 relative border-b', // Already handled by custom Caption
+              caption_layout: 'flex items-center justify-between py-2 px-1 md:px-2 relative border-b',
               caption: "flex items-center gap-1", 
               caption_label: "text-lg font-semibold text-foreground text-center flex-grow justify-start",
 
-              nav_container: "flex items-center gap-1", // Handled in custom Caption
-              nav_button: cn( // Handled in custom Caption
+              nav_container: "flex items-center gap-1",
+              nav_button: cn(
                 buttonVariants({ variant: "ghost" }),
                 "h-8 w-8 p-0 hover:bg-accent/50"
               ),
-              nav_button_previous: "", // Handled in custom Caption
-              nav_button_next: "", // Handled in custom Caption
+              nav_button_previous: "", 
+              nav_button_next: "", 
 
               table: "w-full border-collapse mt-0 flex-grow grid grid-rows-[auto_repeat(6,minmax(0,1fr))] border-t border-l border-border", 
               head_row: "flex border-b border-border",
               head_cell: cn(
                 "text-muted-foreground font-normal text-[0.70rem] flex items-center justify-center uppercase pt-1 pb-1 w-[calc(100%/7)] h-10 border-r border-border",
-                "sm:text-xs" // Ensure small text for weekday headers
+                "sm:text-xs"
               ),
 
               row: "flex w-full border-b border-border last:border-b-0",
@@ -77,9 +130,9 @@ export default function CalendarPage() {
                 buttonVariants({ variant: "ghost" }),
                 "h-full w-full p-1 font-normal flex flex-col items-end justify-start focus:z-10 rounded-none text-left" 
               ),
-              day_selected: "", // Custom styling in DayContent for selection to match GCal
-              day_today: "", // Handled in DayContent for specific number styling
-              day_outside: "text-muted-foreground/70", // Base for outside days, specific styling in DayContent
+              day_selected: "", 
+              day_today: "", 
+              day_outside: "text-muted-foreground/70",
               day_disabled: "text-muted-foreground opacity-40 pointer-events-none",
               day_hidden: "invisible",
             }}
@@ -88,7 +141,7 @@ export default function CalendarPage() {
                 <div className="flex items-center justify-between py-2 px-2 md:px-4 border-b border-border h-14">
                   <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" onClick={handleTodayClick} className="text-sm h-9">
-                      {t('today') || 'Heute'} 
+                      {t('today')} 
                     </Button>
                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setCurrentDisplayMonth(prev => new Date(prev.getFullYear(), prev.getMonth() -1, 1))}>
                         <ChevronLeft className="h-5 w-5" />
@@ -106,19 +159,19 @@ export default function CalendarPage() {
                     <Button variant="ghost" size="icon" className="h-9 w-9"><Search className="h-5 w-5"/></Button>
                     <Button variant="ghost" size="icon" className="h-9 w-9"><HelpCircle className="h-5 w-5"/></Button>
                     <Button variant="ghost" size="icon" className="h-9 w-9"><Settings className="h-5 w-5"/></Button>
-                    <Select defaultValue="month">
+                    <Select value={viewMode} onValueChange={(value) => setViewMode(value as 'month' | 'week' | 'day')}>
                       <SelectTrigger className="w-[110px] h-9 text-sm focus:ring-0">
-                        <SelectValue placeholder={t('view') || "View"} />
+                        <SelectValue placeholder={t('view')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="day">{t('dayView') || 'Day'}</SelectItem>
-                        <SelectItem value="week">{t('weekView') || 'Week'}</SelectItem>
-                        <SelectItem value="month">{t('monthView') || 'Month'}</SelectItem>
-                        <SelectItem value="year">{t('yearView') || 'Year'}</SelectItem>
+                        <SelectItem value="day">{t('dayView')}</SelectItem>
+                        <SelectItem value="week">{t('weekView')}</SelectItem>
+                        <SelectItem value="month">{t('monthView')}</SelectItem>
+                        <SelectItem value="year">{t('yearView')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <div className="flex items-center border border-border rounded-md ml-1">
-                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-r-none border-r border-border data-[active=true]:bg-accent data-[active=true]:text-accent-foreground" data-active={true}><CalendarIconLucide className="h-5 w-5"/></Button>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-r-none border-r border-border data-[active=true]:bg-accent data-[active=true]:text-accent-foreground" data-active={viewMode === 'month'}><CalendarIconLucide className="h-5 w-5"/></Button>
                         <Button variant="ghost" size="icon" className="h-9 w-9 rounded-l-none data-[active=true]:bg-accent data-[active=true]:text-accent-foreground"><CheckSquare className="h-5 w-5"/></Button>
                     </div>
                     <Button variant="ghost" size="icon" className="h-9 w-9 ml-1"><GripVertical className="h-5 w-5"/></Button>
@@ -132,32 +185,56 @@ export default function CalendarPage() {
 
                 let dayNumberStyle = "text-xs w-6 h-6 flex items-center justify-center rounded-full relative z-10"; 
                 let dayText: React.ReactNode = dayDate.getDate();
+                
+                const moonEmoji = getMockMoonPhaseEmoji(dayDate);
 
                 if (isTodayDate) {
                   dayNumberStyle = cn(dayNumberStyle, "bg-primary text-primary-foreground font-semibold");
                 } else if (isSelectedDate && isCurrentMonth) {
-                  dayNumberStyle = cn(dayNumberStyle, "bg-accent/50 ring-1 ring-primary text-primary"); // GCal selection is often a ring or light bg
+                  dayNumberStyle = cn(dayNumberStyle, "bg-accent/30 ring-1 ring-primary text-primary");
                 } else if (!isCurrentMonth) {
                     dayNumberStyle = cn(dayNumberStyle, "text-muted-foreground");
                      if (dayDate.getDate() === 1) {
                         dayText = dayDate.toLocaleDateString(userPreferences.language, { day: 'numeric', month: 'short' });
                     }
                 } else {
-                   dayNumberStyle = cn(dayNumberStyle, "text-foreground"); // Default for current month days
+                   dayNumberStyle = cn(dayNumberStyle, "text-foreground");
                 }
-
 
                 return (
                   <div className={cn(
-                    "w-full h-full flex flex-col items-end p-1 pt-0", // Ensure cell content takes full height
+                    "w-full h-full flex flex-col items-end p-1 pt-0 text-right", 
                   )}>
                     <span className={cn(dayNumberStyle, "mt-1 mr-1")}>{dayText}</span>
-                    {/* Placeholder for event indicators if needed later, GCal style */}
+                    <span className="text-3xl mt-auto mb-1 mr-1">{moonEmoji}</span>
                   </div>
                 );
               }
             }}
           />
+        );
+      case 'week':
+        return <div className="flex-grow flex items-center justify-center text-muted-foreground"><p>{t('weekView')} (Not Implemented)</p></div>;
+      case 'day':
+        return <div className="flex-grow flex items-center justify-center text-muted-foreground"><p>{t('dayView')} (Not Implemented)</p></div>;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="flex-grow flex flex-col h-full w-full">
+      {renderCalendarView()}
+      {dateForEntry && (
+        <DayEntryDialog
+          isOpen={isEntryDialogOpen}
+          onClose={handleCloseDialog}
+          selectedDate={dateForEntry}
+          onSaveEntry={handleSaveEntry}
+          language={userPreferences.language}
+          t={t}
+        />
+      )}
     </div>
   );
 }

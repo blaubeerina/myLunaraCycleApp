@@ -20,6 +20,12 @@ const translations: Translations = {
   mood: { en: 'Mood', de: 'Stimmung' },
   reminders: { en: 'Reminders', de: 'Erinnerungen' },
   settings: { en: 'Settings', de: 'Einstellungen' },
+  today: { en: 'Today', de: 'Heute' },
+  view: { en: 'View', de: 'Ansicht' },
+  dayView: { en: 'Day', de: 'Tag' },
+  weekView: { en: 'Week', de: 'Woche' },
+  monthView: { en: 'Month', de: 'Monat' },
+  yearView: { en: 'Year', de: 'Jahr' },
   // Modes
   cycleMode: { en: 'Cycle Mode', de: 'Zyklusmodus' },
   pregnancyMode: { en: 'Pregnancy Mode', de: 'Schwangerschaftsmodus' },
@@ -38,12 +44,34 @@ const translations: Translations = {
   generateAffirmation: { en: 'Generate Affirmation', de: 'Affirmation generieren' },
   affirmationForToday: { en: "Today's Affirmation", de: 'Heutige Affirmation' },
   saveEntry: { en: "Save Entry", de: "Eintrag speichern"},
+  generating: { en: 'Generating...', de: 'Generiere...' },
+  sampleAffirmation: { en: 'This is a placeholder for your daily affirmation. Go to Journal to generate one!', de: 'Dies ist ein Platzhalter für deine tägliche Affirmation. Gehe zum Tagebuch, um eine zu generieren!' },
+  generateNewAffirmation: { en: 'Generate New Affirmation', de: 'Neue Affirmation generieren' },
+  openJournal: { en: 'Open Journal', de: 'Tagebuch öffnen' },
+  viewCalendar: { en: 'View Calendar', de: 'Kalender ansehen' },
+  // Day Entry Dialog
+  dayEntry: { en: 'Log Entry for {date}', de: 'Eintrag für {date}' },
+  dayEntryMood: { en: 'Mood', de: 'Stimmung' },
+  dayEntryBleeding: { en: 'Bleeding', de: 'Blutung' },
+  dayEntryEnergyLevel: { en: 'Energy Level', de: 'Energielevel' },
+  dayEntryNotes: { en: 'Notes', de: 'Notizen' },
+  dayEntrySave: { en: 'Save Entry', de: 'Eintrag Speichern' },
+  dayEntryClose: { en: 'Close', de: 'Schließen' },
+  dayEntryEnergyLow: { en: 'Low', de: 'Niedrig' },
+  dayEntryEnergyMedium: { en: 'Medium', de: 'Mittel' },
+  dayEntryEnergyHigh: { en: 'High', de: 'Hoch' },
   // Add more translations here
 };
 
 export const getTranslations = (lang: Language) => {
-  const t = (key: string): string => {
-    return translations[key]?.[lang] || key;
+  const t = (key: string, params?: Record<string, string | number>): string => {
+    let translation = translations[key]?.[lang] || key;
+    if (params) {
+      Object.keys(params).forEach((paramKey) => {
+        translation = translation.replace(`{${paramKey}}`, String(params[paramKey]));
+      });
+    }
+    return translation;
   };
   return { t };
 };
