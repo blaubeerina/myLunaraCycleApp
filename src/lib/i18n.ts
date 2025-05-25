@@ -51,11 +51,10 @@ const translations: Translations = {
   openJournal: { en: 'Open Journal', de: 'Tagebuch öffnen' },
   viewCalendar: { en: 'View Calendar', de: 'Kalender ansehen' },
   // Day Entry Dialog
-  dayEntryTitle: { en: 'Log Entry for {date}', de: 'Eintrag für {date}' }, // Renamed from dayEntry for clarity
+  dayEntryTitle: { en: 'Log Entry for {date}', de: 'Eintrag für {date}' },
   dayEntryMood: { en: 'Mood', de: 'Stimmung' },
   dayEntryBleeding: { en: 'Bleeding', de: 'Blutung' },
   dayEntryBleedingStrength: { en: 'Bleeding Strength', de: 'Stärke der Blutung' },
-  dayEntryBleedingStrengthNone: { en: 'None', de: 'Keine' },
   dayEntryBleedingStrengthLight: { en: 'Light', de: 'Leicht' },
   dayEntryBleedingStrengthMedium: { en: 'Medium', de: 'Mittel' },
   dayEntryBleedingStrengthHeavy: { en: 'Heavy', de: 'Stark' },
@@ -73,7 +72,13 @@ const translations: Translations = {
   cyclePhaseFollicular: { en: 'Follicular Phase', de: 'Follikelphase' },
   cyclePhaseOvulation: { en: 'Ovulation', de: 'Eisprung' },
   cyclePhaseLuteal: { en: 'Luteal Phase', de: 'Lutealphase' },
+  cyclePhasePremenstrual: { en: 'Premenstrual Phase', de: 'Prämenstruelle Phase' },
   cyclePhaseUnknown: { en: 'Unknown Cycle Phase', de: 'Unbekannte Zyklusphase' },
+  fertileWindowLabel: { en: 'Fertile Window', de: 'Fruchtbares Fenster' },
+  ovulationDayLabel: { en: 'Ovulation Day', de: 'Eisprungtag' },
+  currentCyclePhaseLabel: { en: 'Current Cycle Phase', de: 'Aktuelle Zyklusphase' },
+  nextPeriodPredictionLabel: { en: 'Next Estimated Period', de: 'Nächste geschätzte Periode' },
+
 
   // Dashboard Impulse
   dailyImpulseTitle: { en: 'Your Daily Impulse', de: 'Dein täglicher Impuls' },

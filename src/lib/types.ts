@@ -39,15 +39,29 @@ export interface MoonPhaseData {
   emoji: string;
 }
 
-// New types for Cycle Calculation and AI Impulse
-export type CyclePhase = 'Menstruation' | 'Follicular' | 'Ovulation' | 'Luteal' | 'Unknown';
+// Updated types for Cycle Calculation and AI Impulse
+export type CyclePhase = 'Menstruation' | 'Follicular' | 'Ovulation' | 'Luteal' | 'Premenstrual' | 'Unknown';
 
 export interface CycleInfo {
   phase: CyclePhase;
-  cycleDay: number; // Day in cycle, e.g., 1, 15, 28. 0 if unknown.
-  lastPeriodStartDate?: string; // YYYY-MM-DD
-  estimatedCycleLength: number; // e.g. 28
+  cycleDay: number;
+  lastPeriodStartDate?: string;
+  estimatedCycleLength: number;
+  // For more detailed phase display and logic
+  isFertile?: boolean; // Indicates if the day falls within the fertile window
+  isOvulationDay?: boolean; // Specifically marks the estimated ovulation day
+  nextPeriodStartDate?: string; // Predicted start of the next cycle
+
+  // Optional: Boundaries for internal logic or detailed display, if needed
+  menstrualPhaseEndDay?: number;
+  follicularPhaseEndDay?: number;
+  ovulationDayEstimated?: number; // The exact estimated day number for ovulation
+  fertileWindowStartDay?: number;
+  fertileWindowEndDay?: number;
+  lutealPhaseStartDay?: number;
+  premenstrualPhaseStartDay?: number;
 }
+
 
 export interface GeneratedImpulse {
   date: string; // YYYY-MM-DD of the entry it's for

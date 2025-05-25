@@ -1,116 +1,163 @@
 
 import type { DailyEntryData, CycleInfo, CyclePhase } from './types';
-import { differenceInDays, parseISO, format, addDays } from 'date-fns';
+import { differenceInDays, parseISO, format, addDays, startOfDay } from 'date-fns';
 
-const DEFAULT_CYCLE_LENGTH = 28;
-const MENSTRUATION_MAX_DAYS = 7; // Typical max, can be adjusted
-const FOLLICULAR_END_DAY = 13; // Approx end relative to period start
-const OVULATION_START_DAY = 14; // Approx start
-const OVULATION_END_DAY = 16; // Approx end
+const DEFAULT_AVERAGE_CYCLE_LENGTH = 28;
+const DEFAULT_MENSTRUATION_LENGTH = 5; // Typical, can be overridden by actual bleeding logs
+const OVULATION_DAY_IN_CYCLE = 14; // Relative to period start, for a typical 28-day cycle
+const FERTILE_WINDOW_BEFORE_OVULATION = 2; // Days before ovulation are fertile
+const FERTILE_WINDOW_AFTER_OVULATION = 2; // Days after ovulation are fertile (includes ovulation day)
+const LUTEAL_PHASE_LENGTH = 14; // Typically stable
+const PREMENSTRUAL_PHASE_DAYS_BEFORE_PERIOD = 5;
+
 
 /**
  * Finds the start date of the most recent period based on bleeding entries.
  * Iterates backwards from the most recent entry.
  */
-function findLastPeriodStartDate(entries: DailyEntryData[]): string | undefined {
+function findLastPeriodStartDate(entries: DailyEntryData[], forDate?: string): string | undefined {
   if (!entries || entries.length === 0) {
     return undefined;
   }
 
-  // Sort entries by date descending to process most recent first
-  const sortedEntries = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  // Consider entries up to and including forDate if provided, otherwise all entries
+  const relevantEntries = forDate 
+    ? entries.filter(e => parseISO(e.date) <= parseISO(forDate))
+    : entries;
 
-  let lastPeriodStart: string | undefined = undefined;
-  let currentBleedingSequenceStartDate: string | undefined = undefined;
+  if (relevantEntries.length === 0) return undefined;
 
-  for (let i = 0; i < sortedEntries.length; i++) {
-    const entry = sortedEntries[i];
+
+  const sortedEntries = [...relevantEntries].sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
+
+  let lastActualBleedingDay: DailyEntryData | undefined = undefined;
+
+  // Find the most recent actual bleeding day
+  for (const entry of sortedEntries) {
     if (entry.isBleeding) {
-      // If this is a bleeding day, it could be the start of the current sequence
-      currentBleedingSequenceStartDate = entry.date;
-      // If the previous day (if exists and is in map) was NOT bleeding, this is a new start
-      const prevDayDate = format(addDays(parseISO(entry.date), -1), 'yyyy-MM-dd');
-      const prevDayEntry = sortedEntries.find(e => e.date === prevDayDate);
-      if (!prevDayEntry || !prevDayEntry.isBleeding) {
-        // This is the start of a bleeding sequence.
-        // Since we iterate backwards, the first one we find is the most recent period start.
-        lastPeriodStart = entry.date;
-        break; 
-      }
+      lastActualBleedingDay = entry;
+      break;
+    }
+  }
+
+  if (!lastActualBleedingDay) return undefined; // No bleeding logged at all
+
+  // Now, from this lastActualBleedingDay, go backwards to find the first day of that bleeding sequence
+  let currentPeriodStartDate = lastActualBleedingDay.date;
+  let dayBefore = addDays(parseISO(currentPeriodStartDate), -1);
+
+  // Create a map for quick lookup of entries by date string
+  const entriesMap = new Map(entries.map(e => [e.date, e]));
+
+  while (true) {
+    const dayBeforeEntry = entriesMap.get(format(dayBefore, 'yyyy-MM-dd'));
+    if (dayBeforeEntry && dayBeforeEntry.isBleeding) {
+      currentPeriodStartDate = dayBeforeEntry.date;
+      dayBefore = addDays(parseISO(currentPeriodStartDate), -1);
     } else {
-      // If we encounter a non-bleeding day AND we were in a bleeding sequence,
-      // the 'currentBleedingSequenceStartDate' holds the start of the *previous* sequence.
-      // However, due to iterating backwards, the logic above should catch the latest start directly.
+      break; // Found the start of this bleeding sequence
+    }
+  }
+  return currentPeriodStartDate;
+}
+
+
+export function calculateCycleInfo(
+  currentDateStr: string,
+  allEntries: DailyEntryData[],
+  averageCycleLength: number = DEFAULT_AVERAGE_CYCLE_LENGTH
+): CycleInfo {
+  const currentDate = startOfDay(parseISO(currentDateStr));
+  const lastPeriodStartDateStr = findLastPeriodStartDate(allEntries, currentDateStr);
+
+  if (!lastPeriodStartDateStr) {
+    return {
+      phase: 'Unknown',
+      cycleDay: 0,
+      estimatedCycleLength: averageCycleLength,
+    };
+  }
+
+  const lastPeriodStartDate = startOfDay(parseISO(lastPeriodStartDateStr));
+  const cycleDay = differenceInDays(currentDate, lastPeriodStartDate) + 1;
+
+  if (cycleDay < 1) { // Should not happen if findLastPeriodStartDate is correct for currentDate
+    return { phase: 'Unknown', cycleDay: 0, estimatedCycleLength: averageCycleLength, lastPeriodStartDate: lastPeriodStartDateStr };
+  }
+  
+  const currentEntry = allEntries.find(e => e.date === currentDateStr);
+
+  // Phase boundaries (relative to cycleDay)
+  // These are simplified; a real app might adjust based on average luteal length, etc.
+  const menstrualPhaseEndDay = DEFAULT_MENSTRUATION_LENGTH; // Can be shorter if bleeding stops earlier
+
+  // Ovulation day is tricky. For a standard 28-day cycle, it's day 14.
+  // If averageCycleLength differs, ovulation is typically LUTEAL_PHASE_LENGTH days before next period.
+  const ovulationDayEstimated = averageCycleLength - LUTEAL_PHASE_LENGTH;
+
+  const fertileWindowStartDay = Math.max(1, ovulationDayEstimated - FERTILE_WINDOW_BEFORE_OVULATION);
+  const fertileWindowEndDay = ovulationDayEstimated + FERTILE_WINDOW_AFTER_OVULATION;
+
+  const follicularPhaseEndDay = ovulationDayEstimated - 1;
+  const lutealPhaseStartDay = ovulationDayEstimated + 1;
+  const lutealPhaseEndDay = averageCycleLength; // End of cycle
+  
+  const premenstrualPhaseStartDay = Math.max(lutealPhaseStartDay, lutealPhaseEndDay - PREMENSTRUAL_PHASE_DAYS_BEFORE_PERIOD + 1);
+
+  let phase: CyclePhase = 'Unknown';
+  let isFertile = false;
+  let isOvulationDay = false;
+
+  // Determine Phase
+  if (currentEntry?.isBleeding && cycleDay <= menstrualPhaseEndDay + 2) { // Allow slight overrun if still bleeding
+    phase = 'Menstruation';
+  } else if (cycleDay <= follicularPhaseEndDay) {
+    phase = 'Follicular';
+  } else if (cycleDay >= ovulationDayEstimated && cycleDay <= ovulationDayEstimated) { // Ovulation Day
+    phase = 'Ovulation';
+    isOvulationDay = true;
+  } else if (cycleDay >= lutealPhaseStartDay && cycleDay <= lutealPhaseEndDay) {
+    phase = 'Luteal';
+    if (cycleDay >= premenstrualPhaseStartDay) {
+      phase = 'Premenstrual';
+    }
+  }
+
+  // Check for fertile window, ovulation can override general follicular/luteal if logic is simplified
+  if (cycleDay >= fertileWindowStartDay && cycleDay <= fertileWindowEndDay) {
+    isFertile = true;
+    if (cycleDay === ovulationDayEstimated) {
+        phase = 'Ovulation'; // Ensure Ovulation phase takes precedence if it's the day
+        isOvulationDay = true;
+    } else if (phase !== 'Menstruation' && phase !== 'Ovulation') { // Don't override Menstruation
+        // If fertile but not ovulation day itself, and not menstruation
+        // we might not assign a specific "Fertile" phase unless desired.
+        // 'Follicular' or 'Luteal' would still be the primary phase name.
     }
   }
   
-  // If we found a bleeding sequence, but it went to the oldest entry,
-  // currentBleedingSequenceStartDate would be the start of that one.
-  if (!lastPeriodStart && currentBleedingSequenceStartDate) {
-      lastPeriodStart = currentBleedingSequenceStartDate;
-  }
-
-  return lastPeriodStart;
-}
-
-export function calculateCycleInfo(currentDateStr: string, allEntries: DailyEntryData[]): CycleInfo {
-  const lastPeriodStartDateStr = findLastPeriodStartDate(allEntries);
-
-  if (!lastPeriodStartDateStr) {
-    return { phase: 'Unknown', cycleDay: 0, estimatedCycleLength: DEFAULT_CYCLE_LENGTH };
-  }
-
-  const lastPeriodStartDate = parseISO(lastPeriodStartDateStr);
-  const currentDate = parseISO(currentDateStr);
-  
-  let cycleDay = differenceInDays(currentDate, lastPeriodStartDate) + 1;
-
-  if (cycleDay < 1) { 
-    // This can happen if currentDate is before lastPeriodStartDate (e.g. looking at past entries)
-    // Or if data is inconsistent. For simplicity, treat as unknown or adjust logic.
-    // For now, let's assume we're calculating for a date on or after the period start.
-    // If we are calculating for a date *within* the bleeding entries that *is* the start, day is 1.
-     cycleDay = 1; // Or handle as 'Unknown' if currentDate is truly before period start.
-  }
-
-
-  let phase: CyclePhase = 'Unknown';
-  const currentEntry = allEntries.find(e => e.date === currentDateStr);
-
-  // 1. Menstruation Phase
-  if (currentEntry?.isBleeding && cycleDay <= MENSTRUATION_MAX_DAYS) {
-    phase = 'Menstruation';
-  }
-  // 2. Follicular Phase (can overlap with end of menstruation if menstruation is short)
-  // Typically up to ovulation.
-  else if (cycleDay <= FOLLICULAR_END_DAY) {
-    phase = 'Follicular';
-  }
-  // 3. Ovulation Phase (approximate)
-  else if (cycleDay >= OVULATION_START_DAY && cycleDay <= OVULATION_END_DAY) {
-    phase = 'Ovulation';
-  }
-  // 4. Luteal Phase
-  else if (cycleDay > OVULATION_END_DAY && cycleDay <= DEFAULT_CYCLE_LENGTH) {
-    // After ovulation, before next period (assuming default cycle length)
-    phase = 'Luteal';
-  }
-  // If cycleDay is beyond the default length, it might be late Luteal or new cycle hasn't been logged.
-  else if (cycleDay > DEFAULT_CYCLE_LENGTH) {
-     phase = 'Luteal'; // Could also be 'Unknown' or 'Awaiting Next Cycle'
-  }
-
-
-  // If still bleeding after typical menstruation days but within follicular, it's still menstruation.
-  if (phase === 'Follicular' && currentEntry?.isBleeding) {
+  // Refine menstruation if still bleeding after typical window but before ovulation estimation
+  if (currentEntry?.isBleeding && phase !== 'Menstruation' && cycleDay <= follicularPhaseEndDay) {
     phase = 'Menstruation';
   }
 
+
+  const nextPeriodStartDate = format(addDays(lastPeriodStartDate, averageCycleLength), 'yyyy-MM-dd');
 
   return {
     phase,
     cycleDay,
     lastPeriodStartDate: lastPeriodStartDateStr,
-    estimatedCycleLength: DEFAULT_CYCLE_LENGTH,
+    estimatedCycleLength: averageCycleLength,
+    isFertile,
+    isOvulationDay,
+    nextPeriodStartDate,
+    menstrualPhaseEndDay: currentEntry?.isBleeding ? cycleDay : menstrualPhaseEndDay, // More accurate if bleeding
+    follicularPhaseEndDay,
+    ovulationDayEstimated,
+    fertileWindowStartDay,
+    fertileWindowEndDay,
+    lutealPhaseStartDay,
+    premenstrualPhaseStartDay,
   };
 }
