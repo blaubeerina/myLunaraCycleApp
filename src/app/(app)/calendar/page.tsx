@@ -7,13 +7,13 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import type { Locale } from 'date-fns';
-import { format, addMonths, subMonths, getYear, getMonth, parseISO, startOfDay, isEqual } from 'date-fns';
+import { format, addMonths, subMonths, getYear, getMonth, parseISO, startOfDay, isEqual, addDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { Modifier } from 'react-day-picker';
 import { ChevronLeft, ChevronRight, Search, HelpCircle, Settings, GripVertical, CalendarDays as CalendarIconLucide, CheckSquare, Loader2, Droplet, Star } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DayEntryDialog } from '@/components/calendar/DayEntryDialog';
-import type { DailyEntryData, MoonPhaseData, GeneratedImpulse, CycleInfo } from '@/lib/types';
+import type { DailyEntryData, MoonPhaseData, GeneratedImpulse, CycleInfo, CyclePhase } from '@/lib/types';
 import { calculateCycleInfo } from '@/lib/cycle-utils';
 import { generateCycleImpulse, type GenerateCycleImpulseInput } from '@/ai/flows/generate-cycle-impulse';
 import { toast } from '@/hooks/use-toast';
@@ -188,7 +188,7 @@ export default function CalendarPage() {
           const newImpulse: GeneratedImpulse = {
             date: entryData.date,
             text: impulseResult.impulseText,
-            cyclePhase: currentCycleInfo.phase,
+            cyclePhase: currentCycleInfo.phase as CyclePhase, // Cast if necessary, ensure type compatibility
             moonPhase: moonPhase,
           };
           localStorage.setItem('myLunaraCycle-latestImpulse', JSON.stringify(newImpulse));
@@ -378,3 +378,4 @@ export default function CalendarPage() {
     </div>
   );
 }
+
