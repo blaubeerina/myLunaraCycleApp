@@ -10,77 +10,101 @@ body {
 @layer base {
   :root,
   html[data-theme="lunar-skin"] { /* Default Theme: Lunar Skin */
-    --background: 27 33% 93%;         /* #F1E6D9 moon-milk */
-    --foreground: 27 13% 31%;         /* #5A4D45 Darker Ashwood */
-    --card: 30 43% 88%;               /* #EBD5C2 almond-skin */
-    --card-foreground: 27 13% 31%;   /* #5A4D45 */
-    --popover: 30 50% 95%;            /* #F5EEE5 Lighter moon-milk */
-    --popover-foreground: 27 13% 31%;/* #5A4D45 */
-    --primary: 12 50% 73%;            /* #DBA89B blush-clay */
-    --primary-foreground: 27 33% 93%; /* #F1E6D9 moon-milk */
-    --secondary: 220 15% 83%;          /* #D4D2CF wolf-grey */
-    --secondary-foreground: 27 13% 31%; /* #5A4D45 */
-    --muted: 210 20% 89%;              /* #E0D9D2 lighter wolf-grey */
-    --muted-foreground: 27 13% 50%;  /* #8E8076 Lighter Ashwood */
-    --accent: 16 71% 88%;             /* #F5D2C8 pale-blood-rose */
-    --accent-foreground: 27 13% 31%;  /* #5A4D45 */
-    --destructive: 12 39% 65%;         /* #C98073 Darker blush-clay */
-    --destructive-foreground: 27 33% 93%;/* #F1E6D9 */
-    --border: 220 15% 83%;             /* #D4D2CF wolf-grey */
-    --input: 30 43% 88%;              /* #EBD5C2 almond-skin */
-    --ring: 12 50% 73%;               /* #DBA89B blush-clay */
-    --radius: 0.5rem;
-    --lunara-ovulation-glow: 16 71% 88%; /* #F5D2C8 pale-blood-rose */
-    --lunara-pregnancy-growth: 12 50% 73%; /* #DBA89B for other cycle/growth highlights */
-    --chart-1: 12 50% 73%;
-    --chart-2: 16 71% 88%;
-    --chart-3: 30 19% 69%;
-    --chart-4: 220 15% 83%;
-    --chart-5: 30 43% 88%;
-    --sidebar-background: 30 50% 96%;
-    --sidebar-foreground: 27 13% 31%;
-    --sidebar-primary: 12 50% 73%;
-    --sidebar-primary-foreground: 27 33% 93%;
-    --sidebar-accent: 16 71% 88%;
-    --sidebar-accent-foreground: 27 13% 31%;
-    --sidebar-border: 220 15% 83%;
-    --sidebar-ring: 12 50% 73%;
+    --background: 0 0% 95%; /* Cloud Whisper #F2F2F2 */
+    --foreground: 225 30% 25%; /* Moonlit Indigo #2E3A59 */
+    
+    --card: 0 0% 100%; /* Dream Mist #FFFFFF */
+    --card-foreground: 225 30% 25%; /* Moonlit Indigo */
+    
+    --popover: 270 25% 96%; /* Lavender Fog #F3F0F7 */
+    --popover-foreground: 225 30% 25%; /* Moonlit Indigo */
+    
+    --primary: 20 100% 85%; /* First Light Peach #FFD9C7 */
+    --primary-foreground: 225 30% 25%; /* Moonlit Indigo */
+    
+    --secondary: 30 100% 90%; /* Sun Haze Apricot (for hovers, accents) #FFE6D6 */
+    --secondary-foreground: 225 30% 25%; /* Moonlit Indigo */
+    
+    --muted: 270 25% 92%; /* Slightly darker Lavender Fog for muted */
+    --muted-foreground: 225 30% 45%; /* Velvet Sky #5C6784 - for muted text */
+    
+    --accent: 30 100% 88%; /* Sun Haze Apricot (main accent) */
+    --accent-foreground: 225 30% 25%; /* Moonlit Indigo */
+    
+    --destructive: 0 70% 70%; /* A soft rose for destructive */
+    --destructive-foreground: 0 0% 100%; /* White */
+    
+    --border: 270 20% 88%; /* Light border based on Lavender Fog */
+    --input: 0 0% 98%; /* Very light input background */
+    --ring: 20 100% 85%; /* First Light Peach */
+    
+    --chart-1: 20 100% 85%; /* First Light Peach */
+    --chart-2: 30 100% 90%; /* Sun Haze Apricot */
+    --chart-3: 270 50% 80%; /* Horizon Lilac (Luteal) #C3B4D9 */
+    --chart-4: 0 0% 100%; /* Dream Mist (Ovulation) - use white as base */
+    --chart-5: 225 30% 70%; /* Lighter Moonlit Indigo */
+
+    --sidebar-background: 270 25% 97%; /* Very light lavender for sidebar */
+    --sidebar-foreground: 225 30% 25%;
+    --sidebar-primary: 20 100% 85%;
+    --sidebar-primary-foreground: 225 30% 25%;
+    --sidebar-accent: 30 100% 88%;
+    --sidebar-accent-foreground: 225 30% 25%;
+    --sidebar-border: 270 20% 88%;
+    --sidebar-ring: 20 100% 85%;
+
+    --lunara-ovulation-glow: 0 0% 100%; /* Dream Mist (as HSL) - was #FFF7D6 (Hellgelb) */
+    --lunara-pregnancy-growth: 120 60% 85%; /* Light Green based on #D5F8D5 */
+    --lunara-luteal-phase: 270 50% 80%; /* Horizon Lilac */
   }
 
   html[data-theme="midnight-ritual"] {
-    --background: 240 67% 4%;         /* #0C0C0C obsidian-black */
-    --foreground: 0 0% 77%;         /* #C5C5C5 silken-silver */
-    --card: 227 60% 9%;               /* #121C3D nocturne-blue */
-    --card-foreground: 0 0% 77%;   /* #C5C5C5 */
-    --popover: 225 40% 19%;            /* #1F294A slightly lighter nocturne-blue */
-    --popover-foreground: 0 0% 77%;/* #C5C5C5 */
-    --primary: 321 45% 21%;            /* #4B1E3E gothic-plum */
-    --primary-foreground: 0 0% 77%; /* #C5C5C5 */
-    --secondary: 0 0% 24%;          /* #3E3E3E smoke-grey */
-    --secondary-foreground: 0 0% 77%; /* #C5C5C5 */
-    --muted: 0 0% 19%;              /* #303030 darker smoke-grey */
-    --muted-foreground: 0 0% 63%;  /* #A0A0A0 */
-    --accent: 353 75% 24%;             /* #6B0F1A blood-moon-red */
-    --accent-foreground: 0 0% 77%;  /* #C5C5C5 */
-    --destructive: 353 76% 30%;         /* #8A0F2C more intense blood-moon-red */
-    --destructive-foreground: 0 0% 77%;/* #C5C5C5 */
-    --border: 0 0% 18%;             /* #2D2D2D subtle border */
-    --input: 227 60% 9%;              /* #121C3D nocturne-blue */
-    --ring: 353 75% 24%;               /* #6B0F1A blood-moon-red */
-    --lunara-ovulation-glow: 0 0% 77%; /* #C5C5C5 silken-silver */
-    --chart-1: 353 75% 24%;
-    --chart-2: 321 45% 21%;
-    --chart-3: 0 0% 77%;
-    --chart-4: 227 60% 9%;
-    --chart-5: 0 0% 24%;
-    --sidebar-background: 0 0% 4%;
-    --sidebar-foreground: 0 0% 77%;
-    --sidebar-primary: 321 45% 21%;
-    --sidebar-primary-foreground: 0 0% 77%;
-    --sidebar-accent: 353 75% 24%;
-    --sidebar-accent-foreground: 0 0% 77%;
-    --sidebar-border: 0 0% 18%;
-    --sidebar-ring: 353 75% 24%;
+    --background: 227 58% 8%; /* Moonshadow Blue #0B1C3A */
+    --foreground: 210 20% 80%; /* Lunar Silver #C7CCD1 */
+
+    --card: 266 96% 15%; /* Eclipse Violet #4B014E - for card backgrounds */
+    --card-foreground: 210 20% 80%; /* Lunar Silver */
+
+    --popover: 266 96% 20%; /* Lighter Eclipse Violet for popovers */
+    --popover-foreground: 210 20% 80%;
+
+    --primary: 42 59% 64%; /* Golden Smoke #D1B679 - for buttons, primary actions */
+    --primary-foreground: 227 58% 8%; /* Moonshadow Blue - text on golden buttons */
+
+    --secondary: 210 20% 80%; /* Lunar Silver - for secondary actions/text buttons */
+    --secondary-foreground: 227 58% 8%; /* Moonshadow Blue - text on silver buttons */
+    
+    --muted: 276 25% 67%; /* Ashen Lilac #A89BAE - for muted backgrounds, borders */
+    --muted-foreground: 320 25% 73%; /* Mystic Rose #BFA3B8 - for muted text */
+
+    --accent: 42 59% 64%; /* Golden Smoke - for accents like links, focus rings */
+    --accent-foreground: 227 58% 8%;
+
+    --destructive: 330 49% 29%; /* Velvet Plum #5D3754 - for destructive states */
+    --destructive-foreground: 42 59% 70%; /* Lighter Golden Smoke for text on destructive */
+
+    --border: 276 25% 60%; /* Darker Ashen Lilac */
+    --input: 276 25% 67%; /* Ashen Lilac */
+    --ring: 42 59% 64%; /* Golden Smoke */
+
+    --chart-1: 42 59% 64%; /* Golden Smoke */
+    --chart-2: 266 96% 25%; /* Eclipse Violet */
+    --chart-3: 330 49% 29%; /* Velvet Plum */
+    --chart-4: 210 20% 70%; /* Lunar Silver (lighter) */
+    --chart-5: 320 25% 73%; /* Mystic Rose */
+
+    --sidebar-background: 227 58% 6%; /* Darker Moonshadow */
+    --sidebar-foreground: 210 20% 80%;
+    --sidebar-primary: 42 59% 64%;
+    --sidebar-primary-foreground: 227 58% 8%;
+    --sidebar-accent: 42 59% 70%;
+    --sidebar-accent-foreground: 227 58% 8%;
+    --sidebar-border: 276 25% 55%;
+    --sidebar-ring: 42 59% 64%;
+    
+    /* Specific phase colors for Dark Feminine Energy theme */
+    --lunara-ovulation-glow: 320 40% 60%; /* Shadow Amethyst (using Mystic Rose as base idea) #997F95 */
+    --lunara-luteal-phase: 330 30% 50%; /* Rose Smoke (using Velvet Plum as base idea) #A67C9C */
   }
 
   html[data-theme="fairy-fields"] {
@@ -133,4 +157,39 @@ body {
   main {
     flex-grow: 1;
   }
+}
+
+/* Styles for react-masonry-css */
+.my-masonry-grid {
+  /* display: -webkit-box; */ /* Not needed if using flex */
+  /* display: -ms-flexbox; */ /* Not needed if using flex */
+  /* display: flex; */ /* Already in PinterestJournalGrid.tsx className */
+  /* margin-left: -24px; */ /* Adjust based on column padding, handled in PinterestJournalGrid.tsx */
+  /* width: auto; */
+}
+.my-masonry-grid_column {
+  /* padding-left: 24px; */ /* gutter size, handled in PinterestJournalGrid.tsx */
+  /* background-clip: padding-box; */ /* Already in PinterestJournalGrid.tsx className */
+}
+
+/* Style for individual masonry items, if needed globally, but better per component */
+.my-masonry-grid_column > div { /* Example: if cards are direct children */
+  /* margin-bottom: 24px; */ /* Handled by mb-6 on card motion.div */
+}
+
+/* Wavy paper edges for Pinterest Journal Cards */
+.journal-card {
+  /* This SVG creates a subtle wavy bottom edge.
+     It's a white wave. For dark themes, you might need to adjust fill or use a different SVG.
+     The current prompt uses a Vintage/Cream theme, so white might be okay, or #F5F5DC.
+     The example in PinterestJournalCard.tsx uses an inline SVG data URI with #F5F5DC.
+     So this global class might not be strictly necessary if handled inline, but good for reference.
+  */
+  /* 
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='10' viewBox='0 0 100 10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 5 Q 12.5 0, 25 5 T 50 5 T 75 5 T 100 5 L100 10 L0 10 Z' fill='white'/%3E%3C/svg%3E");
+  background-size: 50px 10px;
+  background-repeat: repeat-x;
+  background-position: bottom;
+  padding-bottom: 10px; // Ensure content doesn't overlap the wave if wave is part of background
+  */
 }

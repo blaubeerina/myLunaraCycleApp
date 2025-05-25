@@ -58,7 +58,7 @@ export interface GeneratedImpulse {
   moonPhase: string;
 }
 
-// New types for Editable Journal
+// Old JournalEntry (List-based)
 export type FirebaseTimestamp = Date; // Mocking Firestore Timestamp with JS Date
 
 export const journalEntryMoods = ['happy', 'sad', 'energetic', 'tired'] as const;
@@ -73,6 +73,22 @@ export interface JournalEntry {
   lastUpdated: FirebaseTimestamp;
   userId?: string; // Optional: for mock ownership
 }
+
+
+// Pinterest-Style Journal Types
+export type PinterestJournalMoodType = 'happy' | 'sad' | 'calm' | 'energetic' | 'neutral'; // Added neutral as a sensible default
+
+export interface PinterestJournalEntry {
+  id: string;
+  date: string; // ISO string
+  content: string;
+  mood: PinterestJournalMoodType;
+  tags?: string[];
+  rotation: number; // -3 to 3
+  pinned?: boolean;
+  userId?: string; // For mock ownership/Firestore rules
+}
+
 
 // Theme switcher types
 export interface ThemeColorPalette {
