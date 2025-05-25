@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useAppContext } from '@/contexts/AppContext';
@@ -7,9 +8,11 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import type { Language, AppMode } from '@/lib/types';
 import { useAuth } from '@/components/auth/AuthContext';
+import { themes } from '@/lib/themes'; // Import theme definitions
+import { CheckCircle } from 'lucide-react';
 
 export default function SettingsPage() {
-  const { t, userPreferences, setUserPreferences } = useAppContext();
+  const { t, userPreferences, setUserPreferences, activeTheme, setActiveTheme } = useAppContext();
   const { user, logout } = useAuth();
 
   const handleLanguageChange = (lang: Language) => {
@@ -18,6 +21,10 @@ export default function SettingsPage() {
 
   const handleModeChange = (mode: AppMode) => {
     setUserPreferences(prev => ({ ...prev, appMode: mode }));
+  };
+
+  const handleThemeChange = (themeId: string) => {
+    setActiveTheme(themeId);
   };
 
   return (
@@ -69,6 +76,40 @@ export default function SettingsPage() {
               </div>
             </RadioGroup>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Theme Selection</CardTitle>
+          <CardDescription>Choose your preferred color theme for the app.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {themes.map((theme) => (
+            <Button
+              key={theme.id}
+              variant={activeTheme === theme.id ? "secondary" : "outline"}
+              className="w-full justify-start h-auto py-3 text-left"
+              onClick={() => handleThemeChange(theme.id)}
+            >
+              <div className="flex items-center w-full">
+                <div className="flex-grow">
+                  <p className="font-semibold">{theme.name}</p>
+                  <div className="flex space-x-1 mt-1.5">
+                    {theme.previewColors.map((color, index) => (
+                      <div
+                        key={index}
+                        className="h-5 w-5 rounded-sm border border-border"
+                        style={{ backgroundColor: color }}
+                        aria-label={`${theme.name} color swatch ${index + 1}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+                {activeTheme === theme.id && <CheckCircle className="h-5 w-5 text-primary ml-2 shrink-0" />}
+              </div>
+            </Button>
+          ))}
         </CardContent>
       </Card>
 

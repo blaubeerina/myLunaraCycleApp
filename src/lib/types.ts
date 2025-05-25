@@ -5,15 +5,8 @@ export type Language = 'en' | 'de';
 export interface UserPreferences {
   language: Language;
   appMode: AppMode;
+  activeTheme: string; // Theme ID
 }
-
-// export interface JournalEntry { // Old journal entry, can be removed or renamed if not used elsewhere
-//   id: string;
-//   date: string; // ISO Date string YYYY-MM-DD
-//   mood: string; // emoji or string identifier
-//   text: string;
-//   createdAt: number; // timestamp
-// }
 
 export interface Reminder {
   id: string;
@@ -79,4 +72,59 @@ export interface JournalEntry {
   symptoms: string[]; // Array of symptom strings
   lastUpdated: FirebaseTimestamp;
   userId?: string; // Optional: for mock ownership
+}
+
+// Theme switcher types
+export interface ThemeColorPalette {
+  background: string;        // Hex
+  primary: string;           // Hex
+  accentPrimary: string;     // Hex
+  accentSecondary: string;   // Hex
+  textPrimary: string;       // Hex
+  textSecondary?: string;      // Hex (Optional for simpler palettes)
+  inputField?: string;         // Hex (Optional)
+  highlight?: string;          // Hex (Optional)
+  softHighlight?: string;      // Hex (Optional)
+  // For direct mapping to CSS vars
+  cssBackground: string; // HSL string
+  cssForeground: string; // HSL string
+  cssCard: string; // HSL string
+  cssCardForeground: string; // HSL string
+  cssPopover: string; // HSL string
+  cssPopoverForeground: string; // HSL string
+  cssPrimary: string; // HSL string
+  cssPrimaryForeground: string; // HSL string
+  cssSecondary: string; // HSL string
+  cssSecondaryForeground: string; // HSL string
+  cssMuted: string; // HSL string
+  cssMutedForeground: string; // HSL string
+  cssAccent: string; // HSL string
+  cssAccentForeground: string; // HSL string
+  cssDestructive: string; // HSL string
+  cssDestructiveForeground: string; // HSL string
+  cssBorder: string; // HSL string
+  cssInput: string; // HSL string
+  cssRing: string; // HSL string
+  cssChart1: string; // HSL string
+  cssChart2: string; // HSL string
+  cssChart3: string; // HSL string
+  cssChart4: string; // HSL string
+  cssChart5: string; // HSL string
+  cssSidebarBackground: string; // HSL string
+  cssSidebarForeground: string; // HSL string
+  cssSidebarPrimary: string; // HSL string
+  cssSidebarPrimaryForeground: string; // HSL string
+  cssSidebarAccent: string; // HSL string
+  cssSidebarAccentForeground: string; // HSL string
+  cssSidebarBorder: string; // HSL string
+  cssSidebarRing: string; // HSL string
+  cssLunaraOvulationGlow?: string; // HSL string
+  cssLunaraPregnancyGrowth?: string; // HSL string
+}
+
+export interface ThemeOption {
+  id: string;
+  name: string;
+  colors: ThemeColorPalette;
+  previewColors: string[]; // Array of hex codes for display
 }
