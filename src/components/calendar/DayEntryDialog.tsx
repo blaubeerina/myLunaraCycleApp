@@ -36,6 +36,8 @@ const moods = [
   { emoji: '😕', label: 'Confused' }, { emoji: '😟', label: 'Worried'}
 ];
 
+const validBleedingStrengths: BleedingStrength[] = ['light', 'medium', 'heavy'];
+
 export function DayEntryDialog({
   isOpen,
   onClose,
@@ -52,66 +54,57 @@ export function DayEntryDialog({
   const [energyLevel, setEnergyLevel] = useState<'low' | 'medium' | 'high'>('medium');
   const [notes, setNotes] = useState<string>('');
 
-  // Effect for setting initial state when dialog opens or initialData/appMode changes
   useEffect(() => {
     if (isOpen) {
       setMood(initialData?.mood || '');
       setEnergyLevel(initialData?.energyLevel || 'medium');
       setNotes(initialData?.notes || '');
 
-      const initialIsBleedingSetting = appMode === 'cycle' ? (initialData?.isBleeding || false) : false;
-      setIsBleeding(initialIsBleedingSetting);
+      const initialIsBleeding = appMode === 'cycle' ? (initialData?.isBleeding || false) : false;
+      setIsBleeding(initialIsBleeding);
 
-      if (appMode === 'cycle' && initialIsBleedingSetting) {
-        // If bleeding is on in cycle mode, strength cannot be 'none'.
-        // Default to 'light' if initialData.strength was 'none' or undefined, or is not a valid selectable option.
-        const validStrengths: BleedingStrength[] = ['light', 'medium', 'heavy'];
+      if (appMode === 'cycle' && initialIsBleeding) {
         const initialStrength = initialData?.bleedingStrength;
-        if (initialStrength && validStrengths.includes(initialStrength)) {
+        if (initialStrength && validBleedingStrengths.includes(initialStrength)) {
           setBleedingStrength(initialStrength);
         } else {
-          setBleedingStrength('light');
+          setBleedingStrength('light'); // Default to 'light' if bleeding but strength is none or invalid
         }
       } else {
-        // Not cycle mode, or bleeding is off
         setBleedingStrength('none');
       }
     }
   }, [isOpen, initialData, appMode]);
 
-  // Effect for handling changes to the isBleeding switch *after* initial load
+
   useEffect(() => {
-    if (!isOpen) return; // Only run if dialog is open and was already initialized
+    if (!isOpen) return; 
 
     if (appMode === 'cycle') {
       if (isBleeding) {
-        // If bleeding is turned ON, and strength is currently 'none' (e.g., it was just toggled from off)
-        // set it to 'light' as a default.
         if (bleedingStrength === 'none') {
           setBleedingStrength('light');
         }
       } else {
-        // If bleeding is turned OFF
         setBleedingStrength('none');
       }
-    } else { // Pregnancy mode
-      if (isBleeding) { // Should not happen, but as a safeguard
-         setIsBleeding(false); 
-      }
+    } else { 
+      // Ensure bleeding is off and strength is none if not in cycle mode
+      if (isBleeding) setIsBleeding(false); // Force off if it was somehow set
       setBleedingStrength('none');
     }
-  // NOTE: `bleedingStrength` is intentionally omitted from deps here for this specific logic
-  // to avoid re-triggering when `setBleedingStrength` is called within.
-  // The logic path ensures that if isBleeding turns true and strength was 'none', it gets updated.
-  }, [isBleeding, appMode, isOpen]);
+  }, [isBleeding, appMode, isOpen]); // bleedingStrength removed from deps intentionally here as per prior logic
 
 
   const handleSave = () => {
+    const finalIsBleeding = appMode === 'cycle' ? isBleeding : false;
+    const finalBleedingStrength = appMode === 'cycle' && finalIsBleeding ? bleedingStrength : 'none';
+
     const entryData: DailyEntryData = {
       date: selectedDate.toISOString().split('T')[0], 
       mood,
-      isBleeding: appMode === 'cycle' ? isBleeding : false,
-      bleedingStrength: appMode === 'cycle' && isBleeding ? bleedingStrength : 'none',
+      isBleeding: finalIsBleeding,
+      bleedingStrength: finalBleedingStrength,
       energyLevel,
       notes,
     };
@@ -154,26 +147,22 @@ export function DayEntryDialog({
                 <Label htmlFor="bleeding">{t('dayEntryBleeding')}</Label>
               </div>
 
-              {isBleeding && (
+              {isBleeding && ( // Only show strength options if bleeding is active and in cycle mode
                 <div className="grid gap-2">
                   <Label>{t('dayEntryBleedingStrength')}</Label>
                   <RadioGroup
                     value={bleedingStrength}
-                    onValueChange={(value: BleedingStrength) => setBleedingStrength(value)}
+                    onValueChange={(value: string) => setBleedingStrength(value as BleedingStrength)}
                     className="flex space-x-2 sm:space-x-4"
                   >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="light" id="strength-light" />
-                      <Label htmlFor="strength-light" className="font-normal">{t('dayEntryBleedingStrengthLight')}</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="medium" id="strength-medium" />
-                      <Label htmlFor="strength-medium" className="font-normal">{t('dayEntryBleedingStrengthMedium')}</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="heavy" id="strength-heavy" />
-                      <Label htmlFor="strength-heavy" className="font-normal">{t('dayEntryBleedingStrengthHeavy')}</Label>
-                    </div>
+                    {validBleedingStrengths.map((strength) => (
+                       <div key={strength} className="flex items-center space-x-2">
+                        <RadioGroupItem value={strength} id={`strength-${strength}`} />
+                        <Label htmlFor={`strength-${strength}`} className="font-normal">
+                          {t(`dayEntryBleedingStrength${strength.charAt(0).toUpperCase() + strength.slice(1)}` as any)}
+                        </Label>
+                      </div>
+                    ))}
                   </RadioGroup>
                 </div>
               )}
@@ -184,7 +173,7 @@ export function DayEntryDialog({
             <Label>{t('dayEntryEnergyLevel')}</Label>
             <RadioGroup
               value={energyLevel}
-              onValueChange={(value: 'low' | 'medium' | 'high') => setEnergyLevel(value)}
+              onValueChange={(value: string) => setEnergyLevel(value as 'low' | 'medium' | 'high')}
               className="flex space-x-4"
             >
               <div className="flex items-center space-x-2">
@@ -227,3 +216,4 @@ export function DayEntryDialog({
     </Dialog>
   );
 }
+
