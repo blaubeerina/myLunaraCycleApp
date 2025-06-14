@@ -7,7 +7,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import type { Locale } from 'date-fns';
-import { format, addMonths, subMonths, getYear, getMonth, parseISO, startOfDay, isEqual, addDays as dateFnsAddDays } from 'date-fns';
+import { format, addMonths, subMonths, getYear, getMonth, parseISO, startOfDay, isEqual, addDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { Modifier } from 'react-day-picker';
 import { ChevronLeft, ChevronRight, Search, HelpCircle, Settings, GripVertical, CalendarDays as CalendarIconLucide, CheckSquare, Loader2, Droplet, Star } from 'lucide-react';
@@ -48,7 +48,6 @@ async function fetchDailyEntriesForMonthRange(userId: string, startDate: Date, e
   return entriesMap;
 }
 
-// Re-activate moon phase data fetching
 const moonPhaseEmojisList = ['🌑', '🌒', '🌓', '🌔', '🌕', '🌖', '🌗', '🌘'];
 const moonPhaseNamesList = ["New Moon", "Waxing Crescent", "First Quarter", "Waxing Gibbous", "Full Moon", "Waning Gibbous", "Last Quarter", "Waning Crescent"];
 
@@ -66,7 +65,7 @@ async function fetchMoonDataForDateRange(startDate: Date, endDate: Date): Promis
       emoji: moonPhaseEmojisList[phaseIndex],
       phaseName: moonPhaseNamesList[phaseIndex],
     });
-    currentDateIter = dateFnsAddDays(currentDateIter, 1);
+    currentDateIter = addDays(currentDateIter, 1);
   }
   return moonDataMap;
 }
@@ -84,7 +83,6 @@ export default function CalendarPage() {
   const [entriesMap, setEntriesMap] = useState<Map<string, DailyEntryData>>(new Map());
   const [isLoadingEntries, setIsLoadingEntries] = useState(false);
   
-  // Re-activate moon phase state
   const [moonDataMap, setMoonDataMap] = useState<Map<string, MoonPhaseData>>(new Map());
   const [isLoadingMoonData, setIsLoadingMoonData] = useState(false); 
   
@@ -95,7 +93,7 @@ export default function CalendarPage() {
   const loadDataForDisplayMonth = useCallback(async () => {
     if (!user) return;
     setIsLoadingEntries(true);
-    setIsLoadingMoonData(true); // Set loading for moon data
+    setIsLoadingMoonData(true); 
 
     const year = getYear(currentDisplayMonth);
     const month = getMonth(currentDisplayMonth);
@@ -103,28 +101,28 @@ export default function CalendarPage() {
     const firstDayOfMonth = new Date(year, month, 1);
     const lastDayOfMonth = new Date(year, month + 1, 0);
 
-    const fetchStartDate = dateFnsAddDays(firstDayOfMonth, -42); 
-    const fetchEndDate = dateFnsAddDays(lastDayOfMonth, 42);
+    const fetchStartDate = addDays(firstDayOfMonth, -42); 
+    const fetchEndDate = addDays(lastDayOfMonth, 42);
 
     try {
       const [fetchedEntries, fetchedMoonData] = await Promise.all([
         fetchDailyEntriesForMonthRange(user.id, fetchStartDate, fetchEndDate),
-        fetchMoonDataForDateRange(fetchStartDate, fetchEndDate) // Fetch moon data
+        fetchMoonDataForDateRange(fetchStartDate, fetchEndDate) 
       ]);
       
       setEntriesMap(fetchedEntries);
-      setMoonDataMap(fetchedMoonData); // Set moon data
+      setMoonDataMap(fetchedMoonData); 
 
       const newCycleInfoMap = new Map<string, CycleInfo>();
       const allFetchedEntriesArray = Array.from(fetchedEntries.values());
       
-      let dayToCalc = dateFnsAddDays(firstDayOfMonth, - (firstDayOfMonth.getDay() === 0 ? 6 : firstDayOfMonth.getDay() -1) - 7 ); 
-      const endDayToCalc = dateFnsAddDays(lastDayOfMonth, 14); 
+      let dayToCalc = addDays(firstDayOfMonth, - (firstDayOfMonth.getDay() === 0 ? 6 : firstDayOfMonth.getDay() -1) - 7 ); 
+      const endDayToCalc = addDays(lastDayOfMonth, 14); 
 
       while(dayToCalc <= endDayToCalc) {
         const dateKey = format(dayToCalc, 'yyyy-MM-dd');
         newCycleInfoMap.set(dateKey, calculateCycleInfo(dateKey, allFetchedEntriesArray));
-        dayToCalc = dateFnsAddDays(dayToCalc, 1);
+        dayToCalc = addDays(dayToCalc, 1);
       }
       setCycleInfoMap(newCycleInfoMap);
 
@@ -133,7 +131,7 @@ export default function CalendarPage() {
       toast({ title: "Data Loading Error", description: "Could not load calendar data.", variant: "destructive" });
     } finally {
       setIsLoadingEntries(false);
-      setIsLoadingMoonData(false); // Clear loading for moon data
+      setIsLoadingMoonData(false); 
     }
   }, [currentDisplayMonth, user]);
 
@@ -171,7 +169,7 @@ export default function CalendarPage() {
       await loadDataForDisplayMonth(); 
 
       const currentCycleInfo = calculateCycleInfo(entryData.date, Array.from(newEntriesMap.values()));
-      const moonPhaseForDay = moonDataMap.get(entryData.date); // Use updated moonDataMap
+      const moonPhaseForDay = moonDataMap.get(entryData.date); 
       const moonPhaseName = moonPhaseForDay?.phaseName || "Unknown";
 
 
@@ -213,7 +211,7 @@ export default function CalendarPage() {
   };
 
   const renderCalendarView = () => {
-    if (isLoadingEntries || isLoadingMoonData) { // Check isLoadingMoonData as well
+    if (isLoadingEntries || isLoadingMoonData) { 
        return (
         <div className="flex-grow flex items-center justify-center text-muted-foreground">
           <Loader2 className="h-8 w-8 animate-spin mr-2" />
@@ -237,15 +235,15 @@ export default function CalendarPage() {
             showOutsideDays={true}
             weekStartsOn={1} 
             classNames={{
-              root: "flex flex-col flex-grow w-full h-full", 
-              months: "flex flex-col sm:flex-row flex-grow h-full",
-              month: "space-y-0 flex flex-col flex-grow h-full p-0", 
+              root: "flex flex-col w-full", 
+              months: "flex flex-col sm:flex-row",
+              month: "space-y-0 flex flex-col p-0", 
               caption_layout: 'flex items-center justify-between py-2 px-1 md:px-2 relative border-b',
               caption: "flex items-center gap-1", 
               caption_label: "text-lg font-semibold text-foreground text-center flex-grow justify-start",
               nav_container: "flex items-center gap-1",
               nav_button: cn(buttonVariants({ variant: "ghost" }), "h-8 w-8 p-0 hover:bg-accent/50"),
-              table: "w-full border-collapse mt-0 flex-grow grid grid-rows-[auto_repeat(6,minmax(0,1fr))] border-t border-l border-border h-full", 
+              table: "w-full border-collapse mt-0 grid grid-rows-[auto_repeat(6,auto)] border-t border-l border-border", 
               head_row: "flex border-b border-border",
               head_cell: cn("text-muted-foreground font-normal text-[0.70rem] flex items-center justify-center uppercase py-2 w-[calc(100%/7)] h-10 border-r border-border", "sm:text-xs"),
               row: "flex w-full border-b border-border last:border-b-0", 
@@ -304,7 +302,7 @@ export default function CalendarPage() {
                 let dayTextNode: React.ReactNode = dayDate.getDate();
                 const entry = entriesMap.get(dateKey);
                 const cycleDayInfo = cycleInfoMap.get(dateKey);
-                const moonPhaseForDay = moonDataMap.get(dateKey); // Get moon data for the day
+                const moonPhaseForDay = moonDataMap.get(dateKey); 
 
                 let numberDisplayClasses = "text-xs font-medium";
                 let numberContainerDivClasses = "flex items-center justify-center p-0.5";
@@ -322,9 +320,8 @@ export default function CalendarPage() {
                 }
                 
                 return (
-                  <div className={cn("w-full h-full flex flex-col p-1")}> {/* Main DayContent container */}
-                    {/* Moon and Day Number - Grouped and aligned to Top Right */}
-                    <div className="flex items-center ml-auto space-x-1"> {/* ml-auto pushes to right */}
+                  <div className={cn("w-full h-full flex flex-col justify-between p-1")}>
+                    <div className="flex items-center space-x-1 self-end"> {/* Top-Right alignment */}
                       {moonPhaseForDay && (
                         <span className="text-xs leading-none" style={{filter: 'grayscale(1) invert(1) brightness(1.5)'}}>
                           {moonPhaseForDay.emoji}
@@ -336,8 +333,6 @@ export default function CalendarPage() {
                         </span>
                       </div>
                     </div>
-                
-                    <div className="flex-grow"></div> {/* Spacer */}
                 
                     {/* Cycle Indicators - Bottom Left */}
                     <div className="flex items-center space-x-1 self-start text-xs">
@@ -375,7 +370,7 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="flex-grow flex flex-col h-full w-full bg-background">
+    <div className="flex flex-col w-full bg-background">
       {renderCalendarView()}
       {selectedDateForDialog && (
         <DayEntryDialog
