@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useCycleContext } from '@/contexts/CycleContext';
 import { CycleCalendar } from '@/components/CycleCalendar';
 import { PeriodLogDialog } from '@/components/PeriodLogDialog';
-import { calculateCycleDay, getEstimatedNextPeriod } from '@/lib/cycle-utils';
+import { calculateCycleDay } from '@/lib/cycle-utils'; // getEstimatedNextPeriod removed from imports here
 import { getMoonPhase, getMoonEmoji } from '@/lib/moon-utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -19,9 +19,9 @@ import { tarotCards, fallbackTarotCard } from '@/lib/tarot-data';
 import { drawNewDailyCard, updateRecentCardIds, getCardById } from '@/lib/tarot-utils';
 import { wisdomAffirmations } from '@/lib/affirmations-data';
 import { selectNewDailyAffirmation } from '@/lib/affirmation-utils';
-import { Droplet, CalendarDays, Repeat, Sparkles, RefreshCcw, BookOpen, Edit3, FileText, Moon } from 'lucide-react';
+import { Droplet, Sparkles, RefreshCcw, BookOpen, Edit3, FileText, Moon } from 'lucide-react'; // CalendarDays removed
 
-const DAILY_WISDOM_STORAGE_KEY = 'lunarRhythmsDailyWisdom_v1';
+const DAILY_WISDOM_STORAGE_KEY = 'lunarRhythmsDailyWisdom_v1'; 
 
 const initialDailyWisdomState: DailyWisdom = {
   tarot: { cardId: null, drawDate: null, recentIds: [] },
@@ -44,8 +44,7 @@ export default function HomePage() {
   const [inputStartDate, setInputStartDate] = useState<string>('');
   const [inputEndDate, setInputEndDate] = useState<string>('');
   const [currentCycleDay, setCurrentCycleDay] = useState<number | null>(null);
-  const [estimatedNextPeriodDate, setEstimatedNextPeriodDate] = useState<Date | null>(null);
-
+  
   const [dailyWisdom, setDailyWisdom] = useState<DailyWisdom>(initialDailyWisdomState);
   const [currentTarotCard, setCurrentTarotCard] = useState<TarotCard>(fallbackTarotCard);
   const [currentAffirmation, setCurrentAffirmation] = useState<WisdomAffirmation | null>(null);
@@ -56,7 +55,6 @@ export default function HomePage() {
 
   const [todayMoonPhaseName, setTodayMoonPhaseName] = useState<string>('');
   const [todayMoonEmoji, setTodayMoonEmoji] = useState<string>('');
-  const [nextPeriodMoonEmoji, setNextPeriodMoonEmoji] = useState<string>('');
 
 
   useEffect(() => {
@@ -127,18 +125,9 @@ export default function HomePage() {
     if (lastPeriodDate) {
       setInputStartDate(lastPeriodDate);
       setCurrentCycleDay(calculateCycleDay(lastPeriodDate, today));
-      const nextPeriod = getEstimatedNextPeriod(lastPeriodDate);
-      setEstimatedNextPeriodDate(nextPeriod);
-      if (nextPeriod) {
-        setNextPeriodMoonEmoji(getMoonEmoji(getMoonPhase(nextPeriod)));
-      } else {
-        setNextPeriodMoonEmoji('');
-      }
     } else {
       setInputStartDate('');
       setCurrentCycleDay(null);
-      setEstimatedNextPeriodDate(null);
-      setNextPeriodMoonEmoji('');
     }
     setInputEndDate(lastPeriodEndDate || '');
   }, [lastPeriodDate, lastPeriodEndDate]);
@@ -209,12 +198,10 @@ export default function HomePage() {
     );
   }
 
-  // Header Display Logic
   const displayStartDate = lastPeriodDate ? format(parseISO(lastPeriodDate), 'dd.MM') : '--.--';
   const displayEndDate = lastPeriodEndDate ? format(parseISO(lastPeriodEndDate), 'dd.MM') : '--.--';
   const displayDurationText = lastPeriodDuration ? `(${lastPeriodDuration} days)` : '';
   const displayCycleDayText = currentCycleDay ? `Day ${currentCycleDay}/28` : 'Day --/28';
-  const displayNextPeriodText = estimatedNextPeriodDate ? `Next: ~${format(estimatedNextPeriodDate, 'dd.MM')}` : 'Next: ~--.--';
 
   return (
     <div className="flex flex-col min-h-screen p-4 md:p-6 bg-background text-foreground">
@@ -223,22 +210,19 @@ export default function HomePage() {
         <p className="text-md text-foreground/80">Track your cycle, align with the cosmos.</p>
       </header>
 
-      {/* Top Section: Compact Date Display & Inputs */}
       <section className="w-full max-w-2xl mx-auto p-4 bg-card rounded-md shadow-lg mb-6">
         <div className='mb-4 text-center'>
-            <h2 className="text-lg font-medium text-center mb-2 text-foreground/90 flex items-center justify-center space-x-2">
-              <span className="text-2xl" style={{color: 'hsl(var(--color-moon))', opacity: isToday(new Date()) ? 1 : 0.7}}>{todayMoonEmoji}</span>
-              <span>{todayMoonPhaseName} Cycle</span>
-              <span className={currentCycleDay ? 'text-secondary font-semibold' : 'text-foreground/80'}>{displayCycleDayText}</span>
+            <h2 className="text-lg font-medium text-foreground/90 flex items-center justify-center space-x-2">
+              <span className="text-2xl" style={{color: 'hsl(var(--color-moon))'}}>{todayMoonEmoji}</span>
+              <span className="capitalize">{todayMoonPhaseName} Cycle</span>
+              <span className={currentCycleDay ? 'text-[hsl(var(--calendar-today-text))] font-semibold' : 'text-foreground/80'}>{displayCycleDayText}</span>
             </h2>
             <div className="text-sm text-foreground/80 space-x-1 flex justify-center items-center flex-wrap">
-                <span className="text-lg" style={{color: 'hsl(var(--color-bleeding))'}}>🩸</span> 
+                <span className="text-lg text-[hsl(var(--primary))]">🩸</span> 
                 <span className="text-foreground/90">{displayStartDate}</span> 
                 {lastPeriodDate && lastPeriodEndDate && <span className="text-foreground/70">&rarr;</span>}
                 {lastPeriodDate && lastPeriodEndDate && <span className="text-foreground/90">{displayEndDate}</span>}
                 {displayDurationText && <span className="text-xs text-foreground/70 ml-1">{displayDurationText}</span>}
-                <span className="text-muted-foreground mx-2">|</span>
-                <span className="text-foreground/80">{nextPeriodMoonEmoji} {displayNextPeriodText}</span>
             </div>
         </div>
         
@@ -274,15 +258,13 @@ export default function HomePage() {
                 </Button>
             )}
         </div>
-         {!lastPeriodDate && <p className="text-center text-xs text-muted-foreground mt-3">Enter your last period start date to see cycle stats.</p>}
+         {!lastPeriodDate && <p className="text-center text-xs text-muted-foreground mt-3">Enter your last period start date to see cycle stats and log bleeding days.</p>}
       </section>
       <Separator className="my-6 max-w-3xl mx-auto bg-border/50" />
 
-      {/* Middle Section: Interactive Calendar */}
       <section className="w-full max-w-3xl mx-auto mb-6">
         <CycleCalendar 
-          onDayClick={handleDayClickCalendar} 
-          lastPeriodStartDate={lastPeriodDate}
+          onDayClick={handleDayClickCalendar}
         />
       </section>
 
@@ -297,7 +279,6 @@ export default function HomePage() {
       )}
       
       <Separator className="my-6 max-w-3xl mx-auto bg-border/50" />
-      {/* Bottom Section: Tabs for Logs & Affirmations */}
       <section className="w-full max-w-3xl mx-auto">
         <Tabs defaultValue="daily-wisdom" className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-muted/50 rounded-md">
@@ -312,14 +293,15 @@ export default function HomePage() {
                   <li key={log.date} className="p-3 bg-background/50 rounded-sm shadow-sm border border-border">
                     <div className="flex justify-between items-center">
                       <span className="font-semibold text-sm text-foreground/90">{format(parseISO(log.date), 'EEE, dd MMM yyyy')}</span>
-                      {log.intensity !== 'none' && <span className="text-lg" style={{color: 'hsl(var(--color-bleeding))'}}>🩸</span>}
+                      {log.intensity !== 'none' && <span className="text-sm text-[hsl(var(--calendar-bleeding-indicator))]">● Bleeding Logged</span>}
                     </div>
+                    {log.intensity !== 'none' && <p className="text-xs text-muted-foreground capitalize">Recorded Intensity: {log.intensity}</p>}
                     {log.symptoms && log.symptoms.length > 0 && (
                       <p className="text-xs text-muted-foreground mt-1">Symptoms: {log.symptoms.join(', ')}</p>
                     )}
                     {log.notes && <p className="text-sm mt-1 italic text-foreground/80">"{log.notes}"</p>}
                      <Button variant="link" size="sm" className="mt-1 text-xs h-auto p-1 text-secondary" onClick={() => {setSelectedDateForLog(parseISO(log.date)); setIsPeriodLogDialogOpen(true);}}>
-                        <Edit3 className="h-3 w-3 mr-1"/> Edit
+                        <Edit3 className="h-3 w-3 mr-1"/> Edit Log
                     </Button>
                   </li>
                 ))}

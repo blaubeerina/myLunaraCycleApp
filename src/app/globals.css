@@ -5,7 +5,6 @@
 
 @layer base {
   :root {
-    /* Cosmic Color Palette */
     /* Base: Midnight Indigo (#0F0A1D) */
     --background: 248 43% 8%; /* Adjusted from #0F0A1D for HSL */
     --foreground: 240 10% 85%; /* Light silver/off-white for text */
@@ -17,41 +16,40 @@
     --popover: 246 30% 10%;
     --popover-foreground: 240 10% 85%;
     
-    /* Primary: Soft Crimson (#E53E3E) for bleeding days, general accents */
+    /* Primary: Soft Crimson (#E53E3E) for general accents, and base for bleeding */
     --primary: 0 79% 57%; 
     --primary-foreground: 0 0% 98%; /* White/very light for text on crimson */
     
-    /* Secondary: Luminous Peach (#FF9A76) for ovulation */
-    --secondary: 15 100% 73%; 
-    --secondary-foreground: 240 20% 10%; /* Dark text for peach */
+    /* Secondary/Accent: Golden Sunrise Start (#F6D365) */
+    --secondary: 46 90% 68%; 
+    --secondary-foreground: 240 20% 10%; /* Dark text for gold/peach */
 
-    /* Accent: Golden Sunrise Start (#F6D365) - used in gradients */
-    --accent-start: 46 90% 68%;
-    /* Accent: Golden Sunrise End (#FDA085) - used in gradients */
-    --accent-end: 15 98% 76%;
-    /* General Accent (Fallback if single color needed, e.g. for text on fertile days) */
-    --accent: 30 95% 70%;
+    --accent: 30 95% 70%; 
     --accent-foreground: 240 20% 10%;
 
     /* Muted: Darker gray/indigo for subtle elements */
     --muted: 240 15% 25%;
     --muted-foreground: 240 10% 65%; /* Lighter muted text */
     
-    --destructive: 0 79% 57%; /* Same as primary for now, can be adjusted */
+    --destructive: 0 79% 57%; 
     --destructive-foreground: 0 0% 98%;
     
     --border: 240 10% 30%;   /* Subtle border for dark theme */
     --input: 240 15% 18%;    /* Dark input background */
-    --ring: 15 100% 73%;     /* Luminous Peach for focus rings */
+    --ring: 46 90% 68%;     /* Golden for focus rings */
 
-    --radius: 0.5rem;
+    --radius: 0.5rem; /* Default radius */
+    --radius-sm: 0.25rem; /* Smaller radius for 1px effect, effectively */
     
-    /* Specific theme colors from prompt */
+    /* Specific Calendar Colors from prompt */
+    --calendar-normal-text: 240 0% 94%; /* #F0F0F0 */
+    --calendar-bleeding-bg-raw: 0 79% 57%; /* #E53E3E - for direct use in hsla */
+    --calendar-bleeding-text: 0 0% 100%; /* #FFFFFF */
+    --calendar-bleeding-indicator: 0 79% 57%; /* #E53E3E */
+    --calendar-today-bg-raw: 220 13% 23%; /* #2D3748 - for direct use in hsla */
+    --calendar-today-text: 46 90% 68%; /* #F6D365 */
+    
     --color-moon: 0 0% 75%; /* Silver #C0C0C0 */
-    --color-fertile-start: hsl(var(--accent-start));
-    --color-fertile-end: hsl(var(--accent-end));
-    --color-ovulation: hsl(var(--secondary));
-    --color-bleeding: hsl(var(--primary));
   }
 
   .dark {
@@ -64,10 +62,8 @@
     --popover-foreground: 240 10% 85%;
     --primary: 0 79% 57%;
     --primary-foreground: 0 0% 98%;
-    --secondary: 15 100% 73%;
+    --secondary: 46 90% 68%;
     --secondary-foreground: 240 20% 10%;
-    --accent-start: 46 90% 68%;
-    --accent-end: 15 98% 76%;
     --accent: 30 95% 70%;
     --accent-foreground: 240 20% 10%;
     --muted: 240 15% 25%;
@@ -76,7 +72,15 @@
     --destructive-foreground: 0 0% 98%;
     --border: 240 10% 30%;
     --input: 240 15% 18%;
-    --ring: 15 100% 73%;
+    --ring: 46 90% 68%;
+
+    --calendar-normal-text: 240 0% 94%;
+    --calendar-bleeding-bg-raw: 0 79% 57%;
+    --calendar-bleeding-text: 0 0% 100%;
+    --calendar-bleeding-indicator: 0 79% 57%;
+    --calendar-today-bg-raw: 220 13% 23%;
+    --calendar-today-text: 46 90% 68%;
+    --color-moon: 0 0% 75%;
   }
 }
 
@@ -86,7 +90,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-geist-sans), sans-serif; /* Keeping Geist, can change to Poppins */
+    font-family: var(--font-geist-sans), sans-serif; 
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -94,20 +98,7 @@
   main {
     flex-grow: 1;
   }
-   .rounded-1px { 
-    border-radius: 1px; /* Custom if needed, generally use sm, md, lg */
+  .rounded-1px { 
+    border-radius: 1px;
   }
-}
-
-/* Pulse animation for ovulation day */
-@keyframes pulse-peach {
-  0%, 100% {
-    box-shadow: 0 0 0 0 hsl(var(--secondary) / 0.7);
-  }
-  50% {
-    box-shadow: 0 0 0 8px hsl(var(--secondary) / 0);
-  }
-}
-.animate-pulse-peach {
-  animation: pulse-peach 2s infinite;
 }

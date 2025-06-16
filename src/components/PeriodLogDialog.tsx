@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { format } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -23,8 +24,8 @@ interface PeriodLogDialogProps {
   onSaveLog: (logEntry: PeriodLogEntry) => void;
 }
 
-const intensityOptions: { value: PeriodIntensity; label: string }[] = [
-  { value: 'none', label: 'None' },
+// Intensity options for the dialog, "none" is handled by the master switch.
+const intensityOptionsForDialog: { value: PeriodIntensity; label: string }[] = [
   { value: 'spotting', label: 'Spotting' },
   { value: 'light', label: 'Light' },
   { value: 'medium', label: 'Medium' },
@@ -38,13 +39,18 @@ export function PeriodLogDialog({
   initialLogData,
   onSaveLog,
 }: PeriodLogDialogProps) {
-  const [intensity, setIntensity] = useState<PeriodIntensity>('none');
+  const [isBleedingLogged, setIsBleedingLogged] = useState<boolean>(false);
+  // Default to 'light' if bleeding is logged and no specific intensity was previously set.
+  const [intensity, setIntensity] = useState<PeriodIntensity>('light'); 
   const [selectedSymptoms, setSelectedSymptoms] = useState<Symptom[]>([]);
   const [notes, setNotes] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
-      setIntensity(initialLogData?.intensity || 'none');
+      const hasBleeding = initialLogData?.intensity !== 'none' && initialLogData?.intensity !== undefined;
+      setIsBleedingLogged(hasBleeding);
+      // Set intensity from log if available and not 'none', otherwise default to 'light' if we are in a bleeding state.
+      setIntensity(hasBleeding && initialLogData?.intensity ? initialLogData.intensity : 'light');
       setSelectedSymptoms(initialLogData?.symptoms || []);
       setNotes(initialLogData?.notes || '');
     }
@@ -57,9 +63,11 @@ export function PeriodLogDialog({
   };
 
   const handleSave = () => {
+    // If bleeding is not logged, intensity is 'none'. Otherwise, use the selected intensity.
+    const finalIntensity = isBleedingLogged ? intensity : 'none';
     const logEntry: PeriodLogEntry = {
       date: format(selectedDate, 'yyyy-MM-dd'),
-      intensity,
+      intensity: finalIntensity,
       symptoms: selectedSymptoms,
       notes,
     };
@@ -72,30 +80,41 @@ export function PeriodLogDialog({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md bg-card border-border rounded-md">
         <DialogHeader>
-          <DialogTitle className="text-foreground">Period Log for {formattedDate}</DialogTitle>
-          <DialogDescription className="text-muted-foreground">Log your flow, symptoms, and any notes for this day.</DialogDescription>
+          <DialogTitle className="text-foreground">Log for {formattedDate}</DialogTitle>
+          <DialogDescription className="text-muted-foreground">Record details for this day.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-6 py-4">
-          <div className="grid gap-2">
-            <Label className="font-medium text-foreground/90">Bleeding Intensity</Label>
-            <RadioGroup
-              value={intensity}
-              onValueChange={(value: string) => setIntensity(value as PeriodIntensity)}
-              className="flex flex-wrap gap-x-3 gap-y-2"
-            >
-              {intensityOptions.map(opt => (
-                <div key={opt.value} className="flex items-center space-x-2">
-                  <RadioGroupItem value={opt.value} id={`intensity-${opt.value}`} />
-                  <Label htmlFor={`intensity-${opt.value}`} className="font-normal text-foreground/80">
-                    {opt.label}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="log-bleeding-switch"
+              checked={isBleedingLogged}
+              onCheckedChange={setIsBleedingLogged}
+            />
+            <Label htmlFor="log-bleeding-switch" className="font-medium text-foreground/90">Log Bleeding</Label>
           </div>
 
+          {isBleedingLogged && (
+            <div className="grid gap-2">
+              <Label className="font-medium text-foreground/90">Bleeding Intensity (Optional)</Label>
+              <RadioGroup
+                value={intensity}
+                onValueChange={(value: string) => setIntensity(value as PeriodIntensity)}
+                className="flex flex-wrap gap-x-3 gap-y-2"
+              >
+                {intensityOptionsForDialog.map(opt => (
+                  <div key={opt.value} className="flex items-center space-x-2">
+                    <RadioGroupItem value={opt.value} id={`intensity-${opt.value}`} />
+                    <Label htmlFor={`intensity-${opt.value}`} className="font-normal text-foreground/80">
+                      {opt.label}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+          )}
+
           <div className="grid gap-2">
-            <Label className="font-medium text-foreground/90">Symptoms</Label>
+            <Label className="font-medium text-foreground/90">Symptoms (Optional)</Label>
             <ScrollArea className="h-36 w-full rounded-md border border-border/50 p-3 bg-input/50">
                 <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                 {SYMPTOMS_LIST.map(symptom => (
@@ -116,7 +135,7 @@ export function PeriodLogDialog({
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="notes" className="font-medium text-foreground/90">Notes</Label>
+            <Label htmlFor="notes" className="font-medium text-foreground/90">Notes (Optional)</Label>
             <Textarea
               id="notes"
               value={notes}
