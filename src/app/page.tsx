@@ -16,8 +16,8 @@ import { Separator } from '@/components/ui/separator';
 import { format, parseISO, isValid, isToday, startOfDay } from 'date-fns';
 import type { TarotCard, WisdomAffirmation, DailyWisdom, PeriodLogEntry, MoonPhaseName, PeriodIntensity } from '@/lib/types';
 import { tarotCards, fallbackTarotCard } from '@/lib/tarot-data';
-import { drawNewDailyCard, updateRecentCardIds, getCardById } from '@/lib/tarot-utils'; // Removed getDailyTarotCard as it was specific to calendar
-import { wisdomAffirmations } from '@/lib/affirmations-data';
+import { drawNewDailyCard, updateRecentCardIds, getCardById } from '@/lib/tarot-utils';
+// wisdomAffirmations is no longer imported directly as it's fetched
 import { selectNewDailyAffirmation } from '@/lib/affirmation-utils';
 import { Droplet, Sparkles, RefreshCcw, BookOpen, Edit3, FileText, Moon as MoonIcon, CalendarDays } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -51,6 +51,7 @@ export default function HomePage() {
   const [currentTarotCard, setCurrentTarotCard] = useState<TarotCard>(fallbackTarotCard);
   const [currentAffirmation, setCurrentAffirmation] = useState<WisdomAffirmation | null>(null);
   const [isUiLoading, setIsUiLoading] = useState(true);
+  const [isAffirmationLoading, setIsAffirmationLoading] = useState(false);
 
   const [isPeriodLogDialogOpen, setIsPeriodLogDialogOpen] = useState(false);
   const [selectedDateForLog, setSelectedDateForLog] = useState<Date | null>(null);
@@ -75,7 +76,8 @@ export default function HomePage() {
 
   }, [lastPeriodDate]);
 
-  const loadAndProcessDailyWisdom = useCallback(() => {
+  const loadAndProcessDailyWisdom = useCallback(async () => {
+    setIsAffirmationLoading(true);
     let storedWisdom: DailyWisdom = initialDailyWisdomState;
     try {
       const storedData = localStorage.getItem(DAILY_WISDOM_STORAGE_KEY);
@@ -90,6 +92,7 @@ export default function HomePage() {
     const todayStr = format(new Date(), 'yyyy-MM-dd');
     let wisdomNeedsUpdate = false;
 
+    // Tarot Card Logic (remains synchronous)
     let newCardId = storedWisdom.tarot.cardId;
     if (storedWisdom.tarot.drawDate !== todayStr || !newCardId) {
       const drawnCard = drawNewDailyCard(tarotCards, storedWisdom.tarot.recentIds);
@@ -105,19 +108,29 @@ export default function HomePage() {
     }
     setCurrentTarotCard(getCardById(newCardId));
 
+    // Affirmation Logic (now asynchronous)
     let newAffirmationText = storedWisdom.affirmation.text;
     let newAffirmationAuthor = storedWisdom.affirmation.author;
+
     if (storedWisdom.affirmation.displayDate !== todayStr || !newAffirmationText) {
-      const affirmation = selectNewDailyAffirmation(wisdomAffirmations, storedWisdom.affirmation.previousText);
-      newAffirmationText = affirmation.text;
-      newAffirmationAuthor = affirmation.author;
-      storedWisdom.affirmation = {
-        text: newAffirmationText, author: newAffirmationAuthor,
-        displayDate: todayStr, previousText: newAffirmationText,
-      };
-      wisdomNeedsUpdate = true;
+      try {
+        const affirmationResult = await selectNewDailyAffirmation(storedWisdom.affirmation.previousText);
+        newAffirmationText = affirmationResult.text;
+        newAffirmationAuthor = affirmationResult.author;
+        storedWisdom.affirmation = {
+          text: newAffirmationText, author: newAffirmationAuthor,
+          displayDate: todayStr, previousText: newAffirmationText,
+        };
+        wisdomNeedsUpdate = true;
+      } catch (error) {
+        console.error("Failed to fetch new affirmation for daily wisdom", error);
+        // Use existing or fallback if API fails
+        newAffirmationText = newAffirmationText || "Embrace the quiet moments.";
+        newAffirmationAuthor = newAffirmationAuthor || "System";
+      }
     }
     setCurrentAffirmation({ text: newAffirmationText || "", author: newAffirmationAuthor });
+    setIsAffirmationLoading(false);
 
     setDailyWisdom(storedWisdom);
     if (wisdomNeedsUpdate) {
@@ -169,8 +182,11 @@ export default function HomePage() {
     setInputEndDate('');
   };
 
-  const handleManualWisdomRefresh = () => {
+  const handleManualWisdomRefresh = async () => {
+    setIsAffirmationLoading(true);
     const todayStr = format(new Date(), 'yyyy-MM-dd');
+    
+    // Tarot card refresh (synchronous)
     const drawnCard = drawNewDailyCard(tarotCards, dailyWisdom.tarot.recentIds);
     let newCardId = dailyWisdom.tarot.cardId;
     let newRecentIds = dailyWisdom.tarot.recentIds;
@@ -180,8 +196,16 @@ export default function HomePage() {
     }
     setCurrentTarotCard(getCardById(newCardId));
 
-    const affirmation = selectNewDailyAffirmation(wisdomAffirmations, dailyWisdom.affirmation.text);
+    // Affirmation refresh (asynchronous)
+    let affirmation: WisdomAffirmation = { text: "Loading affirmation...", author: "" };
+    try {
+        affirmation = await selectNewDailyAffirmation(dailyWisdom.affirmation.text);
+    } catch (error) {
+        console.error("Failed to fetch new affirmation on manual refresh", error);
+        affirmation = { text: "Breathe deeply and find your center.", author: "System Fallback"};
+    }
     setCurrentAffirmation(affirmation);
+    setIsAffirmationLoading(false);
     
     const newDailyWisdomData: DailyWisdom = {
         tarot: { cardId: newCardId, drawDate: todayStr, recentIds: newRecentIds },
@@ -215,12 +239,10 @@ export default function HomePage() {
   const displayStartDateShort = lastPeriodDate ? format(parseISO(lastPeriodDate), 'dd.MM') : '--.--';
   const displayEndDateShort = lastPeriodEndDate ? format(parseISO(lastPeriodEndDate), 'dd.MM') : '--.--';
   const displayDurationText = calculatedPeriodDuration ? `(${calculatedPeriodDuration} days)` : '';
-  const displayCycleDayText = currentCycleDay ? `${currentCycleDay}/28` : '--/28';
-  const nextPeriodDate = getEstimatedNextPeriod(lastPeriodDate);
-  const displayNextPeriod = nextPeriodDate ? format(nextPeriodDate, 'dd.MM') : '--.--';
-
+  
   const todayForPeriodCheck = startOfDay(new Date());
   const isTodayActuallyAPeriodDay = !!(
+      hasSufficientDataForDisplay && // Only consider if baseline data exists
       lastPeriodDate &&
       lastPeriodEndDate &&
       isValid(parseISO(lastPeriodDate)) &&
@@ -229,8 +251,17 @@ export default function HomePage() {
       todayForPeriodCheck <= startOfDay(parseISO(lastPeriodEndDate))
   );
 
-  const IntensityIconDisplay = ({ intensity }: { intensity: PeriodIntensity }) => {
-    const iconColor = "text-[hsl(var(--primary))]"; // Soft Crimson
+  const displayCycleDayText = currentCycleDay ? `${currentCycleDay}/28` : '--/28';
+  const cycleDayHighlightClass = isTodayActuallyAPeriodDay ? 'text-[hsl(var(--color-rose-quartz))]' : 'text-[hsl(var(--primary))]';
+
+  const nextPeriodDate = getEstimatedNextPeriod(lastPeriodDate);
+  const displayNextPeriod = nextPeriodDate ? format(nextPeriodDate, 'dd.MM') : '--.--';
+
+
+  const IntensityIconDisplay = ({ intensity }: { intensity: PeriodIntensity | undefined }) => {
+    if (!intensity || intensity === 'none') return null;
+    
+    const iconColor = "text-[hsl(var(--primary))]";
     const iconSize = "inline h-3 w-3 mx-px";
 
     switch (intensity) {
@@ -255,7 +286,7 @@ export default function HomePage() {
             <div className="flex items-center justify-center space-x-2 text-base md:text-lg mb-1">
               <span className="text-2xl" style={{color: 'hsl(var(--color-moon))'}}>{todayMoonEmoji}</span>
               <span className="capitalize font-semibold text-foreground/90">{todayMoonPhaseName} Cycle</span>
-              <span className={cn("font-bold", isTodayActuallyAPeriodDay ? 'text-[hsl(var(--color-rose-quartz))]' : 'text-[hsl(var(--primary))]')}>
+              <span className={cn("font-bold", cycleDayHighlightClass)}>
                 Day {displayCycleDayText}
               </span>
             </div>
@@ -359,7 +390,7 @@ export default function HomePage() {
                     
                     {log.intensity !== 'none' && (
                       <div className="text-xs text-foreground/90 mt-1 flex items-center">
-                        <IntensityIconDisplay intensity={log.intensity} />
+                         <IntensityIconDisplay intensity={log.intensity} />
                       </div>
                     )}
 
@@ -382,7 +413,9 @@ export default function HomePage() {
           <TabsContent value="daily-wisdom" className="p-4 md:p-6 bg-card/50 rounded-b-md shadow-lg min-h-[200px] mt-2 border border-border/50">
             <div className="text-center mb-5">
               <h3 className="text-md font-semibold text-accent mb-2">✨ Today’s Reflection:</h3>
-              {currentAffirmation?.text ? (
+              {isAffirmationLoading ? (
+                 <p className="text-muted-foreground">Loading wisdom...</p>
+              ) : currentAffirmation?.text ? (
                 <>
                   <p className="text-lg italic text-foreground/90">"{currentAffirmation.text}"</p>
                   {currentAffirmation.author && (
@@ -390,7 +423,7 @@ export default function HomePage() {
                   )}
                 </>
               ) : (
-                <p className="text-muted-foreground">Loading wisdom...</p>
+                <p className="text-muted-foreground">Could not load wisdom at this time.</p>
               )}
             </div>
 
@@ -422,7 +455,7 @@ export default function HomePage() {
               )}
             </div>
             <div className="mt-6 flex flex-col sm:flex-row justify-center items-center gap-3">
-              <Button onClick={handleManualWisdomRefresh} variant="outline" size="sm" className="rounded-sm text-muted-foreground hover:text-foreground border-border hover:bg-muted/50">
+              <Button onClick={handleManualWisdomRefresh} variant="outline" size="sm" className="rounded-sm text-muted-foreground hover:text-foreground border-border hover:bg-muted/50" disabled={isAffirmationLoading}>
                 <RefreshCcw className="mr-2 h-4 w-4" /> New Wisdom
               </Button>
               <Button onClick={() => alert('Save to Journal feature not implemented yet.')} variant="secondary" size="sm" className="rounded-sm text-secondary-foreground bg-secondary hover:bg-secondary/90">
@@ -439,4 +472,3 @@ export default function HomePage() {
     </div>
   );
 }
-
