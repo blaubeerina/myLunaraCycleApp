@@ -78,10 +78,16 @@ export const tarotCards: TarotCard[] = [
     meaning: 'Endings, beginnings, change, transformation, transition.',
   },
   {
-    id: '10-of-coins', // Or a more descriptive ID like 'pentacles-10'
-    title: 'Ten of Coins', // English title
+    id: 'king-of-cups', // Or a more descriptive ID like 'cups-king'
+    title: 'King of Cups', // English title for consistency
+    image: '/cards/king-of-cups.png', // Assumed filename
+    meaning: 'Emotional balance, compassion, diplomacy. (König der Kellche)',
+  },
+  {
+    id: '10-of-coins',
+    title: 'Ten of Coins',
     image: '/cards/zehn-der-muenzen.png',
-    meaning: 'Legacy, inheritance, family wealth, lasting success, abundance.',
+    meaning: 'Legacy, inheritance, family wealth, lasting success, abundance. (Zehn der Münzen)',
   },
   // Add all 22 Major Arcana, or your desired subset
   // { id: 'justice', title: 'Justice', image: '/cards/justice.png', meaning: '...' },
