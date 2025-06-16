@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image'; // Import next/image
 import {
   format,
   addMonths,
@@ -16,17 +17,18 @@ import {
   isWithinInterval,
   parseISO,
   isValid,
-  startOfDay, // Added startOfDay here
+  startOfDay,
 } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { calculateCycleDay } from '@/lib/cycle-utils';
 import { getMoonPhase, getMoonEmoji, getAffirmationForMoonPhase } from '@/lib/moon-utils';
-import type { DailyCalendarInfo } from '@/lib/types';
+import { getDailyTarotCard } from '@/lib/tarot-utils'; // Import tarot utility
+import type { DailyCalendarInfo, TarotCard } from '@/lib/types'; // Ensure TarotCard is imported
 import { Button } from '@/components/ui/button';
 
 interface CycleCalendarProps {
   lastPeriodStartDate: string | null;
-  lastPeriodEndDate: string | null; // New prop
+  lastPeriodEndDate: string | null;
 }
 
 export function CycleCalendar({ lastPeriodStartDate, lastPeriodEndDate }: CycleCalendarProps) {
@@ -42,7 +44,15 @@ export function CycleCalendar({ lastPeriodStartDate, lastPeriodEndDate }: CycleC
       } else {
         setPeriodInterval(null);
       }
-    } else {
+    } else if (lastPeriodStartDate) { // Only start date provided
+        const start = parseISO(lastPeriodStartDate);
+        if (isValid(start)) {
+            setPeriodInterval({start: startOfDay(start), end: startOfDay(start)}); // Period is just the start day
+        } else {
+            setPeriodInterval(null);
+        }
+    }
+     else {
       setPeriodInterval(null);
     }
   }, [lastPeriodStartDate, lastPeriodEndDate]);
@@ -102,6 +112,7 @@ export function CycleCalendar({ lastPeriodStartDate, lastPeriodEndDate }: CycleC
         const cycleDay = calculateCycleDay(lastPeriodStartDate, dayPointer);
         const moonPhaseName = getMoonPhase(dayPointer);
         const isPeriod = periodInterval ? isWithinInterval(startOfDay(dayPointer), periodInterval) : false;
+        const dailyTarotCard = getDailyTarotCard(dayPointer); // Get daily tarot card
         
         daysData.push({
           date: new Date(dayPointer),
@@ -113,6 +124,7 @@ export function CycleCalendar({ lastPeriodStartDate, lastPeriodEndDate }: CycleC
           moonEmoji: getMoonEmoji(moonPhaseName),
           affirmation: getAffirmationForMoonPhase(moonPhaseName),
           isPeriodDay: isPeriod,
+          tarotCard: dailyTarotCard, // Add to dayInfo
         });
         dayPointer = addDays(dayPointer, 1);
       }
@@ -121,34 +133,57 @@ export function CycleCalendar({ lastPeriodStartDate, lastPeriodEndDate }: CycleC
           {daysData.map((dayInfo) => (
             <div
               key={dayInfo.date.toISOString()}
-              className={`min-h-[8rem] md:min-h-[9rem] p-2 flex flex-col items-start
+              className={`min-h-[10rem] md:min-h-[12rem] p-2 flex flex-col items-start
                           ${dayInfo.isCurrentMonth ? 'bg-card hover:bg-card/80' : 'bg-background/50 hover:bg-card/60 text-muted-foreground/70'}
-                          ${dayInfo.isPeriodDay ? 'bg-primary/20' : ''}
+                          ${dayInfo.isPeriodDay ? 'bg-primary/10' : ''}
                           cursor-default transition-colors duration-150 ease-in-out
                           border-r border-b border-border 
                           ${dayInfo.date.getDay() === 0 ? 'border-r-0' : ''} 
                          `}
               aria-label={`Date ${format(dayInfo.date, 'PPP')}`}
             >
-              <div className="flex justify-between items-center w-full">
-                <span className={`text-2xl ${!dayInfo.isCurrentMonth ? 'opacity-50' : ''}`}>
-                  {dayInfo.moonEmoji}
-                </span>
-                <span className={`text-xs font-medium self-start ${dayInfo.isToday ? 'bg-primary text-primary-foreground rounded-full px-1.5 py-0.5' : dayInfo.isCurrentMonth ? 'text-foreground' : 'text-muted-foreground/70'}`}>
-                  {dayInfo.dayOfMonth}
-                </span>
+              <div className="flex justify-between items-start w-full mb-1">
+                <div className="flex items-center">
+                  <span className={`text-xl ${!dayInfo.isCurrentMonth ? 'opacity-50' : ''}`}>
+                    {dayInfo.moonEmoji}
+                  </span>
+                  <span className={`text-xs font-medium ml-1 ${dayInfo.isToday ? 'bg-primary text-primary-foreground rounded-full px-1.5 py-0.5' : dayInfo.isCurrentMonth ? 'text-foreground' : 'text-muted-foreground/70'}`}>
+                    {dayInfo.dayOfMonth}
+                  </span>
+                </div>
               </div>
               
-              <div className="flex-grow mt-1 w-full space-y-1 text-left">
-                {dayInfo.cycleDay && (
-                  <p className={`text-xs ${dayInfo.isPeriodDay ? 'text-primary font-semibold' : 'text-primary'}`}>
-                    Cycle Day {dayInfo.cycleDay}
-                    {dayInfo.isPeriodDay && <span className="ml-1">🩸</span>}
+              <div className="flex-grow w-full space-y-1 text-left flex flex-col justify-between">
+                <div>
+                  {dayInfo.cycleDay && (
+                    <p className={`text-xs ${dayInfo.isPeriodDay ? 'text-primary font-semibold' : 'text-primary/90'}`}>
+                      Cycle Day {dayInfo.cycleDay}
+                      {dayInfo.isPeriodDay && <span className="ml-1">🩸</span>}
+                    </p>
+                  )}
+                  <p className="text-xs text-foreground/70 leading-tight mt-0.5">
+                    {dayInfo.affirmation}
                   </p>
+                </div>
+
+                {dayInfo.tarotCard && (
+                  <div className="mt-1 pt-1 border-t border-border/30 w-full">
+                    <p className="text-[0.65rem] font-medium text-primary/90 mb-0.5 truncate" title={dayInfo.tarotCard.title}>
+                       {dayInfo.tarotCard.title}
+                    </p>
+                    <div className="flex justify-center">
+                      <Image 
+                        src={dayInfo.tarotCard.image} 
+                        alt={dayInfo.tarotCard.title} 
+                        width={40}  // Adjusted size
+                        height={64} // Adjusted size
+                        className="rounded-sm object-contain"
+                        data-ai-hint="tarot card"
+                        unoptimized={dayInfo.tarotCard.image.startsWith('https://placehold.co')} // Only unoptimize for placeholder
+                      />
+                    </div>
+                  </div>
                 )}
-                <p className="text-xs text-foreground/80 leading-tight">
-                  {dayInfo.affirmation}
-                </p>
               </div>
             </div>
           ))}

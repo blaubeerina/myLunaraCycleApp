@@ -15,6 +15,14 @@ export type MoonPhaseName =
   | 'Last Quarter'
   | 'Waning Crescent';
 
+export interface TarotCard {
+  id: string;
+  title: string;
+  image: string;
+  // Optional: Add meaning or keywords later
+  // meaning?: string; 
+}
+
 export interface DailyCalendarInfo {
   date: Date;
   dayOfMonth: number;
@@ -24,5 +32,6 @@ export interface DailyCalendarInfo {
   moonPhase: MoonPhaseName;
   moonEmoji: string;
   affirmation: string;
-  isPeriodDay?: boolean; // Optional: for highlighting period days in calendar
+  isPeriodDay?: boolean;
+  tarotCard?: TarotCard; // Added for daily tarot card
 }
