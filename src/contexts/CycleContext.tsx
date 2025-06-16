@@ -2,18 +2,23 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import type { LocalStorageData } from '@/lib/types';
-import { calculatePeriodDuration } from '@/lib/cycle-utils'; // Import new utility
+import type { LocalStorageData, PeriodLogEntry, PeriodIntensity, Symptom } from '@/lib/types';
+import { calculatePeriodDuration } from '@/lib/cycle-utils';
+import { format, parseISO, isValid } from 'date-fns';
 
-const LOCAL_STORAGE_KEY = 'minimalCycleTrackerData_v1';
+const LOCAL_STORAGE_KEY_CYCLE = 'minimalCycleTrackerData_v1';
+const LOCAL_STORAGE_KEY_LOGS = 'lunarRhythmsPeriodLogs_v1';
 
 interface CycleContextType {
   lastPeriodDate: string | null;
   lastPeriodEndDate: string | null;
   lastPeriodDuration: number | null;
+  periodLogs: Record<string, PeriodLogEntry>;
   setPeriodDates: (startDate: string | null, endDate?: string | null) => void;
   isLoading: boolean;
   clearPeriodData: () => void;
+  addPeriodLog: (log: PeriodLogEntry) => void;
+  getPeriodLog: (date: string) => PeriodLogEntry | undefined;
 }
 
 const CycleContext = createContext<CycleContextType | undefined>(undefined);
@@ -22,23 +27,36 @@ export const CycleProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [lastPeriodDate, setLastPeriodDateState] = useState<string | null>(null);
   const [lastPeriodEndDate, setLastPeriodEndDateState] = useState<string | null>(null);
   const [lastPeriodDuration, setLastPeriodDurationState] = useState<number | null>(null);
+  const [periodLogs, setPeriodLogsState] = useState<Record<string, PeriodLogEntry>>({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     try {
-      const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (storedData) {
-        const parsedData: LocalStorageData = JSON.parse(storedData);
+      // Load main cycle data
+      const storedCycleData = localStorage.getItem(LOCAL_STORAGE_KEY_CYCLE);
+      if (storedCycleData) {
+        const parsedData: LocalStorageData = JSON.parse(storedCycleData);
         if (parsedData.lastPeriodDate && /^\d{4}-\d{2}-\d{2}$/.test(parsedData.lastPeriodDate)) {
           setLastPeriodDateState(parsedData.lastPeriodDate);
         }
         if (parsedData.lastPeriodEndDate && /^\d{4}-\d{2}-\d{2}$/.test(parsedData.lastPeriodEndDate)) {
           setLastPeriodEndDateState(parsedData.lastPeriodEndDate);
         }
-        if (typeof parsedData.lastPeriodDuration === 'number') {
-          setLastPeriodDurationState(parsedData.lastPeriodDuration);
+        // Recalculate duration for consistency or load if stored (current setup recalculates)
+        if (parsedData.lastPeriodDate && parsedData.lastPeriodEndDate) {
+           setLastPeriodDurationState(calculatePeriodDuration(parsedData.lastPeriodDate, parsedData.lastPeriodEndDate));
+        } else {
+            setLastPeriodDurationState(null);
         }
       }
+
+      // Load period logs
+      const storedLogsData = localStorage.getItem(LOCAL_STORAGE_KEY_LOGS);
+      if (storedLogsData) {
+        const parsedLogs: Record<string, PeriodLogEntry> = JSON.parse(storedLogsData);
+        setPeriodLogsState(parsedLogs || {});
+      }
+
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
     }
@@ -47,45 +65,66 @@ export const CycleProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const setPeriodDates = useCallback((startDate: string | null, endDate?: string | null) => {
     let newStartDate = startDate;
-    let newEndDate = endDate !== undefined ? endDate : lastPeriodEndDate; // Use existing end date if new one not provided
+    let newEndDate = endDate !== undefined ? endDate : lastPeriodEndDate;
     let newDuration: number | null = null;
 
-    // If only start date is cleared, clear end date and duration too
     if (newStartDate === null) {
         newEndDate = null;
         newDuration = null;
-    } else if (newEndDate !== null) { // if endDate is explicitly set to null, it means clear it
+    } else if (newStartDate && newEndDate && isValid(parseISO(newStartDate)) && isValid(parseISO(newEndDate))) {
       newDuration = calculatePeriodDuration(newStartDate, newEndDate);
     }
 
 
     try {
-      const dataToStore: LocalStorageData = { 
+      const dataToStore: Pick<LocalStorageData, 'lastPeriodDate' | 'lastPeriodEndDate' | 'lastPeriodDuration'> = {
         lastPeriodDate: newStartDate,
         lastPeriodEndDate: newEndDate,
-        lastPeriodDuration: newDuration
+        lastPeriodDuration: newDuration,
       };
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToStore));
+      localStorage.setItem(LOCAL_STORAGE_KEY_CYCLE, JSON.stringify(dataToStore));
       setLastPeriodDateState(newStartDate);
       setLastPeriodEndDateState(newEndDate);
       setLastPeriodDurationState(newDuration);
     } catch (error) {
-      console.error("Failed to save data to localStorage", error);
+      console.error("Failed to save cycle data to localStorage", error);
     }
-  }, [lastPeriodEndDate]); // Add lastPeriodEndDate to dependencies
+  }, [lastPeriodEndDate]);
 
   const clearPeriodData = useCallback(() => {
-    setPeriodDates(null, null); // This will also clear duration
+    setPeriodDates(null, null);
+    // Optionally clear period logs too, or handle that separately
+    // setPeriodLogsState({});
+    // localStorage.removeItem(LOCAL_STORAGE_KEY_LOGS);
   }, [setPeriodDates]);
 
+  const addPeriodLog = useCallback((log: PeriodLogEntry) => {
+    setPeriodLogsState(prevLogs => {
+      const newLogs = { ...prevLogs, [log.date]: log };
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEY_LOGS, JSON.stringify(newLogs));
+      } catch (error) {
+        console.error("Failed to save period logs to localStorage", error);
+      }
+      return newLogs;
+    });
+  }, []);
+
+  const getPeriodLog = useCallback((date: string): PeriodLogEntry | undefined => {
+    return periodLogs[date];
+  }, [periodLogs]);
+
   return (
-    <CycleContext.Provider value={{ 
-      lastPeriodDate, 
+    <CycleContext.Provider value={{
+      lastPeriodDate,
       lastPeriodEndDate,
       lastPeriodDuration,
-      setPeriodDates, 
+      periodLogs,
+      setPeriodDates,
       isLoading,
-      clearPeriodData
+      clearPeriodData,
+      addPeriodLog,
+      getPeriodLog
     }}>
       {children}
     </CycleContext.Provider>

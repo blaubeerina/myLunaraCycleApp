@@ -2,7 +2,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 import {
   format,
   addMonths,
@@ -17,58 +16,44 @@ import {
   isWithinInterval,
   parseISO,
   isValid,
-  startOfDay,
+  getDay,
 } from 'date-fns';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { calculateCycleDay } from '@/lib/cycle-utils';
+import { ChevronLeft, ChevronRight, Droplet, Dot } from 'lucide-react';
 import { getMoonPhase, getMoonEmoji } from '@/lib/moon-utils';
-// getAffirmationForMoonPhase is removed as affirmations are now global
-import type { DailyCalendarInfo } from '@/lib/types';
+import type { DailyCalendarInfo, PeriodLogEntry } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogClose,
-} from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
+import { useCycleContext } from '@/contexts/CycleContext'; // For accessing period logs
 
 interface CycleCalendarProps {
-  lastPeriodStartDate: string | null;
-  lastPeriodEndDate: string | null;
+  onDayClick: (date: Date) => void; // To open the log dialog
 }
 
-export function CycleCalendar({ lastPeriodStartDate, lastPeriodEndDate }: CycleCalendarProps) {
+export function CycleCalendar({ onDayClick }: CycleCalendarProps) {
   const [currentDisplayMonth, setCurrentDisplayMonth] = useState(new Date());
+  const { lastPeriodDate, lastPeriodEndDate, getPeriodLog } = useCycleContext();
   const [periodInterval, setPeriodInterval] = useState<{start: Date, end: Date} | null>(null);
-  const [selectedDay, setSelectedDay] = useState<DailyCalendarInfo | null>(null);
 
   useEffect(() => {
-    if (lastPeriodStartDate && lastPeriodEndDate) {
-      const start = parseISO(lastPeriodStartDate);
+    // This interval is for the *main* period defined by user inputs, not individual log days
+    if (lastPeriodDate && lastPeriodEndDate) {
+      const start = parseISO(lastPeriodDate);
       const end = parseISO(lastPeriodEndDate);
       if (isValid(start) && isValid(end) && end >= start) {
-        setPeriodInterval({ start: startOfDay(start), end: startOfDay(end) });
+        setPeriodInterval({ start, end });
       } else {
         setPeriodInterval(null);
       }
-    } else if (lastPeriodStartDate) { 
-        const start = parseISO(lastPeriodStartDate);
+    } else if (lastPeriodDate) {
+        const start = parseISO(lastPeriodDate);
         if (isValid(start)) {
-            setPeriodInterval({start: startOfDay(start), end: startOfDay(start)});
+            setPeriodInterval({start, end: start}); // Treat as single day if no end date
         } else {
             setPeriodInterval(null);
         }
     } else {
       setPeriodInterval(null);
     }
-  }, [lastPeriodStartDate, lastPeriodEndDate]);
-
-  const handleDayClick = (dayInfo: DailyCalendarInfo) => {
-    setSelectedDay(dayInfo);
-  };
+  }, [lastPeriodDate, lastPeriodEndDate]);
 
   const renderHeader = () => {
     return (
@@ -98,7 +83,8 @@ export function CycleCalendar({ lastPeriodStartDate, lastPeriodEndDate }: CycleC
 
   const renderDaysOfWeek = () => {
     const daysHeader = [];
-    const firstDayOfWeek = startOfWeek(new Date()); 
+    // weekStartsOn: 1 for Monday
+    const firstDayOfWeek = startOfWeek(new Date(), { weekStartsOn: 1 });
     for (let i = 0; i < 7; i++) {
       daysHeader.push(
         <div key={i} className="text-center font-medium text-muted-foreground text-sm py-2">
@@ -112,112 +98,90 @@ export function CycleCalendar({ lastPeriodStartDate, lastPeriodEndDate }: CycleC
   const renderCells = () => {
     const monthStart = startOfMonth(currentDisplayMonth);
     const monthEnd = endOfMonth(monthStart);
-    const startDate = startOfWeek(monthStart, { weekStartsOn: 1 }); 
+    // weekStartsOn: 1 for Monday
+    const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
     const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
     const rows: JSX.Element[] = [];
-    let daysData: DailyCalendarInfo[] = [];
     let dayPointer = startDate;
 
     while (dayPointer <= endDate) {
+      const weekDays: JSX.Element[] = [];
       for (let i = 0; i < 7; i++) {
-        const cycleDay = calculateCycleDay(lastPeriodStartDate, dayPointer);
-        const moonPhaseName = getMoonPhase(dayPointer);
-        const isPeriod = periodInterval ? isWithinInterval(startOfDay(dayPointer), periodInterval) : false;
+        const dayClone = new Date(dayPointer);
+        const formattedDateKey = format(dayClone, 'yyyy-MM-dd');
+        const periodLog = getPeriodLog(formattedDateKey);
+        const isPeriodDayFromLog = periodLog && periodLog.intensity !== 'none';
+
+        // isPeriod is from main user input, isPeriodDayFromLog is from detailed log
+        const isPeriod = periodInterval ? isWithinInterval(dayClone, periodInterval) : false;
+
+        const dayInfo: DailyCalendarInfo = {
+          date: dayClone,
+          dayOfMonth: parseInt(format(dayClone, 'd')),
+          isCurrentMonth: isSameMonth(dayClone, monthStart),
+          isToday: isSameDay(dayClone, new Date()),
+          cycleDay: null, // Cycle day logic is handled on the main page now
+          moonPhase: getMoonPhase(dayClone),
+          moonEmoji: getMoonEmoji(getMoonPhase(dayClone)),
+          isPeriodDay: isPeriod, // Main period
+          periodLog: periodLog,
+        };
         
-        daysData.push({
-          date: new Date(dayPointer),
-          dayOfMonth: parseInt(format(dayPointer, 'd')),
-          isCurrentMonth: isSameMonth(dayPointer, monthStart),
-          isToday: isSameDay(dayPointer, new Date()),
-          cycleDay: cycleDay,
-          moonPhase: moonPhaseName,
-          moonEmoji: getMoonEmoji(moonPhaseName),
-          isPeriodDay: isPeriod,
-        });
+        // Tailwind classes for day cells
+        let cellClasses = `min-h-[4rem] md:min-h-[4.5rem] p-2 flex flex-col items-center justify-center 
+                           cursor-pointer transition-colors duration-150 ease-in-out
+                           border-r border-b border-border 
+                           ${getDay(dayClone) === 0 ? 'border-r-0' : ''}`; // getDay() 0 is Sunday, 6 is Saturday
+        
+        if (!dayInfo.isCurrentMonth) {
+          cellClasses += ' bg-background/30 hover:bg-card/50 text-muted-foreground/50';
+        } else if (dayInfo.isToday) {
+          cellClasses += ' bg-primary/10 hover:bg-primary/20';
+        } else {
+          cellClasses += ' bg-card hover:bg-card/80';
+        }
+        if (isPeriodDayFromLog) {
+            cellClasses += ' relative'; // For positioning the dot
+        }
+
+
+        weekDays.push(
+          <div
+            key={dayInfo.date.toISOString()}
+            onClick={() => onDayClick(dayInfo.date)}
+            className={cellClasses}
+            aria-label={`Date ${format(dayInfo.date, 'PPP')}, Moon: ${dayInfo.moonPhase}`}
+          >
+            <span className={`text-xs font-medium self-start ${dayInfo.isToday ? 'bg-primary text-primary-foreground rounded-full px-1.5 py-0.5' : dayInfo.isCurrentMonth ? 'text-foreground' : 'text-muted-foreground/70'}`}>
+              {dayInfo.dayOfMonth}
+            </span>
+            <div className="flex-grow flex flex-col items-center justify-center">
+              <span className={`text-xl ${!dayInfo.isCurrentMonth ? 'opacity-50' : ''}`}>
+                {dayInfo.moonEmoji}
+              </span>
+              {isPeriodDayFromLog && (
+                <Dot className="h-5 w-5 text-destructive absolute bottom-1 right-1" />
+              )}
+            </div>
+          </div>
+        );
         dayPointer = addDays(dayPointer, 1);
       }
       rows.push(
         <div className="grid grid-cols-7 gap-px bg-border" key={`week-${format(dayPointer, 'yyyy-MM-dd')}`}>
-          {daysData.map((dayInfo) => (
-            <div
-              key={dayInfo.date.toISOString()}
-              onClick={() => handleDayClick(dayInfo)}
-              className={`min-h-[4.5rem] md:min-h-[5rem] p-2 flex flex-col items-start justify-between
-                          ${dayInfo.isCurrentMonth ? 'bg-card hover:bg-card/80' : 'bg-background/50 hover:bg-card/60 text-muted-foreground/70'}
-                          ${dayInfo.isPeriodDay ? 'bg-primary/10' : ''}
-                          cursor-pointer transition-colors duration-150 ease-in-out
-                          border-r border-b border-border 
-                          ${dayInfo.date.getDay() === 0 ? 'border-r-0' : ''} 
-                         `}
-              aria-label={`Date ${format(dayInfo.date, 'PPP')}, Moon: ${dayInfo.moonPhase}${dayInfo.cycleDay ? `, Cycle Day ${dayInfo.cycleDay}` : ''}`}
-            >
-              <div className="flex justify-between items-start w-full">
-                <span className={`text-xs font-medium ${dayInfo.isToday ? 'bg-primary text-primary-foreground rounded-full px-1.5 py-0.5' : dayInfo.isCurrentMonth ? 'text-foreground' : 'text-muted-foreground/70'}`}>
-                  {dayInfo.dayOfMonth}
-                </span>
-              </div>
-              
-              <div className="flex flex-col items-center justify-center w-full flex-grow space-y-1">
-                <span className={`text-xl ${!dayInfo.isCurrentMonth ? 'opacity-50' : ''}`}>
-                  {dayInfo.moonEmoji}
-                </span>
-                {dayInfo.cycleDay && (
-                  <p className={`text-xs ${dayInfo.isPeriodDay ? 'text-primary font-semibold' : 'text-primary/80'}`}>
-                    D{dayInfo.cycleDay}
-                    {dayInfo.isPeriodDay && <span className="ml-0.5">🩸</span>}
-                  </p>
-                )}
-              </div>
-            </div>
-          ))}
+          {weekDays}
         </div>
       );
-      daysData = [];
     }
     return <div className="border-l border-border">{rows}</div>;
   };
 
   return (
-    <div className="w-full bg-card shadow-lg rounded-lg overflow-hidden my-8">
+    <div className="w-full bg-card shadow-md rounded-lg overflow-hidden my-6">
       {renderHeader()}
       {renderDaysOfWeek()}
       {renderCells()}
-
-      {selectedDay && (
-        <Dialog open={!!selectedDay} onOpenChange={(isOpen) => !isOpen && setSelectedDay(null)}>
-          <DialogContent className="sm:max-w-md bg-card text-card-foreground p-6">
-            <DialogHeader className="text-center mb-4">
-              <DialogTitle className="text-2xl font-semibold text-primary">
-                {format(selectedDay.date, 'MMMM do, yyyy')}
-              </DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground flex flex-col items-center space-y-1 mt-1">
-                <span>{selectedDay.moonEmoji} {selectedDay.moonPhase}</span>
-                {selectedDay.cycleDay && (
-                  <span>
-                    Cycle Day {selectedDay.cycleDay}
-                    {selectedDay.isPeriodDay && <span className="ml-1 text-primary"> (Period)</span>}
-                  </span>
-                )}
-                {!selectedDay.cycleDay && !lastPeriodStartDate && (
-                    <span>Enter your last period start date to see cycle information.</span>
-                )}
-              </DialogDescription>
-            </DialogHeader>
-            
-            <Separator className="my-4 bg-border" />
-
-            {/* Tarot card and affirmation are now displayed on the main page, not here */}
-            <p className="text-center text-sm text-muted-foreground">
-                Daily wisdom and Tarot insights are available on the main page.
-            </p>
-            
-            <DialogClose asChild>
-              <Button variant="outline" className="mt-6 w-full">Close</Button>
-            </DialogClose>
-          </DialogContent>
-        </Dialog>
-      )}
     </div>
   );
 }

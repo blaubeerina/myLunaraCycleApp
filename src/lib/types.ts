@@ -3,6 +3,8 @@ export interface LocalStorageData {
   lastPeriodDate: string | null;
   lastPeriodEndDate: string | null;
   lastPeriodDuration: number | null;
+  periodLogs?: Record<string, PeriodLogEntry>; // Date string 'YYYY-MM-DD' as key
+  dailyWisdom_v1?: DailyWisdom; // For tarot and affirmations
 }
 
 export type MoonPhaseName =
@@ -19,7 +21,7 @@ export interface TarotCard {
   id: string;
   title: string;
   image: string; // Path to the image, e.g., /cards/the-fool.png
-  meaning: string; 
+  meaning: string;
 }
 
 export interface DailyCalendarInfo {
@@ -30,8 +32,8 @@ export interface DailyCalendarInfo {
   cycleDay: number | null;
   moonPhase: MoonPhaseName;
   moonEmoji: string;
-  // Affirmation is no longer per-day in calendar, but global daily
-  isPeriodDay?: boolean;
+  isPeriodDay?: boolean; // Derived from main period start/end
+  periodLog?: PeriodLogEntry; // Detailed log for the day
 }
 
 export interface WisdomAffirmation {
@@ -49,7 +51,17 @@ export interface DailyWisdom {
     text: string | null;
     author?: string | null;
     displayDate: string | null; // ISO date string YYYY-MM-DD
-    // Optional: to help avoid direct repeats if needed, though random selection from a large list is often sufficient
-    previousText?: string | null; 
+    previousText?: string | null;
   };
+}
+
+export type PeriodIntensity = 'none' | 'spotting' | 'light' | 'medium' | 'heavy';
+export const SYMPTOMS_LIST = ['cramps', 'headache', 'fatigue', 'bloating', 'moodSwings', 'tenderBreasts', 'acne', 'nausea', 'backache', 'foodCravings'] as const;
+export type Symptom = typeof SYMPTOMS_LIST[number];
+
+export interface PeriodLogEntry {
+  date: string; // YYYY-MM-DD
+  intensity: PeriodIntensity;
+  symptoms: Symptom[];
+  notes?: string;
 }
