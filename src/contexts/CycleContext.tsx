@@ -2,9 +2,10 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import type { LocalStorageData, PeriodLogEntry } from '@/lib/types'; // Removed unused PeriodIntensity, Symptom
+import type { LocalStorageData, PeriodLogEntry, MoonPhaseName } from '@/lib/types'; 
 import { calculatePeriodDuration } from '@/lib/cycle-utils';
-import { format, parseISO, isValid } from 'date-fns'; // format is used
+import { getMoonPhase, getMoonEmoji } from '@/lib/moon-utils';
+import { format, parseISO, isValid } from 'date-fns';
 
 const LOCAL_STORAGE_KEY_CYCLE = 'minimalCycleTrackerData_v1';
 const LOCAL_STORAGE_KEY_LOGS = 'lunarRhythmsPeriodLogs_v1';
@@ -19,7 +20,7 @@ interface CycleContextType {
   clearPeriodData: () => void;
   addPeriodLog: (log: PeriodLogEntry) => void;
   getPeriodLog: (date: string) => PeriodLogEntry | undefined;
-  hasSufficientDataForDisplay: boolean; // New flag
+  hasSufficientDataForDisplay: boolean;
 }
 
 const CycleContext = createContext<CycleContextType | undefined>(undefined);
@@ -31,7 +32,7 @@ export const CycleProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [periodLogs, setPeriodLogsState] = useState<Record<string, PeriodLogEntry>>({});
   const [isLoading, setIsLoading] = useState(true);
 
-  const hasSufficientDataForDisplay = !!lastPeriodDate; // True if lastPeriodDate is set
+  const hasSufficientDataForDisplay = !!lastPeriodDate; 
 
   useEffect(() => {
     try {
@@ -96,8 +97,18 @@ export const CycleProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }, [setPeriodDates]);
 
   const addPeriodLog = useCallback((log: PeriodLogEntry) => {
+    const logDate = parseISO(log.date);
+    const moonPhaseName = getMoonPhase(logDate);
+    const moonEmojiChar = getMoonEmoji(moonPhaseName);
+
+    const logWithMoonPhase: PeriodLogEntry = {
+      ...log,
+      moonPhase: moonPhaseName,
+      moonEmoji: moonEmojiChar,
+    };
+
     setPeriodLogsState(prevLogs => {
-      const newLogs = { ...prevLogs, [log.date]: log };
+      const newLogs = { ...prevLogs, [log.date]: logWithMoonPhase };
       try {
         localStorage.setItem(LOCAL_STORAGE_KEY_LOGS, JSON.stringify(newLogs));
       } catch (error) {

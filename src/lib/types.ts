@@ -34,9 +34,9 @@ export interface DailyCalendarInfo {
   moonEmoji: string;
   periodLog?: PeriodLogEntry; 
   isBleedingDay?: boolean;
-  isFertileDay?: boolean;
-  isOvulationDay?: boolean;
-  tarotCard: TarotCard; // Made non-optional as it's always fetched now
+  // isFertileDay?: boolean; // Removed as per minimalist design
+  // isOvulationDay?: boolean; // Removed as per minimalist design
+  tarotCard: TarotCard; 
 }
 
 export interface WisdomAffirmation {
@@ -67,6 +67,8 @@ export interface PeriodLogEntry {
   intensity: PeriodIntensity;
   symptoms: Symptom[];
   notes?: string;
+  moonPhase?: MoonPhaseName;
+  moonEmoji?: string;
 }
 
 // Types for myLunaraCycle specific features

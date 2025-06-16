@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from '@/components/ui/separator';
 import { format, parseISO, isValid, isToday, startOfDay } from 'date-fns';
-import type { TarotCard, WisdomAffirmation, DailyWisdom, PeriodLogEntry } from '@/lib/types';
+import type { TarotCard, WisdomAffirmation, DailyWisdom, PeriodLogEntry, MoonPhaseName } from '@/lib/types';
 import { tarotCards, fallbackTarotCard } from '@/lib/tarot-data';
 import { drawNewDailyCard, updateRecentCardIds, getCardById } from '@/lib/tarot-utils';
 import { wisdomAffirmations } from '@/lib/affirmations-data';
@@ -54,22 +54,24 @@ export default function HomePage() {
   const [isPeriodLogDialogOpen, setIsPeriodLogDialogOpen] = useState(false);
   const [selectedDateForLog, setSelectedDateForLog] = useState<Date | null>(null);
 
-  const [todayMoonPhaseName, setTodayMoonPhaseName] = useState<string>('');
-  const [todayMoonEmoji, setTodayMoonEmoji] = useState<string>('');
+  const [todayMoonPhaseName, setTodayMoonPhaseName] = useState<MoonPhaseName>('New Moon');
+  const [todayMoonEmoji, setTodayMoonEmoji] = useState<string>('🌑');
   const [nextPeriodMoonEmoji, setNextPeriodMoonEmoji] = useState<string>('');
 
 
   useEffect(() => {
     const today = new Date();
-    setTodayMoonPhaseName(getMoonPhase(today));
-    setTodayMoonEmoji(getMoonEmoji(getMoonPhase(today)));
+    const currentMoonPhase = getMoonPhase(today);
+    setTodayMoonPhaseName(currentMoonPhase);
+    setTodayMoonEmoji(getMoonEmoji(currentMoonPhase));
 
-    const nextPeriodDateObj = getEstimatedNextPeriod(lastPeriodDate);
-    if (nextPeriodDateObj) {
-      setNextPeriodMoonEmoji(getMoonEmoji(getMoonPhase(nextPeriodDateObj)));
-    } else {
-      setNextPeriodMoonEmoji('');
-    }
+    // Removed next period prediction from header based on latest minimalist design
+    // const nextPeriodDateObj = getEstimatedNextPeriod(lastPeriodDate);
+    // if (nextPeriodDateObj) {
+    //   setNextPeriodMoonEmoji(getMoonEmoji(getMoonPhase(nextPeriodDateObj)));
+    // } else {
+    //   setNextPeriodMoonEmoji('');
+    // }
 
   }, [lastPeriodDate]);
 
@@ -213,8 +215,8 @@ export default function HomePage() {
   const displayEndDateShort = lastPeriodEndDate ? format(parseISO(lastPeriodEndDate), 'dd.MM') : '--.--';
   const displayDurationText = lastPeriodDuration ? `(${lastPeriodDuration} days)` : '';
   const displayCycleDayText = currentCycleDay ? `Day ${currentCycleDay}/28` : 'Day --/28';
-  const nextPeriodDate = getEstimatedNextPeriod(lastPeriodDate);
-  const displayNextPeriod = nextPeriodDate ? format(nextPeriodDate, 'dd.MM') : '--.--';
+  // const nextPeriodDate = getEstimatedNextPeriod(lastPeriodDate); // Removed as per latest UI
+  // const displayNextPeriod = nextPeriodDate ? format(nextPeriodDate, 'dd.MM') : '--.--'; // Removed
 
 
   return (
@@ -239,12 +241,14 @@ export default function HomePage() {
               <span className="text-foreground/70">Log period to see dates</span>
             )}
           </span>
+          {/* Removed Next Period Display based on prompt
           {lastPeriodDate && (
              <span className="flex items-center">
                 <span className="text-lg mr-1" style={{color: 'hsl(var(--color-moon))'}}>{nextPeriodMoonEmoji}</span>
                 <span className="text-foreground/70">Next: ~{displayNextPeriod}</span>
             </span>
           )}
+          */}
         </div>
       </header>
       
@@ -329,6 +333,11 @@ export default function HomePage() {
                       <p className="text-xs text-muted-foreground mt-1">Symptoms: {log.symptoms.join(', ')}</p>
                     )}
                     {log.notes && <p className="text-sm mt-1 italic text-foreground/80">"{log.notes}"</p>}
+                     {log.moonEmoji && log.moonPhase && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Moon: {log.moonEmoji} {log.moonPhase}
+                        </p>
+                      )}
                   </li>
                 ))}
               </ul>
