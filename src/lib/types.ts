@@ -1,8 +1,8 @@
 
 export interface LocalStorageData {
   lastPeriodDate: string | null;
-  lastPeriodEndDate: string | null; // New field
-  lastPeriodDuration: number | null; // New field
+  lastPeriodEndDate: string | null; 
+  lastPeriodDuration: number | null; 
 }
 
 export type MoonPhaseName =
@@ -18,9 +18,8 @@ export type MoonPhaseName =
 export interface TarotCard {
   id: string;
   title: string;
-  image: string;
-  // Optional: Add meaning or keywords later
-  // meaning?: string; 
+  image: string; // Path to the image, e.g., /cards/the-fool.png
+  meaning?: string; // Optional: Short meaning or keywords
 }
 
 export interface DailyCalendarInfo {
@@ -31,7 +30,8 @@ export interface DailyCalendarInfo {
   cycleDay: number | null;
   moonPhase: MoonPhaseName;
   moonEmoji: string;
-  affirmation: string;
+  affirmation: string; // This will be the moon-based affirmation
   isPeriodDay?: boolean;
-  tarotCard?: TarotCard; // Added for daily tarot card
+  // Tarot card is now fetched on demand for detail view, not stored per cell in initial grid render
 }
+
