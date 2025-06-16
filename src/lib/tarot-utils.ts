@@ -1,5 +1,5 @@
 
-import { format } from 'date-fns';
+import { format, getDayOfYear } from 'date-fns';
 import { tarotCards, fallbackTarotCard } from './tarot-data';
 import type { TarotCard } from './types';
 
@@ -77,7 +77,7 @@ export function getDailyTarotCard(date: Date): TarotCard {
 
     // If no card in localStorage or fallback was stored, select one deterministically for this date.
     // Using a combination of date parts to get a stable index.
-    const dayOfYear = parseInt(format(date, 'D')); // Day of year (1-366)
+    const dayOfYear = getDayOfYear(date); // Day of year (1-366)
     const year = date.getFullYear();
     const month = date.getMonth(); // 0-11
     // Simple deterministic index calculation
@@ -86,7 +86,7 @@ export function getDailyTarotCard(date: Date): TarotCard {
     const selectedCard = tarotCards[deterministicIndex] || fallbackTarotCard;
 
     // Store only if it's not the fallback card itself and localStorage is available.
-    if (selectedCard.id !== 'fallback') {
+    if (selectedCard.id !== 'fallback' && typeof localStorage !== 'undefined') {
       localStorage.setItem(storageKey, selectedCard.id);
     }
     return selectedCard;
@@ -95,10 +95,11 @@ export function getDailyTarotCard(date: Date): TarotCard {
     console.error("Error accessing localStorage for daily tarot card:", error);
     // Fallback in case localStorage fails or other errors during the process.
     // This deterministic selection should still work even if localStorage fails.
-    const dayOfYear = parseInt(format(date, 'D'));
+    const dayOfYear = getDayOfYear(date);
     const year = date.getFullYear();
     const month = date.getMonth();
     const deterministicIndex = (dayOfYear + year + month) % tarotCards.length;
     return tarotCards[deterministicIndex] || fallbackTarotCard;
   }
 }
+
