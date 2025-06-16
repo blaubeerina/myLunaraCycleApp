@@ -2,9 +2,9 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import type { LocalStorageData, PeriodLogEntry, PeriodIntensity, Symptom } from '@/lib/types';
+import type { LocalStorageData, PeriodLogEntry } from '@/lib/types'; // Removed unused PeriodIntensity, Symptom
 import { calculatePeriodDuration } from '@/lib/cycle-utils';
-import { format, parseISO, isValid } from 'date-fns';
+import { format, parseISO, isValid } from 'date-fns'; // format is used
 
 const LOCAL_STORAGE_KEY_CYCLE = 'minimalCycleTrackerData_v1';
 const LOCAL_STORAGE_KEY_LOGS = 'lunarRhythmsPeriodLogs_v1';
@@ -19,6 +19,7 @@ interface CycleContextType {
   clearPeriodData: () => void;
   addPeriodLog: (log: PeriodLogEntry) => void;
   getPeriodLog: (date: string) => PeriodLogEntry | undefined;
+  hasSufficientDataForDisplay: boolean; // New flag
 }
 
 const CycleContext = createContext<CycleContextType | undefined>(undefined);
@@ -30,9 +31,10 @@ export const CycleProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [periodLogs, setPeriodLogsState] = useState<Record<string, PeriodLogEntry>>({});
   const [isLoading, setIsLoading] = useState(true);
 
+  const hasSufficientDataForDisplay = !!lastPeriodDate; // True if lastPeriodDate is set
+
   useEffect(() => {
     try {
-      // Load main cycle data
       const storedCycleData = localStorage.getItem(LOCAL_STORAGE_KEY_CYCLE);
       if (storedCycleData) {
         const parsedData: LocalStorageData = JSON.parse(storedCycleData);
@@ -42,7 +44,6 @@ export const CycleProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (parsedData.lastPeriodEndDate && /^\d{4}-\d{2}-\d{2}$/.test(parsedData.lastPeriodEndDate)) {
           setLastPeriodEndDateState(parsedData.lastPeriodEndDate);
         }
-        // Recalculate duration for consistency or load if stored (current setup recalculates)
         if (parsedData.lastPeriodDate && parsedData.lastPeriodEndDate) {
            setLastPeriodDurationState(calculatePeriodDuration(parsedData.lastPeriodDate, parsedData.lastPeriodEndDate));
         } else {
@@ -50,7 +51,6 @@ export const CycleProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
       }
 
-      // Load period logs
       const storedLogsData = localStorage.getItem(LOCAL_STORAGE_KEY_LOGS);
       if (storedLogsData) {
         const parsedLogs: Record<string, PeriodLogEntry> = JSON.parse(storedLogsData);
@@ -93,9 +93,6 @@ export const CycleProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const clearPeriodData = useCallback(() => {
     setPeriodDates(null, null);
-    // Optionally clear period logs too, or handle that separately
-    // setPeriodLogsState({});
-    // localStorage.removeItem(LOCAL_STORAGE_KEY_LOGS);
   }, [setPeriodDates]);
 
   const addPeriodLog = useCallback((log: PeriodLogEntry) => {
@@ -124,7 +121,8 @@ export const CycleProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       isLoading,
       clearPeriodData,
       addPeriodLog,
-      getPeriodLog
+      getPeriodLog,
+      hasSufficientDataForDisplay
     }}>
       {children}
     </CycleContext.Provider>

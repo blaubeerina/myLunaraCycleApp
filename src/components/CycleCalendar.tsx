@@ -14,6 +14,7 @@ import {
   isSameMonth,
   isSameDay,
   getDay,
+  parseISO // Added parseISO
 } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getMoonPhase, getMoonEmoji } from '@/lib/moon-utils';
@@ -21,24 +22,27 @@ import type { DailyCalendarInfo } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { useCycleContext } from '@/contexts/CycleContext';
 import { cn } from '@/lib/utils';
+import { calculateCycleDay } from '@/lib/cycle-utils';
+
 
 interface CycleCalendarProps {
   onDayClick: (date: Date) => void;
+  hasSufficientDataForDisplay?: boolean; // New prop
 }
 
-export function CycleCalendar({ onDayClick }: CycleCalendarProps) {
+export function CycleCalendar({ onDayClick, hasSufficientDataForDisplay }: CycleCalendarProps) {
   const [currentDisplayMonth, setCurrentDisplayMonth] = useState(new Date());
-  const { getPeriodLog } = useCycleContext();
+  const { getPeriodLog, lastPeriodDate } = useCycleContext(); // get lastPeriodDate for cycle day calculation
 
   const renderHeader = () => {
     return (
-      <div className="flex justify-between items-center py-3 px-1">
+      <div className="flex justify-between items-center py-2 px-1">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setCurrentDisplayMonth(subMonths(currentDisplayMonth, 1))}
           aria-label="Previous month"
-          className="text-foreground/80 hover:text-foreground"
+          className="text-foreground/70 hover:text-foreground"
         >
           <ChevronLeft className="h-5 w-5" />
         </Button>
@@ -50,7 +54,7 @@ export function CycleCalendar({ onDayClick }: CycleCalendarProps) {
           size="icon"
           onClick={() => setCurrentDisplayMonth(addMonths(currentDisplayMonth, 1))}
           aria-label="Next month"
-          className="text-foreground/80 hover:text-foreground"
+          className="text-foreground/70 hover:text-foreground"
         >
           <ChevronRight className="h-5 w-5" />
         </Button>
@@ -60,7 +64,6 @@ export function CycleCalendar({ onDayClick }: CycleCalendarProps) {
 
   const renderDaysOfWeek = () => {
     const daysHeader = [];
-    // Ensure week starts on Monday for display
     const firstDayOfWeek = startOfWeek(new Date(), { weekStartsOn: 1 }); 
     for (let i = 0; i < 7; i++) {
       daysHeader.push(
@@ -69,13 +72,13 @@ export function CycleCalendar({ onDayClick }: CycleCalendarProps) {
         </div>
       );
     }
-    return <div className="grid grid-cols-7 gap-px border-b border-border/50 bg-border/30">{daysHeader}</div>;
+    return <div className="grid grid-cols-7 gap-px border-b border-border/30 bg-border/20">{daysHeader}</div>;
   };
 
   const renderCells = () => {
     const monthStart = startOfMonth(currentDisplayMonth);
     const monthEnd = endOfMonth(monthStart);
-    const startDate = startOfWeek(monthStart, { weekStartsOn: 1 }); // Monday first
+    const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
     const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
     const rows: JSX.Element[] = [];
@@ -93,40 +96,44 @@ export function CycleCalendar({ onDayClick }: CycleCalendarProps) {
           dayOfMonth: parseInt(format(dayClone, 'd')),
           isCurrentMonth: isSameMonth(dayClone, monthStart),
           isToday: isSameDay(dayClone, new Date()),
-          cycleDay: null, // Not displayed directly
+          cycleDay: lastPeriodDate ? calculateCycleDay(lastPeriodDate, dayClone) : null,
           moonPhase: getMoonPhase(dayClone),
           moonEmoji: getMoonEmoji(getMoonPhase(dayClone)),
           periodLog: periodLog,
           isBleedingDay: periodLog?.intensity !== 'none' && periodLog?.intensity !== undefined,
-          // isFertileDay and isOvulationDay removed
         };
         
-        let cellClasses = `min-h-[4.5rem] md:min-h-[5rem] p-1.5 flex flex-col items-start justify-between 
+        let cellClasses = `min-h-[4rem] md:min-h-[4.5rem] p-1.5 flex flex-col items-start justify-between 
                            cursor-pointer transition-all duration-150 ease-in-out relative
-                           border-r border-b border-border/30 
-                           ${getDay(dayClone) === 0 ? 'border-r-0' : ''} rounded-sm`; // Using rounded-sm
+                           border-r border-b border-border/20 rounded-sm
+                           hover:shadow-[0_0_8px_1px_hsl(var(--secondary)/0.2)]`;
         
-        let textColor = 'text-[hsl(var(--calendar-normal-text))]';
-        let bgColor = 'bg-transparent'; // Default normal day background
-        
-        if (dayInfo.isToday) {
-          bgColor = 'bg-[hsla(var(--calendar-today-bg-raw),0.5)]'; // Current Day background #2D374850
-          textColor = 'text-[hsl(var(--calendar-today-text))]'; // Current Day text #F6D365
+        if (getDay(dayClone) === 0 ) { // Sunday (last day of week if weekStartsOn: 1)
+           cellClasses = cn(cellClasses, 'border-r-0');
         }
         
-        if (dayInfo.isBleedingDay) {
-          // Bleeding day background #E53E3E10 (10% opacity)
+        let textColor = 'text-[hsl(var(--calendar-normal-text))]';
+        let bgColor = 'bg-transparent';
+        
+        if (dayInfo.isToday) {
+          bgColor = 'bg-[hsla(var(--calendar-today-bg-raw),0.5)]';
+          textColor = 'text-[hsl(var(--calendar-today-text))]';
+        }
+        
+        // Conditional bleeding day styling based on hasSufficientDataForDisplay
+        const showBleedingStyle = hasSufficientDataForDisplay && dayInfo.isBleedingDay;
+
+        if (showBleedingStyle) {
           bgColor = 'bg-[hsla(var(--calendar-bleeding-bg-raw),0.1)]'; 
-          // Bleeding day text #FFFFFF
           textColor = 'text-[hsl(var(--calendar-bleeding-text))]'; 
         }
 
         if (!dayInfo.isCurrentMonth) {
-          textColor = 'text-muted-foreground/40'; 
-          bgColor = 'bg-background/30'; 
+          textColor = 'text-muted-foreground/30'; 
+          bgColor = 'bg-background/20'; 
         }
         
-        cellClasses = cn(cellClasses, bgColor, textColor, 'hover:shadow-[0_0_8px_1px_hsl(var(--primary)/0.15)]');
+        cellClasses = cn(cellClasses, bgColor, textColor);
 
 
         weekDays.push(
@@ -134,34 +141,35 @@ export function CycleCalendar({ onDayClick }: CycleCalendarProps) {
             key={dayInfo.date.toISOString()}
             onClick={() => onDayClick(dayInfo.date)}
             className={cellClasses}
-            aria-label={`Date ${format(dayInfo.date, 'PPP')}, Moon: ${dayInfo.moonPhase}`}
+            aria-label={`Date ${format(dayInfo.date, 'PPP')}, Moon: ${dayInfo.moonPhase}${showBleedingStyle ? ', Bleeding Logged' : ''}`}
           >
-            {dayInfo.isBleedingDay && (
+            {showBleedingStyle && (
               <span className="absolute top-1 right-1.5 text-[10px] text-[hsl(var(--calendar-bleeding-indicator))]">●</span>
             )}
             <div className="flex justify-between w-full items-start">
               <span className={`text-sm font-medium ${dayInfo.isToday ? 'font-bold' : ''}`}>
                 {dayInfo.dayOfMonth}
               </span>
-              <span className={`text-xs opacity-60`} style={{color: 'hsl(var(--color-moon))'}}>
+              <span className={`text-xs opacity-50`} style={{color: 'hsl(var(--color-moon))'}}>
                 {dayInfo.moonEmoji}
               </span>
             </div>
+            {/* Removed cycle day and other text from here for minimalism */}
           </div>
         );
         dayPointer = addDays(dayPointer, 1);
       }
       rows.push(
-        <div className="grid grid-cols-7 gap-px bg-border/30" key={`week-${format(dayPointer, 'yyyy-MM-dd')}`}>
+        <div className="grid grid-cols-7 gap-px bg-border/20" key={`week-${format(dayPointer, 'yyyy-MM-dd')}`}>
           {weekDays}
         </div>
       );
     }
-    return <div className="border-l border-t border-border/30 rounded-md overflow-hidden shadow-sm bg-background/10">{rows}</div>;
+    return <div className="border-l border-t border-border/30 rounded-md overflow-hidden shadow-sm bg-background/5 ">{rows}</div>;
   };
 
   return (
-    <div className="w-full bg-card/50 rounded-md overflow-hidden">
+    <div className="w-full bg-card/30 rounded-md overflow-hidden border border-border/30">
       {renderHeader()}
       {renderDaysOfWeek()}
       {renderCells()}
