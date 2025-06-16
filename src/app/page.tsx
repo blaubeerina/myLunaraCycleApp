@@ -14,12 +14,12 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from '@/components/ui/separator';
 import { format, parseISO, isValid, isToday, startOfDay } from 'date-fns';
-import type { TarotCard, WisdomAffirmation, DailyWisdom, PeriodLogEntry, MoonPhaseName } from '@/lib/types';
+import type { TarotCard, WisdomAffirmation, DailyWisdom, PeriodLogEntry, MoonPhaseName, PeriodIntensity } from '@/lib/types';
 import { tarotCards, fallbackTarotCard } from '@/lib/tarot-data';
-import { drawNewDailyCard, updateRecentCardIds, getCardById, getDailyTarotCard } from '@/lib/tarot-utils';
+import { drawNewDailyCard, updateRecentCardIds, getCardById } from '@/lib/tarot-utils'; // Removed getDailyTarotCard as it was specific to calendar
 import { wisdomAffirmations } from '@/lib/affirmations-data';
 import { selectNewDailyAffirmation } from '@/lib/affirmation-utils';
-import { Droplet, Sparkles, RefreshCcw, BookOpen, Edit3, FileText, Moon as MoonIcon } from 'lucide-react';
+import { Droplet, Sparkles, RefreshCcw, BookOpen, Edit3, FileText, Moon as MoonIcon, CalendarDays } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const DAILY_WISDOM_STORAGE_KEY = 'lunarRhythmsDailyWisdom_v1'; 
@@ -215,7 +215,7 @@ export default function HomePage() {
   const displayStartDateShort = lastPeriodDate ? format(parseISO(lastPeriodDate), 'dd.MM') : '--.--';
   const displayEndDateShort = lastPeriodEndDate ? format(parseISO(lastPeriodEndDate), 'dd.MM') : '--.--';
   const displayDurationText = calculatedPeriodDuration ? `(${calculatedPeriodDuration} days)` : '';
-  const displayCycleDayText = currentCycleDay ? `Day ${currentCycleDay}/28` : 'Day --/28';
+  const displayCycleDayText = currentCycleDay ? `${currentCycleDay}/28` : '--/28';
   const nextPeriodDate = getEstimatedNextPeriod(lastPeriodDate);
   const displayNextPeriod = nextPeriodDate ? format(nextPeriodDate, 'dd.MM') : '--.--';
 
@@ -229,37 +229,57 @@ export default function HomePage() {
       todayForPeriodCheck <= startOfDay(parseISO(lastPeriodEndDate))
   );
 
+  const IntensityIconDisplay = ({ intensity }: { intensity: PeriodIntensity }) => {
+    const iconColor = "text-[hsl(var(--primary))]"; // Soft Crimson
+    const iconSize = "inline h-3 w-3 mx-px";
+
+    switch (intensity) {
+      case 'spotting':
+        return <span className={cn(iconColor, "text-lg")}>· Spotting</span>;
+      case 'light':
+        return <><Droplet className={cn(iconSize, iconColor)} /> Light</>;
+      case 'medium':
+        return <><Droplet className={cn(iconSize, iconColor)} /> <Droplet className={cn(iconSize, iconColor)} /> Medium</>;
+      case 'heavy':
+        return <><Droplet className={cn(iconSize, iconColor)} /> <Droplet className={cn(iconSize, iconColor)} /> <Droplet className={cn(iconSize, iconColor)} /> Heavy</>;
+      default:
+        return null;
+    }
+  };
+
 
   return (
     <div className="flex flex-col min-h-screen p-4 md:p-6 bg-background text-foreground">
       <header className="w-full max-w-3xl mx-auto text-center my-4 md:my-6">
-        <div className="flex items-center justify-center space-x-2 text-lg md:text-xl">
-          <span className="text-2xl" style={{color: 'hsl(var(--color-moon))'}}>{todayMoonEmoji}</span>
-          <span className="capitalize font-semibold text-foreground/90">{todayMoonPhaseName} Cycle</span>
-          <span className={cn("font-bold", isTodayActuallyAPeriodDay ? 'text-[hsl(var(--color-rose-quartz))]' : 'text-[hsl(var(--primary))]')}>
-            {displayCycleDayText}
-          </span>
-        </div>
-        <div className="text-xs md:text-sm text-foreground/80 mt-1.5 flex flex-wrap justify-center items-center gap-x-3 gap-y-1">
-          <span className="flex items-center">
-            <span className="text-lg mr-1" style={{color: 'hsl(var(--primary))'}}>🩸</span> 
-            {lastPeriodDate ? (
-              <>
-                <span className="text-foreground/90">{displayStartDateShort}</span> 
-                {lastPeriodEndDate && <span className="text-foreground/70 mx-0.5">&rarr;</span>}
-                {lastPeriodEndDate && <span className="text-foreground/90">{displayEndDateShort}</span>}
-                {displayDurationText && <span className="text-xs text-foreground/70 ml-1">{displayDurationText}</span>}
-              </>
-            ) : (
-              <span className="text-foreground/70">Log period to see dates</span>
-            )}
-          </span>
-          {lastPeriodDate && (
-             <span className="flex items-center">
-                <span className="text-lg mr-1" style={{color: 'hsl(var(--color-moon))'}}>{nextPeriodMoonEmoji}</span>
-                <span className="text-foreground/70">Next: ~{displayNextPeriod}</span>
-            </span>
-          )}
+        <div className="text-xs md:text-sm text-foreground/80 mb-2 flex flex-col items-center">
+            <div className="flex items-center justify-center space-x-2 text-base md:text-lg mb-1">
+              <span className="text-2xl" style={{color: 'hsl(var(--color-moon))'}}>{todayMoonEmoji}</span>
+              <span className="capitalize font-semibold text-foreground/90">{todayMoonPhaseName} Cycle</span>
+              <span className={cn("font-bold", isTodayActuallyAPeriodDay ? 'text-[hsl(var(--color-rose-quartz))]' : 'text-[hsl(var(--primary))]')}>
+                Day {displayCycleDayText}
+              </span>
+            </div>
+            <div className="flex items-center text-xs space-x-1">
+                <Droplet className="inline h-3 w-3 mr-0.5 text-[hsl(var(--primary))]" />
+                {lastPeriodDate ? (
+                <>
+                    <span className="font-medium">Start</span>
+                    <span className="text-foreground/90">{displayStartDateShort}</span>
+                    {lastPeriodEndDate && <span className="text-foreground/70 mx-0.5">&rarr;</span>}
+                    {lastPeriodEndDate && <> <span className="font-medium">End</span> <span className="text-foreground/90">{displayEndDateShort}</span></>}
+                    {displayDurationText && <span className="text-foreground/80 ml-1">{displayDurationText}</span>}
+                </>
+                ) : (
+                <span className="text-foreground/70">Log period start</span>
+                )}
+            </div>
+            <div className="flex items-center text-xs space-x-1 mt-0.5">
+                <CalendarDays className="inline h-3 w-3 mr-0.5 text-muted-foreground" />
+                <span>Last: {calculatedPeriodDuration || '--'} days</span>
+                <span className="text-muted-foreground mx-1">|</span>
+                <span style={{color: 'hsl(var(--color-moon))'}}>{nextPeriodMoonEmoji}</span>
+                <span>Next: ~{displayNextPeriod}</span>
+            </div>
         </div>
       </header>
       
@@ -332,14 +352,17 @@ export default function HomePage() {
                   <li key={log.date} className="p-3 bg-background/50 rounded-sm shadow-sm border border-border/70">
                     <div className="flex justify-between items-start">
                       <span className="font-semibold text-sm text-foreground/90">{format(parseISO(log.date), 'EEE, dd MMM yyyy')}</span>
-                      <div className="flex items-center space-x-2">
-                        {log.intensity !== 'none' && <span className="text-xs text-[hsl(var(--calendar-bleeding-indicator))]">● Bleeding Logged</span>}
-                        <Button variant="link" size="sm" className="h-auto p-0 text-xs text-accent hover:text-accent/80" onClick={() => {setSelectedDateForLog(parseISO(log.date)); setIsPeriodLogDialogOpen(true);}}>
+                       <Button variant="link" size="sm" className="h-auto p-0 text-xs text-accent hover:text-accent/80" onClick={() => {setSelectedDateForLog(parseISO(log.date)); setIsPeriodLogDialogOpen(true);}}>
                             <Edit3 className="h-3 w-3 mr-1"/> Edit
                         </Button>
-                      </div>
                     </div>
-                    {log.intensity !== 'none' && <p className="text-xs text-muted-foreground capitalize">Intensity: {log.intensity}</p>}
+                    
+                    {log.intensity !== 'none' && (
+                      <div className="text-xs text-foreground/90 mt-1 flex items-center">
+                        <IntensityIconDisplay intensity={log.intensity} />
+                      </div>
+                    )}
+
                     {log.symptoms && log.symptoms.length > 0 && (
                       <p className="text-xs text-muted-foreground mt-1">Symptoms: {log.symptoms.join(', ')}</p>
                     )}
@@ -416,3 +439,4 @@ export default function HomePage() {
     </div>
   );
 }
+
