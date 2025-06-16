@@ -1,7 +1,10 @@
 
-import { differenceInDays, parseISO, startOfDay, addDays, isValid } from 'date-fns';
+import { differenceInDays, parseISO, startOfDay, addDays, isValid, subDays } from 'date-fns';
 
 const DEFAULT_CYCLE_LENGTH = 28;
+const OVULATION_OFFSET_FROM_CYCLE_START = 13; // Ovulation on day 14 (0-indexed 13)
+const FERTILE_WINDOW_DAYS_BEFORE_OVULATION = 5;
+const FERTILE_WINDOW_DAYS_AFTER_OVULATION = 0; // Fertile window includes ovulation day
 
 export function calculateCycleDay(
   lastPeriodDateString: string | null,
@@ -15,23 +18,27 @@ export function calculateCycleDay(
     const currentTargetDate = startOfDay(targetDate);
 
     if (currentTargetDate < lastPeriodDate) {
-      return null; // Target date is before the last period
+      return null; 
     }
 
-    const diff = differenceInDays(currentTargetDate, lastPeriodDate);
-    return (diff % DEFAULT_CYCLE_LENGTH) + 1;
+    // Calculate days since last period start
+    const diffSinceLastPeriodStart = differenceInDays(currentTargetDate, lastPeriodDate);
+    
+    // Determine current cycle day within the assumed cycle length
+    // If a period is very long, cycle day can exceed DEFAULT_CYCLE_LENGTH before reset
+    return (diffSinceLastPeriodStart % DEFAULT_CYCLE_LENGTH) + 1;
+
   } catch (error) {
-    console.error("Error parsing lastPeriodDateString:", error);
+    console.error("Error parsing lastPeriodDateString for cycle day:", error);
     return null;
   }
 }
+
 
 export function getEstimatedNextPeriod(lastPeriodDateString: string | null): Date | null {
     if (!lastPeriodDateString) return null;
     try {
         const lastPeriodDate = startOfDay(parseISO(lastPeriodDateString));
-        // This simple model assumes periods always start after DEFAULT_CYCLE_LENGTH days
-        // More complex models would track multiple cycles to get an average.
         return addDays(lastPeriodDate, DEFAULT_CYCLE_LENGTH);
     } catch {
         return null;
@@ -52,10 +59,32 @@ export function calculatePeriodDuration(
     if (!isValid(startDate) || !isValid(endDate) || endDate < startDate) {
       return null;
     }
-    // Add 1 because if start and end are same day, duration is 1 day
     return differenceInDays(endDate, startDate) + 1;
   } catch (error) {
     console.error("Error calculating period duration:", error);
+    return null;
+  }
+}
+
+export function getEstimatedOvulationDay(lastPeriodDateString: string | null): Date | null {
+  if (!lastPeriodDateString) return null;
+  try {
+    const lastPeriodDate = startOfDay(parseISO(lastPeriodDateString));
+    return addDays(lastPeriodDate, OVULATION_OFFSET_FROM_CYCLE_START);
+  } catch (error) {
+    console.error("Error estimating ovulation day:", error);
+    return null;
+  }
+}
+
+export function getEstimatedFertileWindow(ovulationDay: Date | null): { start: Date; end: Date } | null {
+  if (!ovulationDay) return null;
+  try {
+    const startDate = subDays(ovulationDay, FERTILE_WINDOW_DAYS_BEFORE_OVULATION);
+    const endDate = addDays(ovulationDay, FERTILE_WINDOW_DAYS_AFTER_OVULATION);
+    return { start: startDate, end: endDate };
+  } catch (error) {
+    console.error("Error estimating fertile window:", error);
     return null;
   }
 }

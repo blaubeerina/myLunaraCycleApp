@@ -16,35 +16,42 @@ import {
   parseISO,
   isValid,
   getDay,
+  isWithinInterval,
 } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getMoonPhase, getMoonEmoji } from '@/lib/moon-utils';
-import type { DailyCalendarInfo, PeriodLogEntry, PeriodIntensity } from '@/lib/types';
+import { getEstimatedOvulationDay, getEstimatedFertileWindow } from '@/lib/cycle-utils';
+import type { DailyCalendarInfo, PeriodLogEntry } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { useCycleContext } from '@/contexts/CycleContext';
+import { cn } from '@/lib/utils';
 
 interface CycleCalendarProps {
   onDayClick: (date: Date) => void;
+  lastPeriodStartDate: string | null;
 }
 
-const BleedingIcon: React.FC<{ intensity: PeriodIntensity | undefined }> = ({ intensity }) => {
-  if (!intensity || intensity === 'none') return null;
-  switch (intensity) {
-    case 'spotting':
-    case 'light':
-      return <span className="text-primary text-xs ml-0.5" title="Light Flow">🩸</span>;
-    case 'medium':
-      return <span className="text-red-500 text-xs ml-0.5" title="Medium Flow">🔴</span>;
-    case 'heavy':
-      return <span className="text-red-700 text-xs ml-0.5" title="Heavy Flow">🟥</span>;
-    default:
-      return null;
-  }
-};
-
-export function CycleCalendar({ onDayClick }: CycleCalendarProps) {
+export function CycleCalendar({ onDayClick, lastPeriodStartDate }: CycleCalendarProps) {
   const [currentDisplayMonth, setCurrentDisplayMonth] = useState(new Date());
   const { getPeriodLog } = useCycleContext();
+  const [ovulationDay, setOvulationDay] = useState<Date | null>(null);
+  const [fertileWindow, setFertileWindow] = useState<{ start: Date; end: Date } | null>(null);
+
+  useEffect(() => {
+    if (lastPeriodStartDate) {
+      const ovDay = getEstimatedOvulationDay(lastPeriodStartDate);
+      setOvulationDay(ovDay);
+      if (ovDay) {
+        setFertileWindow(getEstimatedFertileWindow(ovDay));
+      } else {
+        setFertileWindow(null);
+      }
+    } else {
+      setOvulationDay(null);
+      setFertileWindow(null);
+    }
+  }, [lastPeriodStartDate]);
+
 
   const renderHeader = () => {
     return (
@@ -54,10 +61,11 @@ export function CycleCalendar({ onDayClick }: CycleCalendarProps) {
           size="icon"
           onClick={() => setCurrentDisplayMonth(subMonths(currentDisplayMonth, 1))}
           aria-label="Previous month"
+          className="text-foreground/80 hover:text-foreground"
         >
           <ChevronLeft className="h-5 w-5" />
         </Button>
-        <h2 className="text-lg font-semibold text-primary">
+        <h2 className="text-lg font-semibold text-foreground">
           {format(currentDisplayMonth, 'MMMM yyyy')}
         </h2>
         <Button
@@ -65,6 +73,7 @@ export function CycleCalendar({ onDayClick }: CycleCalendarProps) {
           size="icon"
           onClick={() => setCurrentDisplayMonth(addMonths(currentDisplayMonth, 1))}
           aria-label="Next month"
+          className="text-foreground/80 hover:text-foreground"
         >
           <ChevronRight className="h-5 w-5" />
         </Button>
@@ -82,13 +91,13 @@ export function CycleCalendar({ onDayClick }: CycleCalendarProps) {
         </div>
       );
     }
-    return <div className="grid grid-cols-7 gap-px border-b bg-border">{daysHeader}</div>;
+    return <div className="grid grid-cols-7 gap-px border-b border-border/50 bg-border/30">{daysHeader}</div>;
   };
 
   const renderCells = () => {
     const monthStart = startOfMonth(currentDisplayMonth);
     const monthEnd = endOfMonth(monthStart);
-    const startDate = startOfWeek(monthStart, { weekStartsOn: 1 }); // Monday first
+    const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
     const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
     const rows: JSX.Element[] = [];
@@ -110,23 +119,30 @@ export function CycleCalendar({ onDayClick }: CycleCalendarProps) {
           moonPhase: getMoonPhase(dayClone),
           moonEmoji: getMoonEmoji(getMoonPhase(dayClone)),
           periodLog: periodLog,
+          isBleedingDay: periodLog?.intensity !== 'none',
+          isOvulationDay: ovulationDay ? isSameDay(dayClone, ovulationDay) : false,
+          isFertileDay: fertileWindow ? isWithinInterval(dayClone, fertileWindow) : false,
         };
         
-        let cellClasses = `min-h-[4.5rem] md:min-h-[5rem] p-1.5 flex flex-col items-start justify-between 
-                           cursor-pointer transition-all duration-150 ease-in-out
-                           border-r border-b 
+        let cellClasses = `min-h-[5rem] md:min-h-[5.5rem] p-1.5 flex flex-col items-start justify-between 
+                           cursor-pointer transition-all duration-150 ease-in-out relative
+                           border-r border-b border-border/30 
                            ${getDay(dayClone) === 0 ? 'border-r-0' : ''} 
-                           hover:shadow-[0_0_10px_2px_hsl(var(--primary)/0.2)] hover:z-10 relative`;
+                           hover:shadow-[0_0_10px_3px_hsl(var(--secondary)/0.4)] hover:z-10`;
         
         if (!dayInfo.isCurrentMonth) {
-          cellClasses += ' bg-muted/20 text-muted-foreground/50 hover:bg-muted/30';
+          cellClasses = cn(cellClasses, 'bg-background/30 text-muted-foreground/40 hover:bg-background/50');
+        } else if (dayInfo.isOvulationDay) {
+          cellClasses = cn(cellClasses, 'bg-secondary/20 animate-pulse-peach');
+        } else if (dayInfo.isFertileDay) {
+          cellClasses = cn(cellClasses, 'bg-gradient-to-br from-[hsl(var(--color-fertile-start))] to-[hsl(var(--color-fertile-end))] opacity-50 hover:opacity-75');
+        } else if (dayInfo.isBleedingDay) {
+          cellClasses = cn(cellClasses, 'bg-primary/20');
         } else if (dayInfo.isToday) {
-          cellClasses += ' bg-primary/10 border-primary/50';
-        } else if (periodLog && periodLog.intensity !== 'none') {
-          cellClasses += ' bg-primary/5';
+          cellClasses = cn(cellClasses, 'bg-accent/10 border-accent/50');
         }
         else {
-          cellClasses += ' bg-card hover:bg-accent/10';
+          cellClasses = cn(cellClasses, 'bg-card/80 hover:bg-card');
         }
 
         weekDays.push(
@@ -137,33 +153,33 @@ export function CycleCalendar({ onDayClick }: CycleCalendarProps) {
             aria-label={`Date ${format(dayInfo.date, 'PPP')}, Moon: ${dayInfo.moonPhase}`}
           >
             <div className="flex justify-between w-full items-start">
-              <span className={`text-sm font-medium ${dayInfo.isToday ? 'text-primary font-bold' : dayInfo.isCurrentMonth ? 'text-foreground' : 'text-muted-foreground/60'}`}>
+              <span className={`text-sm font-medium ${dayInfo.isToday ? 'text-secondary font-bold' : dayInfo.isCurrentMonth ? 'text-foreground' : 'text-muted-foreground/60'}`}>
                 {dayInfo.dayOfMonth}
               </span>
-              <span className={`text-lg ${!dayInfo.isCurrentMonth ? 'opacity-60' : ''} self-center`}>
+              <span className={`text-lg opacity-30`} style={{color: 'hsl(var(--color-moon))'}}>
                 {dayInfo.moonEmoji}
               </span>
             </div>
-            <div className="self-center mt-auto">
-              {dayInfo.periodLog && dayInfo.periodLog.intensity !== 'none' && (
-                <BleedingIcon intensity={dayInfo.periodLog.intensity} />
-              )}
+            <div className="self-center mt-auto flex items-center space-x-1">
+              {dayInfo.isBleedingDay && <span className="text-lg" style={{color: 'hsl(var(--color-bleeding))'}}>🩸</span>}
+              {dayInfo.isOvulationDay && <span className="text-lg">🥚</span>}
+              {dayInfo.isFertileDay && !dayInfo.isOvulationDay && <span className="text-lg">✨</span>}
             </div>
           </div>
         );
         dayPointer = addDays(dayPointer, 1);
       }
       rows.push(
-        <div className="grid grid-cols-7 gap-px bg-border" key={`week-${format(dayPointer, 'yyyy-MM-dd')}`}>
+        <div className="grid grid-cols-7 gap-px bg-border/30" key={`week-${format(dayPointer, 'yyyy-MM-dd')}`}>
           {weekDays}
         </div>
       );
     }
-    return <div className="border-l border-t rounded-lg overflow-hidden shadow-sm">{rows}</div>;
+    return <div className="border-l border-t border-border/30 rounded-md overflow-hidden shadow-sm bg-background/10">{rows}</div>;
   };
 
   return (
-    <div className="w-full bg-card rounded-lg overflow-hidden">
+    <div className="w-full bg-card/50 rounded-md overflow-hidden">
       {renderHeader()}
       {renderDaysOfWeek()}
       {renderCells()}

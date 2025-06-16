@@ -32,8 +32,10 @@ export interface DailyCalendarInfo {
   cycleDay: number | null;
   moonPhase: MoonPhaseName;
   moonEmoji: string;
-  isPeriodDay?: boolean; // Derived from main period start/end
-  periodLog?: PeriodLogEntry; // Detailed log for the day
+  periodLog?: PeriodLogEntry; 
+  isBleedingDay?: boolean; // Derived from periodLog or main period dates
+  isFertileDay?: boolean;
+  isOvulationDay?: boolean;
 }
 
 export interface WisdomAffirmation {

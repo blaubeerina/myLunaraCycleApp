@@ -23,12 +23,12 @@ interface PeriodLogDialogProps {
   onSaveLog: (logEntry: PeriodLogEntry) => void;
 }
 
-const intensityOptions: { value: PeriodIntensity; label: string; icon?: string }[] = [
+const intensityOptions: { value: PeriodIntensity; label: string }[] = [
   { value: 'none', label: 'None' },
-  { value: 'spotting', label: 'Spotting', icon: '🩸' },
-  { value: 'light', label: 'Light', icon: '🩸' },
-  { value: 'medium', label: 'Medium', icon: '🔴' },
-  { value: 'heavy', label: 'Heavy', icon: '🟥' },
+  { value: 'spotting', label: 'Spotting' },
+  { value: 'light', label: 'Light' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'heavy', label: 'Heavy' },
 ];
 
 export function PeriodLogDialog({
@@ -70,14 +70,14 @@ export function PeriodLogDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md bg-card border-border rounded-lg">
+      <DialogContent className="sm:max-w-md bg-card border-border rounded-md">
         <DialogHeader>
-          <DialogTitle>Period Log for {formattedDate}</DialogTitle>
-          <DialogDescription>Log your flow, symptoms, and any notes for this day.</DialogDescription>
+          <DialogTitle className="text-foreground">Period Log for {formattedDate}</DialogTitle>
+          <DialogDescription className="text-muted-foreground">Log your flow, symptoms, and any notes for this day.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-6 py-4">
           <div className="grid gap-2">
-            <Label className="font-medium">Bleeding Intensity</Label>
+            <Label className="font-medium text-foreground/90">Bleeding Intensity</Label>
             <RadioGroup
               value={intensity}
               onValueChange={(value: string) => setIntensity(value as PeriodIntensity)}
@@ -86,8 +86,7 @@ export function PeriodLogDialog({
               {intensityOptions.map(opt => (
                 <div key={opt.value} className="flex items-center space-x-2">
                   <RadioGroupItem value={opt.value} id={`intensity-${opt.value}`} />
-                  <Label htmlFor={`intensity-${opt.value}`} className="font-normal flex items-center">
-                    {opt.icon && <span className={`mr-1.5 text-sm ${opt.value === 'light' || opt.value === 'spotting' ? 'text-primary' : opt.value === 'medium' ? 'text-red-500' : opt.value === 'heavy' ? 'text-red-700' : ''}`}>{opt.icon}</span>}
+                  <Label htmlFor={`intensity-${opt.value}`} className="font-normal text-foreground/80">
                     {opt.label}
                   </Label>
                 </div>
@@ -96,8 +95,8 @@ export function PeriodLogDialog({
           </div>
 
           <div className="grid gap-2">
-            <Label className="font-medium">Symptoms</Label>
-            <ScrollArea className="h-36 w-full rounded-md border p-3 bg-input/50">
+            <Label className="font-medium text-foreground/90">Symptoms</Label>
+            <ScrollArea className="h-36 w-full rounded-md border border-border/50 p-3 bg-input/50">
                 <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                 {SYMPTOMS_LIST.map(symptom => (
                     <div key={symptom} className="flex items-center space-x-2">
@@ -105,8 +104,9 @@ export function PeriodLogDialog({
                         id={`symptom-${symptom}`}
                         checked={selectedSymptoms.includes(symptom)}
                         onCheckedChange={(checked) => handleSymptomChange(symptom, !!checked)}
+                        className="border-primary"
                     />
-                    <Label htmlFor={`symptom-${symptom}`} className="font-normal capitalize text-sm">
+                    <Label htmlFor={`symptom-${symptom}`} className="font-normal capitalize text-sm text-foreground/80">
                         {symptom.replace(/([A-Z])/g, ' $1').trim()} 
                     </Label>
                     </div>
@@ -116,22 +116,22 @@ export function PeriodLogDialog({
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="notes" className="font-medium">Notes</Label>
+            <Label htmlFor="notes" className="font-medium text-foreground/90">Notes</Label>
             <Textarea
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Any additional thoughts or observations..."
               rows={3}
-              className="bg-input text-sm"
+              className="bg-input text-sm text-foreground rounded-sm"
             />
           </div>
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="button" variant="outline" onClick={onClose} className="rounded-sm text-foreground hover:bg-muted">Cancel</Button>
           </DialogClose>
-          <Button type="button" onClick={handleSave} className="bg-primary hover:bg-primary/90 text-primary-foreground">Save Log</Button>
+          <Button type="button" onClick={handleSave} className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-sm">Save Log</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
