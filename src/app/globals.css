@@ -18,6 +18,9 @@
     /* Primary: Soft Crimson (#E53E3E) for bleeding days & general accents */
     --primary: 0 79% 57%; 
     --primary-foreground: 0 0% 98%; /* White/very light for text on crimson */
+
+    /* Rose Quartz for specific highlights */
+    --color-rose-quartz: 356 70% 88%; /* #F7CAC9 */
     
     /* Accents for fertile window & ovulation */
     --color-fertile-start: 46 90% 68%; /* #F6D365 Golden Sunrise Start */
@@ -45,19 +48,22 @@
     --radius: 0.5rem; 
     --radius-sm: 0.25rem; 
     
-    /* Specific Calendar Colors from previous prompts, adjusted for cosmic theme */
-    --calendar-normal-text: 240 10% 85%; /* Uses main foreground */
-    --calendar-bleeding-bg-raw: 0 79% 57%; /* #E53E3E - for direct use in hsla, it's primary */
-    --calendar-bleeding-text: 0 0% 98%; /* primary-foreground */
-    --calendar-bleeding-indicator: 0 79% 57%; /* primary */
+    /* Specific Calendar Colors */
+    --calendar-normal-text: 240 10% 85%; 
+    --calendar-default-cell-bg: 0 0% 96%; /* #F5F5F5 Light gray for default cells */
+    --text-charcoal: 0 0% 20%; /* #333333 Dark charcoal text for light gray bg */
+
+    --calendar-bleeding-bg-raw: 0 79% 57%; /* #E53E3E Soft Crimson */
+    --calendar-bleeding-text: 0 0% 98%; 
+    --calendar-bleeding-indicator: 0 79% 57%; /* Crimson for dot indicator */
     
-    --calendar-today-bg-raw: 240 15% 25%; /* Using muted for today background base */
+    --calendar-today-bg-raw: 240 15% 25%; 
     --calendar-today-text: 46 90% 68%;    /* Accent color for today text */
     
     --color-moon: 0 0% 75%; /* Silver #C0C0C0 */
 
     /* Sidebar specific variables if needed, defaults to card/background */
-    --sidebar-background: 246 30% 10%; /* Slightly darker than card */
+    --sidebar-background: 246 30% 10%; 
     --sidebar-foreground: 240 10% 80%;
     --sidebar-primary: 0 79% 57%;
     --sidebar-primary-foreground: 0 0% 98%;
@@ -77,6 +83,7 @@
     --popover-foreground: 240 10% 85%;
     --primary: 0 79% 57%;
     --primary-foreground: 0 0% 98%;
+    --color-rose-quartz: 356 70% 88%;
 
     --color-fertile-start: 46 90% 68%;
     --color-fertile-end: 20 98% 75%;
@@ -97,6 +104,8 @@
     --ring: 46 90% 68%;
 
     --calendar-normal-text: 240 10% 85%;
+    --calendar-default-cell-bg: 0 0% 96%;
+    --text-charcoal: 0 0% 20%;
     --calendar-bleeding-bg-raw: 0 79% 57%;
     --calendar-bleeding-text: 0 0% 98%;
     --calendar-bleeding-indicator: 0 79% 57%;
@@ -141,10 +150,11 @@
 
   @keyframes pulse-ovulation {
     0%, 100% {
+      /* Using secondary color (Luminous Peach) for ovulation pulse */
       box-shadow: 0 0 0 0 hsla(var(--color-ovulation), 0.7);
     }
     50% {
-      box-shadow: 0 0 0 5px hsla(var(--color-ovulation), 0);
+      box-shadow: 0 0 0 8px hsla(var(--color-ovulation), 0);
     }
   }
 }

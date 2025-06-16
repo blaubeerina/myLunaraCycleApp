@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useCycleContext } from '@/contexts/CycleContext';
 import { CycleCalendar } from '@/components/CycleCalendar';
 import { PeriodLogDialog } from '@/components/PeriodLogDialog';
-import { calculateCycleDay, getEstimatedNextPeriod } from '@/lib/cycle-utils';
+import { calculateCycleDay, getEstimatedNextPeriod, calculatePeriodDuration } from '@/lib/cycle-utils';
 import { getMoonPhase, getMoonEmoji } from '@/lib/moon-utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -16,10 +16,11 @@ import { Separator } from '@/components/ui/separator';
 import { format, parseISO, isValid, isToday, startOfDay } from 'date-fns';
 import type { TarotCard, WisdomAffirmation, DailyWisdom, PeriodLogEntry, MoonPhaseName } from '@/lib/types';
 import { tarotCards, fallbackTarotCard } from '@/lib/tarot-data';
-import { drawNewDailyCard, updateRecentCardIds, getCardById } from '@/lib/tarot-utils';
+import { drawNewDailyCard, updateRecentCardIds, getCardById, getDailyTarotCard } from '@/lib/tarot-utils';
 import { wisdomAffirmations } from '@/lib/affirmations-data';
 import { selectNewDailyAffirmation } from '@/lib/affirmation-utils';
 import { Droplet, Sparkles, RefreshCcw, BookOpen, Edit3, FileText, Moon as MoonIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const DAILY_WISDOM_STORAGE_KEY = 'lunarRhythmsDailyWisdom_v1'; 
 
@@ -32,7 +33,6 @@ export default function HomePage() {
   const {
     lastPeriodDate,
     lastPeriodEndDate,
-    lastPeriodDuration,
     setPeriodDates,
     isLoading: isCycleContextLoading,
     clearPeriodData,
@@ -45,6 +45,7 @@ export default function HomePage() {
   const [inputStartDate, setInputStartDate] = useState<string>('');
   const [inputEndDate, setInputEndDate] = useState<string>('');
   const [currentCycleDay, setCurrentCycleDay] = useState<number | null>(null);
+  const [calculatedPeriodDuration, setCalculatedPeriodDuration] = useState<number | null>(null);
   
   const [dailyWisdom, setDailyWisdom] = useState<DailyWisdom>(initialDailyWisdomState);
   const [currentTarotCard, setCurrentTarotCard] = useState<TarotCard>(fallbackTarotCard);
@@ -65,13 +66,12 @@ export default function HomePage() {
     setTodayMoonPhaseName(currentMoonPhase);
     setTodayMoonEmoji(getMoonEmoji(currentMoonPhase));
 
-    // Removed next period prediction from header based on latest minimalist design
-    // const nextPeriodDateObj = getEstimatedNextPeriod(lastPeriodDate);
-    // if (nextPeriodDateObj) {
-    //   setNextPeriodMoonEmoji(getMoonEmoji(getMoonPhase(nextPeriodDateObj)));
-    // } else {
-    //   setNextPeriodMoonEmoji('');
-    // }
+    const nextPeriodDateObj = getEstimatedNextPeriod(lastPeriodDate);
+    if (nextPeriodDateObj) {
+      setNextPeriodMoonEmoji(getMoonEmoji(getMoonPhase(nextPeriodDateObj)));
+    } else {
+      setNextPeriodMoonEmoji('');
+    }
 
   }, [lastPeriodDate]);
 
@@ -142,6 +142,7 @@ export default function HomePage() {
       setCurrentCycleDay(null);
     }
     setInputEndDate(lastPeriodEndDate || '');
+    setCalculatedPeriodDuration(calculatePeriodDuration(lastPeriodDate, lastPeriodEndDate));
   }, [lastPeriodDate, lastPeriodEndDate]);
 
   const handleStartDateChange = (event: React.ChangeEvent<HTMLInputElement>) => setInputStartDate(event.target.value);
@@ -213,10 +214,20 @@ export default function HomePage() {
 
   const displayStartDateShort = lastPeriodDate ? format(parseISO(lastPeriodDate), 'dd.MM') : '--.--';
   const displayEndDateShort = lastPeriodEndDate ? format(parseISO(lastPeriodEndDate), 'dd.MM') : '--.--';
-  const displayDurationText = lastPeriodDuration ? `(${lastPeriodDuration} days)` : '';
+  const displayDurationText = calculatedPeriodDuration ? `(${calculatedPeriodDuration} days)` : '';
   const displayCycleDayText = currentCycleDay ? `Day ${currentCycleDay}/28` : 'Day --/28';
-  // const nextPeriodDate = getEstimatedNextPeriod(lastPeriodDate); // Removed as per latest UI
-  // const displayNextPeriod = nextPeriodDate ? format(nextPeriodDate, 'dd.MM') : '--.--'; // Removed
+  const nextPeriodDate = getEstimatedNextPeriod(lastPeriodDate);
+  const displayNextPeriod = nextPeriodDate ? format(nextPeriodDate, 'dd.MM') : '--.--';
+
+  const todayForPeriodCheck = startOfDay(new Date());
+  const isTodayActuallyAPeriodDay = !!(
+      lastPeriodDate &&
+      lastPeriodEndDate &&
+      isValid(parseISO(lastPeriodDate)) &&
+      isValid(parseISO(lastPeriodEndDate)) &&
+      todayForPeriodCheck >= startOfDay(parseISO(lastPeriodDate)) &&
+      todayForPeriodCheck <= startOfDay(parseISO(lastPeriodEndDate))
+  );
 
 
   return (
@@ -225,7 +236,9 @@ export default function HomePage() {
         <div className="flex items-center justify-center space-x-2 text-lg md:text-xl">
           <span className="text-2xl" style={{color: 'hsl(var(--color-moon))'}}>{todayMoonEmoji}</span>
           <span className="capitalize font-semibold text-foreground/90">{todayMoonPhaseName} Cycle</span>
-          <span className="font-bold" style={{color: 'hsl(var(--primary))'}}>{displayCycleDayText}</span>
+          <span className={cn("font-bold", isTodayActuallyAPeriodDay ? 'text-[hsl(var(--color-rose-quartz))]' : 'text-[hsl(var(--primary))]')}>
+            {displayCycleDayText}
+          </span>
         </div>
         <div className="text-xs md:text-sm text-foreground/80 mt-1.5 flex flex-wrap justify-center items-center gap-x-3 gap-y-1">
           <span className="flex items-center">
@@ -241,14 +254,12 @@ export default function HomePage() {
               <span className="text-foreground/70">Log period to see dates</span>
             )}
           </span>
-          {/* Removed Next Period Display based on prompt
           {lastPeriodDate && (
              <span className="flex items-center">
                 <span className="text-lg mr-1" style={{color: 'hsl(var(--color-moon))'}}>{nextPeriodMoonEmoji}</span>
                 <span className="text-foreground/70">Next: ~{displayNextPeriod}</span>
             </span>
           )}
-          */}
         </div>
       </header>
       
