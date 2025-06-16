@@ -134,8 +134,9 @@ export interface ThemeColorPalette {
   cssSidebarAccentForeground: string; // HSL string
   cssSidebarBorder: string; // HSL string
   cssSidebarRing: string; // HSL string
-  cssLunaraOvulationGlow?: string; // HSL string
-  cssLunaraPregnancyGrowth?: string; // HSL string
+  cssLunaraOvulationGlow?: string; // HSL string for ovulation highlight color
+  cssLunaraPregnancyGrowth?: string; // HSL string for pregnancy related color
+  cssLunaraLutealPhase?: string; // HSL string for luteal phase indication
 }
 
 export interface ThemeOption {

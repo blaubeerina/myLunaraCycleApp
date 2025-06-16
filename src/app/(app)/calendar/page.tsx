@@ -229,7 +229,7 @@ export default function CalendarPage() {
             month={currentDisplayMonth}
             onMonthChange={setCurrentDisplayMonth}
             onDayClick={handleDayClick}
-            className="w-full flex-grow flex flex-col p-0 border-0 rounded-none shadow-none"
+            className="w-full flex flex-col p-0 border-0 rounded-none shadow-none"
             formatters={{ formatWeekdayName }}
             modifiers={{ today: todayModifier }}
             showOutsideDays={true}
