@@ -24,8 +24,8 @@ interface PeriodLogDialogProps {
   onSaveLog: (logEntry: PeriodLogEntry) => void;
 }
 
-// Intensity options for the dialog, "none" is handled by the master switch.
 const intensityOptionsForDialog: { value: PeriodIntensity; label: string }[] = [
+  { value: 'none', label: 'None' },
   { value: 'spotting', label: 'Spotting' },
   { value: 'light', label: 'Light' },
   { value: 'medium', label: 'Medium' },
@@ -39,18 +39,18 @@ export function PeriodLogDialog({
   initialLogData,
   onSaveLog,
 }: PeriodLogDialogProps) {
-  const [isBleedingLogged, setIsBleedingLogged] = useState<boolean>(false);
-  // Default to 'light' if bleeding is logged and no specific intensity was previously set.
+  // The master switch for logging bleeding.
+  const [isBleedingLoggedOverall, setIsBleedingLoggedOverall] = useState<boolean>(false);
+  // Specific intensity if bleeding is logged. Default to 'light' if overall switch is on.
   const [intensity, setIntensity] = useState<PeriodIntensity>('light'); 
   const [selectedSymptoms, setSelectedSymptoms] = useState<Symptom[]>([]);
   const [notes, setNotes] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
-      const hasBleeding = initialLogData?.intensity !== 'none' && initialLogData?.intensity !== undefined;
-      setIsBleedingLogged(hasBleeding);
-      // Set intensity from log if available and not 'none', otherwise default to 'light' if we are in a bleeding state.
-      setIntensity(hasBleeding && initialLogData?.intensity ? initialLogData.intensity : 'light');
+      const hasInitialBleeding = initialLogData?.intensity !== 'none' && initialLogData?.intensity !== undefined;
+      setIsBleedingLoggedOverall(hasInitialBleeding);
+      setIntensity(initialLogData?.intensity || 'light'); // Keep initial or default to light
       setSelectedSymptoms(initialLogData?.symptoms || []);
       setNotes(initialLogData?.notes || '');
     }
@@ -63,8 +63,9 @@ export function PeriodLogDialog({
   };
 
   const handleSave = () => {
-    // If bleeding is not logged, intensity is 'none'. Otherwise, use the selected intensity.
-    const finalIntensity = isBleedingLogged ? intensity : 'none';
+    // If the "Log Bleeding" switch is off, intensity is 'none', regardless of radio button selection.
+    // Otherwise, use the selected intensity from the radio group.
+    const finalIntensity = isBleedingLoggedOverall ? intensity : 'none';
     const logEntry: PeriodLogEntry = {
       date: format(selectedDate, 'yyyy-MM-dd'),
       intensity: finalIntensity,
@@ -73,38 +74,50 @@ export function PeriodLogDialog({
     };
     onSaveLog(logEntry);
   };
+  
+  const handleMasterSwitchChange = (checked: boolean) => {
+    setIsBleedingLoggedOverall(checked);
+    if (!checked) {
+      // If turning off bleeding, set intensity to 'none'.
+      setIntensity('none');
+    } else if (intensity === 'none') {
+      // If turning on bleeding and current intensity is 'none', default to 'light'.
+      setIntensity('light');
+    }
+  };
+
 
   const formattedDate = format(selectedDate, 'EEEE, MMMM do, yyyy');
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md bg-card border-border rounded-md">
+      <DialogContent className="sm:max-w-md bg-card border-border rounded-md text-foreground">
         <DialogHeader>
-          <DialogTitle className="text-foreground">Log for {formattedDate}</DialogTitle>
+          <DialogTitle>Log for {formattedDate}</DialogTitle>
           <DialogDescription className="text-muted-foreground">Record details for this day.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-6 py-4">
           <div className="flex items-center space-x-2">
             <Switch
               id="log-bleeding-switch"
-              checked={isBleedingLogged}
-              onCheckedChange={setIsBleedingLogged}
+              checked={isBleedingLoggedOverall}
+              onCheckedChange={handleMasterSwitchChange}
             />
             <Label htmlFor="log-bleeding-switch" className="font-medium text-foreground/90">Log Bleeding</Label>
           </div>
 
-          {isBleedingLogged && (
+          {isBleedingLoggedOverall && ( // Show intensity options only if master switch is on
             <div className="grid gap-2">
-              <Label className="font-medium text-foreground/90">Bleeding Intensity (Optional)</Label>
+              <Label className="font-medium text-foreground/90">Bleeding Intensity</Label>
               <RadioGroup
                 value={intensity}
                 onValueChange={(value: string) => setIntensity(value as PeriodIntensity)}
                 className="flex flex-wrap gap-x-3 gap-y-2"
               >
-                {intensityOptionsForDialog.map(opt => (
+                {intensityOptionsForDialog.filter(opt => opt.value !== 'none').map(opt => ( // Exclude 'none' from radio
                   <div key={opt.value} className="flex items-center space-x-2">
-                    <RadioGroupItem value={opt.value} id={`intensity-${opt.value}`} />
-                    <Label htmlFor={`intensity-${opt.value}`} className="font-normal text-foreground/80">
+                    <RadioGroupItem value={opt.value} id={`intensity-${opt.value}`} className="border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"/>
+                    <Label htmlFor={`intensity-${opt.value}`} className="font-normal capitalize text-foreground/80">
                       {opt.label}
                     </Label>
                   </div>
@@ -123,7 +136,7 @@ export function PeriodLogDialog({
                         id={`symptom-${symptom}`}
                         checked={selectedSymptoms.includes(symptom)}
                         onCheckedChange={(checked) => handleSymptomChange(symptom, !!checked)}
-                        className="border-primary"
+                        className="border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
                     />
                     <Label htmlFor={`symptom-${symptom}`} className="font-normal capitalize text-sm text-foreground/80">
                         {symptom.replace(/([A-Z])/g, ' $1').trim()} 
@@ -148,7 +161,7 @@ export function PeriodLogDialog({
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button type="button" variant="outline" onClick={onClose} className="rounded-sm text-foreground hover:bg-muted">Cancel</Button>
+            <Button type="button" variant="outline" onClick={onClose} className="rounded-sm text-foreground hover:bg-muted border-border hover:text-foreground">Cancel</Button>
           </DialogClose>
           <Button type="button" onClick={handleSave} className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-sm">Save Log</Button>
         </DialogFooter>

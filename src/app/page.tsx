@@ -6,20 +6,20 @@ import Image from 'next/image';
 import { useCycleContext } from '@/contexts/CycleContext';
 import { CycleCalendar } from '@/components/CycleCalendar';
 import { PeriodLogDialog } from '@/components/PeriodLogDialog';
-import { calculateCycleDay } from '@/lib/cycle-utils';
+import { calculateCycleDay, getEstimatedNextPeriod } from '@/lib/cycle-utils';
 import { getMoonPhase, getMoonEmoji } from '@/lib/moon-utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from '@/components/ui/separator';
-import { format, parseISO, isValid, isToday } from 'date-fns'; // isToday is used
+import { format, parseISO, isValid, isToday, startOfDay } from 'date-fns';
 import type { TarotCard, WisdomAffirmation, DailyWisdom, PeriodLogEntry } from '@/lib/types';
 import { tarotCards, fallbackTarotCard } from '@/lib/tarot-data';
 import { drawNewDailyCard, updateRecentCardIds, getCardById } from '@/lib/tarot-utils';
 import { wisdomAffirmations } from '@/lib/affirmations-data';
 import { selectNewDailyAffirmation } from '@/lib/affirmation-utils';
-import { Droplet, Sparkles, RefreshCcw, BookOpen, Edit3, FileText, Moon } from 'lucide-react';
+import { Droplet, Sparkles, RefreshCcw, BookOpen, Edit3, FileText, Moon as MoonIcon } from 'lucide-react';
 
 const DAILY_WISDOM_STORAGE_KEY = 'lunarRhythmsDailyWisdom_v1'; 
 
@@ -39,7 +39,7 @@ export default function HomePage() {
     periodLogs,
     addPeriodLog,
     getPeriodLog,
-    hasSufficientDataForDisplay, // Get the new flag
+    hasSufficientDataForDisplay,
   } = useCycleContext();
 
   const [inputStartDate, setInputStartDate] = useState<string>('');
@@ -56,13 +56,22 @@ export default function HomePage() {
 
   const [todayMoonPhaseName, setTodayMoonPhaseName] = useState<string>('');
   const [todayMoonEmoji, setTodayMoonEmoji] = useState<string>('');
+  const [nextPeriodMoonEmoji, setNextPeriodMoonEmoji] = useState<string>('');
 
 
   useEffect(() => {
     const today = new Date();
     setTodayMoonPhaseName(getMoonPhase(today));
     setTodayMoonEmoji(getMoonEmoji(getMoonPhase(today)));
-  }, []);
+
+    const nextPeriodDateObj = getEstimatedNextPeriod(lastPeriodDate);
+    if (nextPeriodDateObj) {
+      setNextPeriodMoonEmoji(getMoonEmoji(getMoonPhase(nextPeriodDateObj)));
+    } else {
+      setNextPeriodMoonEmoji('');
+    }
+
+  }, [lastPeriodDate]);
 
   const loadAndProcessDailyWisdom = useCallback(() => {
     let storedWisdom: DailyWisdom = initialDailyWisdomState;
@@ -194,7 +203,7 @@ export default function HomePage() {
   if (isCycleContextLoading || isUiLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-background text-foreground">
-        <Moon className="h-12 w-12 animate-pulse text-primary mb-4" />
+        <MoonIcon className="h-12 w-12 animate-pulse text-primary mb-4" />
         <p className="text-lg">Loading your sacred cosmic space...</p>
       </div>
     );
@@ -204,32 +213,42 @@ export default function HomePage() {
   const displayEndDateShort = lastPeriodEndDate ? format(parseISO(lastPeriodEndDate), 'dd.MM') : '--.--';
   const displayDurationText = lastPeriodDuration ? `(${lastPeriodDuration} days)` : '';
   const displayCycleDayText = currentCycleDay ? `Day ${currentCycleDay}/28` : 'Day --/28';
+  const nextPeriodDate = getEstimatedNextPeriod(lastPeriodDate);
+  const displayNextPeriod = nextPeriodDate ? format(nextPeriodDate, 'dd.MM') : '--.--';
+
 
   return (
     <div className="flex flex-col min-h-screen p-4 md:p-6 bg-background text-foreground">
       <header className="w-full max-w-3xl mx-auto text-center my-4 md:my-6">
-        <h1 className="text-2xl md:text-3xl font-semibold text-primary mb-1 tracking-tight">Lunar Rhythms</h1>
-        <p className="text-sm md:text-md text-foreground/80">Track your cycle, align with the cosmos.</p>
+        <div className="flex items-center justify-center space-x-2 text-lg md:text-xl">
+          <span className="text-2xl" style={{color: 'hsl(var(--color-moon))'}}>{todayMoonEmoji}</span>
+          <span className="capitalize font-semibold text-foreground/90">{todayMoonPhaseName} Cycle</span>
+          <span className="font-bold" style={{color: 'hsl(var(--primary))'}}>{displayCycleDayText}</span>
+        </div>
+        <div className="text-xs md:text-sm text-foreground/80 mt-1.5 flex flex-wrap justify-center items-center gap-x-3 gap-y-1">
+          <span className="flex items-center">
+            <span className="text-lg mr-1" style={{color: 'hsl(var(--primary))'}}>🩸</span> 
+            {lastPeriodDate ? (
+              <>
+                <span className="text-foreground/90">{displayStartDateShort}</span> 
+                {lastPeriodEndDate && <span className="text-foreground/70 mx-0.5">&rarr;</span>}
+                {lastPeriodEndDate && <span className="text-foreground/90">{displayEndDateShort}</span>}
+                {displayDurationText && <span className="text-xs text-foreground/70 ml-1">{displayDurationText}</span>}
+              </>
+            ) : (
+              <span className="text-foreground/70">Log period to see dates</span>
+            )}
+          </span>
+          {lastPeriodDate && (
+             <span className="flex items-center">
+                <span className="text-lg mr-1" style={{color: 'hsl(var(--color-moon))'}}>{nextPeriodMoonEmoji}</span>
+                <span className="text-foreground/70">Next: ~{displayNextPeriod}</span>
+            </span>
+          )}
+        </div>
       </header>
       
-      <section className="w-full max-w-xl mx-auto p-4 bg-card/50 rounded-lg shadow-md mb-6">
-        <div className='mb-3 text-center'>
-            <h2 className="text-md font-medium text-foreground/90 flex items-center justify-center space-x-2">
-              <span className="text-xl" style={{color: 'hsl(var(--color-moon))'}}>{todayMoonEmoji}</span>
-              <span className="capitalize">{todayMoonPhaseName} Cycle</span>
-              <span className={currentCycleDay ? 'text-[hsl(var(--calendar-today-text))] font-semibold' : 'text-foreground/80'}>
-                {displayCycleDayText}
-              </span>
-            </h2>
-            <div className="text-xs text-foreground/80 space-x-1.5 flex justify-center items-center flex-wrap mt-1">
-                <span className="text-md text-[hsl(var(--primary))]">🩸</span> 
-                <span className="text-foreground/90">{displayStartDateShort}</span> 
-                {lastPeriodDate && lastPeriodEndDate && <span className="text-foreground/70">&rarr;</span>}
-                {lastPeriodDate && lastPeriodEndDate && <span className="text-foreground/90">{displayEndDateShort}</span>}
-                {displayDurationText && <span className="text-xs text-foreground/70 ml-0.5">{displayDurationText}</span>}
-            </div>
-        </div>
-        
+      <section className="w-full max-w-xl mx-auto p-3 bg-card/50 rounded-lg shadow-md mb-6 border border-border/30">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
           <div>
             <Label htmlFor="last-period-start-date" className="text-xs font-medium text-foreground/80">
@@ -257,19 +276,19 @@ export default function HomePage() {
               Save Period Dates
             </Button>
             {(lastPeriodDate || lastPeriodEndDate) && (
-                 <Button onClick={handleClearDates} variant="outline" className="w-full sm:w-auto h-9 text-sm rounded-sm text-muted-foreground hover:text-foreground">
+                 <Button onClick={handleClearDates} variant="outline" className="w-full sm:w-auto h-9 text-sm rounded-sm text-muted-foreground hover:text-foreground border-border hover:bg-muted/50">
                     Clear Dates
                 </Button>
             )}
         </div>
-         {!lastPeriodDate && <p className="text-center text-xs text-muted-foreground mt-3">Enter your last period start date to see cycle stats and log bleeding days.</p>}
+         {!lastPeriodDate && <p className="text-center text-xs text-muted-foreground mt-3">Enter your last period start date to enable full cycle tracking.</p>}
       </section>
       <Separator className="my-5 md:my-6 max-w-3xl mx-auto bg-border/30" />
 
       <section className="w-full max-w-2xl mx-auto mb-6">
         <CycleCalendar 
           onDayClick={handleDayClickCalendar}
-          hasSufficientDataForDisplay={hasSufficientDataForDisplay} // Pass the flag
+          hasSufficientDataForDisplay={hasSufficientDataForDisplay}
         />
       </section>
 
@@ -287,11 +306,11 @@ export default function HomePage() {
       <section className="w-full max-w-2xl mx-auto">
         <Tabs defaultValue="daily-wisdom" className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-card/30 rounded-md border border-border/50">
-            <TabsTrigger value="cycle-logs" className="rounded-sm data-[state=active]:bg-card/70 data-[state=active]:shadow-sm"><BookOpen className="inline h-4 w-4 mr-1.5"/>Cycle Logs</TabsTrigger>
-            <TabsTrigger value="daily-wisdom" className="rounded-sm data-[state=active]:bg-card/70 data-[state=active]:shadow-sm"><Sparkles className="inline h-4 w-4 mr-1.5"/>Daily Wisdom</TabsTrigger>
+            <TabsTrigger value="cycle-logs" className="rounded-sm data-[state=active]:bg-card/70 data-[state=active]:shadow-sm text-foreground/80 data-[state=active]:text-foreground"><BookOpen className="inline h-4 w-4 mr-1.5"/>Cycle Logs</TabsTrigger>
+            <TabsTrigger value="daily-wisdom" className="rounded-sm data-[state=active]:bg-card/70 data-[state=active]:shadow-sm text-foreground/80 data-[state=active]:text-foreground"><Sparkles className="inline h-4 w-4 mr-1.5"/>Daily Wisdom</TabsTrigger>
           </TabsList>
           <TabsContent value="cycle-logs" className="p-4 bg-card/50 rounded-b-md shadow-lg min-h-[200px] mt-2 border border-border/50">
-            <h3 className="text-lg font-medium text-primary mb-3">Past Cycle Logs</h3>
+            <h3 className="text-lg font-medium text-accent mb-3">Past Cycle Logs</h3>
             {sortedPeriodLogs.length > 0 ? (
               <ul className="space-y-3 max-h-96 overflow-y-auto pr-2">
                 {sortedPeriodLogs.map(log => (
@@ -300,7 +319,7 @@ export default function HomePage() {
                       <span className="font-semibold text-sm text-foreground/90">{format(parseISO(log.date), 'EEE, dd MMM yyyy')}</span>
                       <div className="flex items-center space-x-2">
                         {log.intensity !== 'none' && <span className="text-xs text-[hsl(var(--calendar-bleeding-indicator))]">● Bleeding Logged</span>}
-                        <Button variant="link" size="sm" className="h-auto p-0 text-xs text-secondary hover:text-secondary/80" onClick={() => {setSelectedDateForLog(parseISO(log.date)); setIsPeriodLogDialogOpen(true);}}>
+                        <Button variant="link" size="sm" className="h-auto p-0 text-xs text-accent hover:text-accent/80" onClick={() => {setSelectedDateForLog(parseISO(log.date)); setIsPeriodLogDialogOpen(true);}}>
                             <Edit3 className="h-3 w-3 mr-1"/> Edit
                         </Button>
                       </div>
@@ -360,10 +379,10 @@ export default function HomePage() {
               )}
             </div>
             <div className="mt-6 flex flex-col sm:flex-row justify-center items-center gap-3">
-              <Button onClick={handleManualWisdomRefresh} variant="outline" size="sm" className="rounded-sm text-muted-foreground hover:text-foreground">
+              <Button onClick={handleManualWisdomRefresh} variant="outline" size="sm" className="rounded-sm text-muted-foreground hover:text-foreground border-border hover:bg-muted/50">
                 <RefreshCcw className="mr-2 h-4 w-4" /> New Wisdom
               </Button>
-              <Button onClick={() => alert('Save to Journal feature not implemented yet.')} variant="secondary" size="sm" className="rounded-sm">
+              <Button onClick={() => alert('Save to Journal feature not implemented yet.')} variant="secondary" size="sm" className="rounded-sm text-secondary-foreground bg-secondary hover:bg-secondary/90">
                 <FileText className="mr-2 h-4 w-4" /> Save to Journal
               </Button>
             </div>

@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image'; // Import next/image
+import Image from 'next/image';
 import {
   format,
   addMonths,
@@ -14,18 +14,22 @@ import {
   addDays,
   isSameMonth,
   isSameDay,
-  getDay,
-  parseISO
+  parseISO,
+  startOfDay as dateFnsStartOfDay // Renamed to avoid conflict
 } from 'date-fns';
-import { ChevronLeft, ChevronRight, Edit3, Droplet, Sparkles, BookOpen } from 'lucide-react';
-import { getMoonPhase, getMoonEmoji } from '@/lib/moon-utils'; // getAffirmationForMoonPhase removed from imports
+import { ChevronLeft, ChevronRight, Edit3 } from 'lucide-react';
+import { getMoonPhase, getMoonEmoji } from '@/lib/moon-utils';
 import { getDailyTarotCard } from '@/lib/tarot-utils';
-import type { DailyCalendarInfo, PeriodLogEntry, TarotCard } from '@/lib/types'; // Added TarotCard
+import type { DailyCalendarInfo, PeriodLogEntry, TarotCard } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { useCycleContext } from '@/contexts/CycleContext';
 import { cn } from '@/lib/utils';
-import { calculateCycleDay, getEstimatedNextPeriod } from '@/lib/cycle-utils'; // Removed ovulation/fertility utils
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
+import { 
+  calculateCycleDay, 
+  getEstimatedOvulationDay, 
+  getEstimatedFertileWindow 
+} from '@/lib/cycle-utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 
 interface DayDetailDialogProps {
@@ -58,11 +62,24 @@ function DayDetailDialog({ isOpen, onClose, dayInfo, onOpenLogDialog }: DayDetai
           </div>
           
           {dayInfo.periodLog && dayInfo.periodLog.intensity !== 'none' && (
-             <div className="flex items-center justify-between text-primary">
+             <div className="flex items-center justify-between text-[hsl(var(--primary))]">
                 <span className="font-semibold">Period Logged:</span>
                 <span className="capitalize">{dayInfo.periodLog.intensity}</span>
             </div>
           )}
+           {dayInfo.isOvulationDay && (
+            <div className="flex items-center justify-between text-[hsl(var(--color-ovulation))]">
+                <span className="font-semibold">Ovulation Day</span>
+                <span>🥚</span>
+            </div>
+          )}
+          {dayInfo.isFertileDay && !dayInfo.isOvulationDay && (
+            <div className="flex items-center justify-between text-[hsl(var(--color-fertile-start))]">
+                <span className="font-semibold">Fertile Day</span>
+                <span>✨</span>
+            </div>
+          )}
+
 
           <Separator className="my-3 bg-border/50" />
 
@@ -84,9 +101,6 @@ function DayDetailDialog({ isOpen, onClose, dayInfo, onOpenLogDialog }: DayDetai
               )}
             </div>
           )}
-          
-          {/* Affirmation from moon-utils is no longer used here, page.tsx handles wisdom affirmations */}
-
         </div>
         <DialogClose asChild>
           <div className="flex justify-end space-x-2 pt-3">
@@ -118,33 +132,39 @@ export function CycleCalendar({ onDayClick, hasSufficientDataForDisplay }: Cycle
   const [selectedDayInfo, setSelectedDayInfo] = useState<DailyCalendarInfo | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   
-  // Effect to recalculate day infos when dependencies change
   const [monthDayInfos, setMonthDayInfos] = useState<DailyCalendarInfo[]>([]);
 
   useEffect(() => {
     const monthStart = startOfMonth(currentDisplayMonth);
     const monthEnd = endOfMonth(monthStart);
-    const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
-    const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
+    const startDate = startOfWeek(monthStart, { weekStartsOn: 1 }); // Monday first
+    const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 }); // Monday first
     
     const infos: DailyCalendarInfo[] = [];
     let dayPointer = startDate;
+
+    const ovulationDay = lastPeriodDate ? getEstimatedOvulationDay(lastPeriodDate) : null;
+    const fertileWindow = ovulationDay ? getEstimatedFertileWindow(ovulationDay) : null;
+
     while(dayPointer <= endDate) {
       const formattedDateKey = format(dayPointer, 'yyyy-MM-dd');
       const periodLog = getPeriodLog(formattedDateKey);
-      const dailyTarot = getDailyTarotCard(dayPointer); // Fetches or generates card for THIS day
+      const dailyTarot = getDailyTarotCard(dayPointer);
       
-      // Determine if this specific day is a bleeding day based on log or main period range
+      const currentDayStart = dateFnsStartOfDay(dayPointer);
       let isBleedingThisDay = periodLog?.intensity !== 'none' && periodLog?.intensity !== undefined;
-      if (!isBleedingThisDay && lastPeriodDate && lastPeriodEndDate) {
-        const currentDayParsed = startOfDay(dayPointer);
-        const periodStartParsed = startOfDay(parseISO(lastPeriodDate));
-        const periodEndParsed = startOfDay(parseISO(lastPeriodEndDate));
-        if (currentDayParsed >= periodStartParsed && currentDayParsed <= periodEndParsed) {
+      if (!isBleedingThisDay && lastPeriodDate && lastPeriodEndDate && hasSufficientDataForDisplay) {
+        const periodStartParsed = dateFnsStartOfDay(parseISO(lastPeriodDate));
+        const periodEndParsed = dateFnsStartOfDay(parseISO(lastPeriodEndDate));
+        if (currentDayStart >= periodStartParsed && currentDayStart <= periodEndParsed) {
           isBleedingThisDay = true; 
         }
       }
 
+      const isOvulationThisDay = ovulationDay ? isSameDay(currentDayStart, ovulationDay) : false;
+      const isFertileThisDay = fertileWindow 
+        ? (currentDayStart >= fertileWindow.start && currentDayStart <= fertileWindow.end) 
+        : false;
 
       infos.push({
         date: new Date(dayPointer),
@@ -155,15 +175,16 @@ export function CycleCalendar({ onDayClick, hasSufficientDataForDisplay }: Cycle
         moonPhase: getMoonPhase(dayPointer),
         moonEmoji: getMoonEmoji(getMoonPhase(dayPointer)),
         periodLog: periodLog,
-        isBleedingDay: isBleedingThisDay, // Use the refined logic
+        isBleedingDay: isBleedingThisDay,
+        isOvulationDay: isOvulationThisDay,
+        isFertileDay: isFertileThisDay && !isOvulationThisDay, // Ovulation takes precedence
         tarotCard: dailyTarot,
-        // Affirmation from moon-utils is not used here anymore
       });
       dayPointer = addDays(dayPointer, 1);
     }
     setMonthDayInfos(infos);
 
-  }, [currentDisplayMonth, getPeriodLog, lastPeriodDate, lastPeriodEndDate]);
+  }, [currentDisplayMonth, getPeriodLog, lastPeriodDate, lastPeriodEndDate, hasSufficientDataForDisplay]);
 
 
   const handleDayCellClick = (dayInfo: DailyCalendarInfo) => {
@@ -172,8 +193,8 @@ export function CycleCalendar({ onDayClick, hasSufficientDataForDisplay }: Cycle
   };
   
   const handleOpenLogDialogFromDetail = (date: Date) => {
-    setIsDetailDialogOpen(false); // Close detail dialog
-    onDayClick(date); // Trigger log dialog on main page
+    setIsDetailDialogOpen(false);
+    onDayClick(date); 
   };
 
 
@@ -223,29 +244,44 @@ export function CycleCalendar({ onDayClick, hasSufficientDataForDisplay }: Cycle
     let weekDays: JSX.Element[] = [];
 
     monthDayInfos.forEach((dayInfo, index) => {
-        let cellClasses = `min-h-[4.5rem] md:min-h-[5rem] p-1.5 flex flex-col items-start justify-between 
+        let cellClasses = `min-h-[4.8rem] md:min-h-[5.2rem] p-1.5 flex flex-col items-start justify-between 
                            cursor-pointer transition-all duration-150 ease-in-out relative
                            border-r border-b border-border/20 rounded-sm
-                           hover:shadow-[0_0_8px_1px_hsl(var(--secondary)/0.2)]`;
+                           hover:shadow-[0_0_8px_1px_hsl(var(--color-ovulation)/0.3)]`; // Peach hover glow
         
-        if ((index + 1) % 7 === 0 ) { // Last day of a week
+        if ((index + 1) % 7 === 0 ) { 
            cellClasses = cn(cellClasses, 'border-r-0');
         }
         
         let textColor = 'text-[hsl(var(--calendar-normal-text))]';
-        let bgColor = 'bg-card'; // Default card background, which is dark
-        
+        let bgColor = 'bg-card'; 
+        let iconContent = null;
+
         const showBleedingStyle = hasSufficientDataForDisplay && dayInfo.isBleedingDay;
 
         if (dayInfo.isToday) {
           bgColor = 'bg-[hsla(var(--calendar-today-bg-raw),0.5)]';
           textColor = 'text-[hsl(var(--calendar-today-text))] font-semibold';
-        } else if (showBleedingStyle) {
-          bgColor = 'bg-[hsla(var(--calendar-bleeding-bg-raw),0.1)]'; 
-          textColor = 'text-[hsl(var(--calendar-bleeding-text))]'; 
-        } else if (!dayInfo.isCurrentMonth) {
+        }
+        
+        if (dayInfo.isCurrentMonth) {
+          if (showBleedingStyle) {
+            bgColor = 'bg-primary/10'; // Soft crimson background
+            iconContent = <span className="absolute top-1.5 right-1.5 text-xs text-[hsl(var(--primary))]">🩸</span>;
+            textColor = 'text-[hsl(var(--calendar-bleeding-text))]';
+          } else if (dayInfo.isOvulationDay && hasSufficientDataForDisplay) {
+            bgColor = 'bg-[hsl(var(--color-ovulation))]/20'; // Luminous peach background
+            iconContent = <span className="absolute top-1.5 right-1.5 text-xs text-[hsl(var(--color-ovulation))]">🥚</span>;
+            cellClasses = cn(cellClasses, 'animate-pulse-ovulation');
+          } else if (dayInfo.isFertileDay && hasSufficientDataForDisplay) {
+            bgColor = 'bg-gradient-to-br from-[hsl(var(--color-fertile-start))] to-[hsl(var(--color-fertile-end))] opacity-70';
+            iconContent = <span className="absolute top-1.5 right-1.5 text-xs text-white">✨</span>;
+          }
+        }
+        
+        if (!dayInfo.isCurrentMonth) {
           textColor = 'text-muted-foreground/40'; 
-          bgColor = 'bg-background/30'; // Slightly different for out-of-month
+          bgColor = 'bg-background/30'; 
         }
         
         cellClasses = cn(cellClasses, bgColor, textColor);
@@ -257,18 +293,15 @@ export function CycleCalendar({ onDayClick, hasSufficientDataForDisplay }: Cycle
             className={cellClasses}
             aria-label={`Date ${format(dayInfo.date, 'PPP')}, Moon: ${dayInfo.moonPhase}${showBleedingStyle ? ', Bleeding Logged' : ''}`}
           >
-            {showBleedingStyle && (
-              <span className="absolute top-1.5 right-1.5 text-xs text-[hsl(var(--calendar-bleeding-indicator))]">●</span>
-            )}
+            {iconContent}
             <div className="flex justify-between w-full items-start">
               <span className={`text-sm ${dayInfo.isToday ? 'font-bold' : 'font-medium'}`}>
                 {dayInfo.dayOfMonth}
               </span>
-              <span className={`text-xs opacity-60`} style={{color: 'hsl(var(--color-moon))'}}>
+              <span className={`text-xs text-[hsl(var(--color-moon))] opacity-30`}>
                 {dayInfo.moonEmoji}
               </span>
             </div>
-            {/* Cycle day or other brief info can go here at the bottom of the cell if needed */}
             {dayInfo.isCurrentMonth && dayInfo.cycleDay && (
                 <span className="text-[10px] self-end text-muted-foreground/50 mt-auto">
                     D{dayInfo.cycleDay}
