@@ -20,7 +20,7 @@ export const tarotCards: TarotCard[] = [
   {
     id: '2-the-high-priestess',
     title: 'The High Priestess',
-    image: '/cards/the-high-priestess.png',
+    image: '/cards/the-high-priestess.jpg', // Changed from .png to .jpg
     meaning: 'Intuition, sacred knowledge, divine feminine, the subconscious mind.',
   },
   {
