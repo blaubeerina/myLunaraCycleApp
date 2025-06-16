@@ -16,6 +16,7 @@ import {
   isWithinInterval,
   parseISO,
   isValid,
+  startOfDay, // Added startOfDay here
 } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { calculateCycleDay } from '@/lib/cycle-utils';
