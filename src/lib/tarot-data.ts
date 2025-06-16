@@ -77,6 +77,12 @@ export const tarotCards: TarotCard[] = [
     image: '/cards/death.png',
     meaning: 'Endings, beginnings, change, transformation, transition.',
   },
+  {
+    id: '10-of-coins', // Or a more descriptive ID like 'pentacles-10'
+    title: 'Ten of Coins', // English title
+    image: '/cards/zehn-der-muenzen.png',
+    meaning: 'Legacy, inheritance, family wealth, lasting success, abundance.',
+  },
   // Add all 22 Major Arcana, or your desired subset
   // { id: 'justice', title: 'Justice', image: '/cards/justice.png', meaning: '...' },
   // { id: 'the-hanged-man', title: 'The Hanged Man', image: '/cards/the-hanged-man.png', meaning: '...' },
@@ -97,4 +103,3 @@ export const fallbackTarotCard: TarotCard = {
   image: 'https://placehold.co/128x200.png', // Placeholder if no local fallback image
   meaning: 'The path ahead is yet to be revealed.',
 };
-
