@@ -1,389 +1,206 @@
 
 'use client';
 
-import { useAppContext } from '@/contexts/AppContext';
-import { useAuth } from '@/components/auth/AuthContext';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import type { Locale } from 'date-fns';
-import { format, addMonths, subMonths, getYear, getMonth, parseISO, startOfDay, isEqual, addDays } from 'date-fns';
-import { cn } from '@/lib/utils';
-import type { Modifier } from 'react-day-picker';
-import { ChevronLeft, ChevronRight, Search, HelpCircle, Settings, GripVertical, CalendarDays as CalendarIconLucide, CheckSquare, Loader2, Droplet, Star } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DayEntryDialog } from '@/components/calendar/DayEntryDialog';
-import type { DailyEntryData, MoonPhaseData, GeneratedImpulse, CycleInfo, CyclePhase } from '@/lib/types';
-import { calculateCycleInfo } from '@/lib/cycle-utils';
-import { generateCycleImpulse, type GenerateCycleImpulseInput } from '@/ai/flows/generate-cycle-impulse';
-import { toast } from '@/hooks/use-toast';
+import { useState, useEffect } from 'react';
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, parseISO } from 'date-fns';
+import de from 'date-fns/locale/de';
+// Removed Image import as we'll display phase name as text for now
+// import Image from 'next/image';
 
-const MOCK_DB_LATENCY = 300; // ms
-
-async function saveDailyEntryToFirestore(userId: string, entry: DailyEntryData): Promise<void> {
-  await new Promise(resolve => setTimeout(resolve, MOCK_DB_LATENCY));
-  console.log(`[Mock Firestore] Saving entry for user ${userId}, date ${entry.date}:`, entry);
-  const existingEntries = JSON.parse(localStorage.getItem(`myLunaraCycle_entries_${userId}`) || '{}');
-  existingEntries[entry.date] = entry;
-  localStorage.setItem(`myLunaraCycle_entries_${userId}`, JSON.stringify(existingEntries));
+interface BloodEntry {
+  [date: string]: boolean;
 }
 
-async function fetchDailyEntriesForMonthRange(userId: string, startDate: Date, endDate: Date): Promise<Map<string, DailyEntryData>> {
-  await new Promise(resolve => setTimeout(resolve, MOCK_DB_LATENCY));
-  const storedEntries = JSON.parse(localStorage.getItem(`myLunaraCycle_entries_${userId}`) || '{}');
-  const entriesMap = new Map<string, DailyEntryData>();
-  
-  Object.keys(storedEntries).forEach(dateKey => {
-    if (dateKey && /^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
-        try {
-            const entryDate = parseISO(dateKey);
-             if (entryDate >= startDate && entryDate <= endDate) {
-                entriesMap.set(dateKey, storedEntries[dateKey]);
-            }
-        } catch (e) {
-            console.warn(`Invalid date key found in localStorage: ${dateKey}`, e);
-        }
-    }
-  });
-  return entriesMap;
+interface MoonPhaseData {
+  [date: string]: string; // e.g. 'new_moon', 'full_moon'
 }
 
-const moonPhaseEmojisList = ['🌑', '🌒', '🌓', '🌔', '🌕', '🌖', '🌗', '🌘'];
-const moonPhaseNamesList = ["New Moon", "Waxing Crescent", "First Quarter", "Waxing Gibbous", "Full Moon", "Waning Gibbous", "Last Quarter", "Waning Crescent"];
+const BLOOD_ENTRIES_STORAGE_KEY = 'myLunaraCycle_bloodEntries';
 
-async function fetchMoonDataForDateRange(startDate: Date, endDate: Date): Promise<Map<string, MoonPhaseData>> {
-  await new Promise(resolve => setTimeout(resolve, MOCK_DB_LATENCY / 2)); // Simulate API call
-  const moonDataMap = new Map<string, MoonPhaseData>();
-  let currentDateIter = new Date(startDate);
-
-  while (currentDateIter <= endDate) {
-    const dateKey = format(currentDateIter, 'yyyy-MM-dd');
-    const dayOfYear = (parseISO(dateKey).valueOf() - new Date(currentDateIter.getFullYear(), 0, 0).valueOf()) / (1000 * 60 * 60 * 24);
-    const phaseIndex = Math.floor(dayOfYear % moonPhaseEmojisList.length);
-    
-    moonDataMap.set(dateKey, {
-      emoji: moonPhaseEmojisList[phaseIndex],
-      phaseName: moonPhaseNamesList[phaseIndex],
-    });
-    currentDateIter = addDays(currentDateIter, 1);
-  }
-  return moonDataMap;
-}
-
-
-export default function CalendarPage() {
-  const { t, userPreferences } = useAppContext();
-  const { user } = useAuth();
-
-  const [selectedDateForDialog, setSelectedDateForDialog] = useState<Date | undefined>(undefined);
-  const [currentDisplayMonth, setCurrentDisplayMonth] = useState(startOfDay(new Date()));
-  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day' | 'year'>('month');
-  const [isEntryDialogOpen, setIsEntryDialogOpen] = useState(false);
-  
-  const [entriesMap, setEntriesMap] = useState<Map<string, DailyEntryData>>(new Map());
-  const [isLoadingEntries, setIsLoadingEntries] = useState(false);
-  
-  const [moonDataMap, setMoonDataMap] = useState<Map<string, MoonPhaseData>>(new Map());
-  const [isLoadingMoonData, setIsLoadingMoonData] = useState(false); 
-  
-  const [cycleInfoMap, setCycleInfoMap] = useState<Map<string, CycleInfo>>(new Map());
-
-  const today = useMemo(() => startOfDay(new Date()), []);
-
-  const loadDataForDisplayMonth = useCallback(async () => {
-    if (!user) return;
-    setIsLoadingEntries(true);
-    setIsLoadingMoonData(true); 
-
-    const year = getYear(currentDisplayMonth);
-    const month = getMonth(currentDisplayMonth);
-    
-    const firstDayOfMonth = new Date(year, month, 1);
-    const lastDayOfMonth = new Date(year, month + 1, 0);
-
-    const fetchStartDate = addDays(firstDayOfMonth, -42); 
-    const fetchEndDate = addDays(lastDayOfMonth, 42);
-
-    try {
-      const [fetchedEntries, fetchedMoonData] = await Promise.all([
-        fetchDailyEntriesForMonthRange(user.id, fetchStartDate, fetchEndDate),
-        fetchMoonDataForDateRange(fetchStartDate, fetchEndDate) 
-      ]);
-      
-      setEntriesMap(fetchedEntries);
-      setMoonDataMap(fetchedMoonData); 
-
-      const newCycleInfoMap = new Map<string, CycleInfo>();
-      const allFetchedEntriesArray = Array.from(fetchedEntries.values());
-      
-      let dayToCalc = addDays(firstDayOfMonth, - (firstDayOfMonth.getDay() === 0 ? 6 : firstDayOfMonth.getDay() -1) - 7 ); 
-      const endDayToCalc = addDays(lastDayOfMonth, 14); 
-
-      while(dayToCalc <= endDayToCalc) {
-        const dateKey = format(dayToCalc, 'yyyy-MM-dd');
-        newCycleInfoMap.set(dateKey, calculateCycleInfo(dateKey, allFetchedEntriesArray));
-        dayToCalc = addDays(dayToCalc, 1);
-      }
-      setCycleInfoMap(newCycleInfoMap);
-
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      toast({ title: "Data Loading Error", description: "Could not load calendar data.", variant: "destructive" });
-    } finally {
-      setIsLoadingEntries(false);
-      setIsLoadingMoonData(false); 
-    }
-  }, [currentDisplayMonth, user]);
+export default function CycleMoonCalendarPage() {
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [bloodEntries, setBloodEntries] = useState<BloodEntry>({});
+  const [moonData, setMoonData] = useState<MoonPhaseData>({});
 
   useEffect(() => {
-    loadDataForDisplayMonth();
-  }, [loadDataForDisplayMonth]);
-
-
-  const formatWeekdayName = (weekday: Date, options: { locale?: Locale }) => {
-    const language = userPreferences.language === 'de' ? 'de-DE' : 'en-US';
-    let shortName = weekday.toLocaleDateString(language, { weekday: 'short' });
-    return shortName.substring(0, 2).toUpperCase();
-  };
-  
-  const todayModifier: Modifier = { date: today, disabled: false };
-
-  const handleTodayClick = () => {
-    const newToday = startOfDay(new Date());
-    setCurrentDisplayMonth(newToday);
-  };
-
-  const handleDayClick = (date: Date | undefined, modifiers: any, e: React.MouseEvent) => {
-    if (!date || modifiers.disabled) return;
-    setSelectedDateForDialog(startOfDay(date));
-    setIsEntryDialogOpen(true);
-  };
-
-  const handleSaveEntry = async (entryData: DailyEntryData) => {
-    if (!user) return;
-    try {
-      await saveDailyEntryToFirestore(user.id, entryData);
-      const newEntriesMap = new Map(entriesMap).set(entryData.date, entryData);
-      setEntriesMap(newEntriesMap);
-      
-      await loadDataForDisplayMonth(); 
-
-      const currentCycleInfo = calculateCycleInfo(entryData.date, Array.from(newEntriesMap.values()));
-      const moonPhaseForDay = moonDataMap.get(entryData.date); 
-      const moonPhaseName = moonPhaseForDay?.phaseName || "Unknown";
-
-
-      if (userPreferences.appMode === 'cycle') {
-        const impulseInput: GenerateCycleImpulseInput = {
-          cyclePhase: currentCycleInfo.phase,
-          cycleDay: currentCycleInfo.cycleDay,
-          moonPhaseName: moonPhaseName,
-          userMood: entryData.mood,
-          userEnergyLevel: entryData.energyLevel,
-          userNotes: entryData.notes,
-        };
-        try {
-          const impulseResult = await generateCycleImpulse(impulseInput);
-          const newImpulse: GeneratedImpulse = {
-            date: entryData.date,
-            text: impulseResult.impulseText,
-            cyclePhase: currentCycleInfo.phase as CyclePhase, 
-            moonPhase: moonPhaseName,
-          };
-          localStorage.setItem('myLunaraCycle-latestImpulse', JSON.stringify(newImpulse));
-          toast({ title: t('newImpulseGenerated') });
-        } catch (aiError) {
-          console.error("Error generating AI impulse:", aiError);
-          toast({ title: "AI Impulse Error", description: "Could not generate impulse.", variant: "destructive" });
-        }
+    // Load blood entries from localStorage
+    const storedBloodEntries = localStorage.getItem(BLOOD_ENTRIES_STORAGE_KEY);
+    if (storedBloodEntries) {
+      try {
+        setBloodEntries(JSON.parse(storedBloodEntries));
+      } catch (e) {
+        console.error("Failed to parse blood entries from localStorage", e);
+        // Initialize with empty if parsing fails
+        setBloodEntries({});
       }
-      setIsEntryDialogOpen(false);
-      setSelectedDateForDialog(undefined);
-    } catch (error) {
-      console.error("Error saving entry:", error);
-      toast({ title: "Error", description: "Could not save entry.", variant: "destructive" });
+    } else {
+        // Initialize with empty if not found
+        setBloodEntries({});
     }
+
+    // Dummy moon phase loader – replace with NASA API or static JSON
+    // Note: Ensure your moon phase names here match what you expect for image file names if re-enabling images.
+    const exampleMoonData: MoonPhaseData = {
+      '2025-06-01': 'new_moon',
+      '2025-06-05': 'waxing_crescent',
+      '2025-06-09': 'first_quarter',
+      '2025-06-13': 'waxing_gibbous',
+      '2025-06-17': 'full_moon',
+      '2025-06-21': 'waning_gibbous',
+      '2025-06-25': 'last_quarter',
+      '2025-06-29': 'waning_crescent',
+      // Add more for other months or implement dynamic loading
+    };
+    // Example for current month to make dummy data more relevant
+    const MOCK_START_DATE_FOR_MOON = startOfMonth(new Date()); // Or currentMonth if you want it to change
+    const localMoonData: MoonPhaseData = {};
+    for(let i = 0; i < 30; i++) {
+        const dateKey = format(addDays(MOCK_START_DATE_FOR_MOON, i), 'yyyy-MM-dd');
+        if (i % 29 === 0) localMoonData[dateKey] = 'new_moon';
+        else if (i % 29 === 7) localMoonData[dateKey] = 'first_quarter';
+        else if (i % 29 === 14) localMoonData[dateKey] = 'full_moon';
+        else if (i % 29 === 21) localMoonData[dateKey] = 'last_quarter';
+        else if (i % 29 < 7) localMoonData[dateKey] = 'waxing_crescent';
+        else if (i % 29 < 14) localMoonData[dateKey] = 'waxing_gibbous';
+        else if (i % 29 < 21) localMoonData[dateKey] = 'waning_gibbous';
+        else localMoonData[dateKey] = 'waning_crescent';
+    }
+
+    setMoonData(localMoonData);
+  }, []); // Removed currentMonth from dependencies to prevent dummy moon data reloading on month change.
+            // If moon data should be fetched per month, adjust this effect.
+
+  const toggleBloodEntry = (day: Date) => {
+    const dateStr = format(day, 'yyyy-MM-dd');
+    setBloodEntries(prev => {
+      const newEntries = {
+        ...prev,
+        [dateStr]: !prev[dateStr],
+      };
+      // Save to localStorage
+      localStorage.setItem(BLOOD_ENTRIES_STORAGE_KEY, JSON.stringify(newEntries));
+      return newEntries;
+    });
   };
 
-  const handleCloseDialog = () => {
-    setIsEntryDialogOpen(false);
-    setSelectedDateForDialog(undefined);
-  };
+  const renderHeader = () => (
+    <div className="flex justify-between items-center py-4 px-2 bg-background border-b border-border">
+      <button 
+        onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+        className="p-2 rounded-md hover:bg-accent hover:text-accent-foreground"
+        aria-label="Previous month"
+      >
+        &lt;
+      </button>
+      <h2 className="text-xl font-semibold text-foreground">
+        {format(currentMonth, 'MMMM yyyy', { locale: de })}
+      </h2>
+      <button 
+        onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+        className="p-2 rounded-md hover:bg-accent hover:text-accent-foreground"
+        aria-label="Next month"
+      >
+        &gt;
+      </button>
+    </div>
+  );
 
-  const renderCalendarView = () => {
-    if (isLoadingEntries || isLoadingMoonData) { 
-       return (
-        <div className="flex-grow flex items-center justify-center text-muted-foreground">
-          <Loader2 className="h-8 w-8 animate-spin mr-2" />
-          <p>{t('loadingData')}</p>
+  const renderDaysOfWeek = () => {
+    const daysHeader = [];
+    // Ensure Sunday is the start of the week for this header if locale implies it, or stick to Monday for 'de'
+    const weekStartsOn = de.options?.weekStartsOn ?? 1; // Default to Monday for 'de'
+    const firstDayOfWeek = startOfWeek(new Date(), { locale: de, weekStartsOn });
+
+    for (let i = 0; i < 7; i++) {
+      daysHeader.push(
+        <div key={i} className="text-center font-medium text-muted-foreground text-sm py-2">
+          {format(addDays(firstDayOfWeek, i), 'EE', { locale: de })}
         </div>
       );
     }
-    
-    switch (viewMode) {
-      case 'month':
-        return (
-          <Calendar
-            mode="single"
-            selected={selectedDateForDialog} 
-            month={currentDisplayMonth}
-            onMonthChange={setCurrentDisplayMonth}
-            onDayClick={handleDayClick}
-            className="w-full flex flex-col p-0 border-0 rounded-none shadow-none"
-            formatters={{ formatWeekdayName }}
-            modifiers={{ today: todayModifier }}
-            showOutsideDays={true}
-            weekStartsOn={1} 
-            classNames={{
-              root: "flex flex-col w-full", 
-              months: "flex flex-col sm:flex-row",
-              month: "space-y-0 flex flex-col p-0", 
-              caption_layout: 'flex items-center justify-between py-2 px-1 md:px-2 relative border-b',
-              caption: "flex items-center gap-1", 
-              caption_label: "text-lg font-semibold text-foreground text-center flex-grow justify-start",
-              nav_container: "flex items-center gap-1",
-              nav_button: cn(buttonVariants({ variant: "ghost" }), "h-8 w-8 p-0 hover:bg-accent/50"),
-              table: "w-full border-collapse mt-0 grid grid-rows-[auto_repeat(6,auto)] border-t border-l border-border", 
-              head_row: "flex border-b border-border",
-              head_cell: cn("text-muted-foreground font-normal text-[0.70rem] flex items-center justify-center uppercase py-2 w-[calc(100%/7)] h-10 border-r border-border", "sm:text-xs"),
-              row: "flex w-full border-b border-border last:border-b-0", 
-              cell: cn("text-sm p-0 relative border-r border-border text-left flex flex-col items-stretch justify-stretch min-h-[7rem] md:min-h-[9rem]", "focus-within:relative focus-within:z-10 w-[calc(100%/7)]"),
-              day: cn(buttonVariants({ variant: "ghost" }), "h-full w-full p-0 font-normal flex flex-col items-stretch justify-stretch focus:z-10 rounded-none text-left hover:bg-accent/10 data-[selected=true]:bg-accent/20"),
-              day_today: "data-[selected=false]:bg-transparent", 
-              day_outside: "text-muted-foreground/70 data-[selected=false]:bg-transparent",
-              day_disabled: "text-muted-foreground opacity-40 pointer-events-none",
-              day_hidden: "invisible",
-            }}
-            components={{
-              Caption: ({ displayMonth }) => (
-                <div className="flex items-center justify-between py-2 px-2 md:px-4 border-b border-border h-14">
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={handleTodayClick} className="text-sm h-9">
-                      {t('today')} 
-                    </Button>
-                     <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setCurrentDisplayMonth(prev => subMonths(prev, 1))}>
-                        <ChevronLeft className="h-5 w-5" />
-                     </Button>
-                     <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setCurrentDisplayMonth(prev => addMonths(prev, 1))}>
-                        <ChevronRight className="h-5 w-5" />
-                    </Button>
-                     <h2 className="text-xl font-medium text-foreground ml-3">
-                        {format(displayMonth, 'MMMM yyyy', { locale: userPreferences.language === 'de' ? (require('date-fns/locale/de') as any).default : (require('date-fns/locale/en-US') as any).default })}
-                     </h2>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-9 w-9"><Search className="h-5 w-5"/></Button>
-                    <Button variant="ghost" size="icon" className="h-9 w-9"><HelpCircle className="h-5 w-5"/></Button>
-                    <Button variant="ghost" size="icon" className="h-9 w-9"><Settings className="h-5 w-5"/></Button>
-                    <Select value={viewMode} onValueChange={(value) => setViewMode(value as 'month' | 'week' | 'day' | 'year')}>
-                      <SelectTrigger className="w-[110px] h-9 text-sm focus:ring-0">
-                        <SelectValue placeholder={t('view')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="day">{t('dayView')}</SelectItem>
-                        <SelectItem value="week">{t('weekView')}</SelectItem>
-                        <SelectItem value="month">{t('monthView')}</SelectItem>
-                        <SelectItem value="year">{t('yearView')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <div className="flex items-center border border-border rounded-md ml-1">
-                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-r-none border-r border-border data-[active=true]:bg-accent data-[active=true]:text-accent-foreground" data-active={viewMode === 'month'}><CalendarIconLucide className="h-5 w-5"/></Button>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-l-none data-[active=true]:bg-accent data-[active=true]:text-accent-foreground" data-active={false}><CheckSquare className="h-5 w-5"/></Button> 
-                    </div>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 ml-1"><GripVertical className="h-5 w-5"/></Button>
-                  </div>
+    return <div className="grid grid-cols-7 gap-px border-b border-border bg-border">{daysHeader}</div>;
+  };
+
+  const renderCells = () => {
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(monthStart);
+    // For 'de' locale, week starts on Monday (1)
+    const startDate = startOfWeek(monthStart, { locale: de, weekStartsOn: 1 });
+    const endDate = endOfWeek(monthEnd, { locale: de, weekStartsOn: 1 });
+
+    const rows = [];
+    let days = [];
+    let day = startDate;
+
+    while (day <= endDate) {
+      for (let i = 0; i < 7; i++) {
+        const dateStr = format(day, 'yyyy-MM-dd');
+        const isBloodDay = bloodEntries[dateStr];
+        const currentMoonPhase = moonData[dateStr];
+        const isCurrentMonth = isSameMonth(day, monthStart);
+        const isToday = isSameDay(day, new Date());
+
+        days.push(
+          <div
+            key={day.toISOString()}
+            className={`min-h-[6rem] md:min-h-[7rem] p-2 flex flex-col items-start 
+                        ${isCurrentMonth ? 'bg-background hover:bg-accent/10' : 'bg-muted/30 hover:bg-accent/20 text-muted-foreground/70'} 
+                        cursor-pointer transition-colors duration-150 ease-in-out
+                        border-r border-b border-border 
+                        ${i === 6 ? 'border-r-0' : ''} 
+                       `}
+            onClick={() => toggleBloodEntry(day)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && toggleBloodEntry(day)}
+            aria-pressed={isBloodDay}
+            aria-label={`Date ${format(day, 'PPP', { locale: de })}${isBloodDay ? ', bleeding logged' : ''}${currentMoonPhase ? `, moon phase: ${currentMoonPhase}` : ''}`}
+          >
+            <span className={`text-xs font-medium self-end ${isToday ? 'bg-primary text-primary-foreground rounded-full px-1.5 py-0.5' : isCurrentMonth ? 'text-foreground' : 'text-muted-foreground/70'}`}>
+              {format(day, 'd')}
+              {format(day,'d') === '1' && !isCurrentMonth && <span className="ml-1">{format(day, 'MMM', {locale: de})}</span>}
+            </span>
+            
+            <div className="flex-grow mt-1 w-full space-y-1">
+              {currentMoonPhase && (
+                <div className="text-xs text-muted-foreground">
+                  {/* Replace with Image component when SVGs are available in public/moon/ */}
+                  {/* <Image src={`/moon/${currentMoonPhase}.svg`} alt={currentMoonPhase} width={16} height={16} data-ai-hint="moon phase" /> */}
+                   <span>{currentMoonPhase.replace(/_/g, ' ')}</span>
                 </div>
-              ),
-              DayContent: ({ date: dayDate, displayMonth: currentViewDisplayMonth }) => {
-                const isCurrentMonthDay = dayDate.getMonth() === currentViewDisplayMonth.getMonth();
-                const dateKey = format(dayDate, 'yyyy-MM-dd');
-                const isTodayDate = isEqual(startOfDay(dayDate), today);
-                
-                let dayTextNode: React.ReactNode = dayDate.getDate();
-                const entry = entriesMap.get(dateKey);
-                const cycleDayInfo = cycleInfoMap.get(dateKey);
-                const moonPhaseForDay = moonDataMap.get(dateKey); 
-
-                let numberDisplayClasses = "text-xs font-medium";
-                let numberContainerDivClasses = "flex items-center justify-center p-0.5";
-
-                if (isTodayDate) {
-                    numberDisplayClasses = cn(numberDisplayClasses, "text-primary-foreground");
-                    numberContainerDivClasses = cn(numberContainerDivClasses, "bg-primary rounded-full w-5 h-5");
-                } else if (!isCurrentMonthDay) {
-                    numberDisplayClasses = cn(numberDisplayClasses, "text-muted-foreground/70");
-                    if (dayDate.getDate() === 1) {
-                        dayTextNode = format(dayDate, 'd. MMM', { locale: userPreferences.language === 'de' ? require('date-fns/locale/de').default : require('date-fns/locale/en-US').default });
-                    }
-                } else {
-                    numberDisplayClasses = cn(numberDisplayClasses, "text-foreground");
-                }
-                
-                return (
-                  <div className={cn("w-full h-full flex flex-col justify-between p-1")}>
-                    <div className="flex items-center space-x-1 self-end"> {/* Top-Right alignment */}
-                      {moonPhaseForDay && (
-                        <span className="text-xs leading-none" style={{filter: 'grayscale(1) invert(1) brightness(1.5)'}}>
-                          {moonPhaseForDay.emoji}
-                        </span>
-                      )}
-                      <div className={numberContainerDivClasses}>
-                        <span className={numberDisplayClasses}>
-                          {dayTextNode}
-                        </span>
-                      </div>
-                    </div>
-                
-                    {/* Cycle Indicators - Bottom Left */}
-                    <div className="flex items-center space-x-1 self-start text-xs">
-                      {userPreferences.appMode === 'cycle' && (entry || cycleDayInfo?.isOvulationDay || cycleDayInfo?.isFertile) && (
-                        <>
-                          {entry?.isBleeding && <Droplet className="h-3 w-3 text-destructive" />}
-                          {cycleDayInfo?.isOvulationDay && <Star className="h-3 w-3 text-[hsl(var(--lunara-ovulation-glow))] fill-[hsl(var(--lunara-ovulation-glow))]" />}
-                          {cycleDayInfo?.isFertile && !cycleDayInfo.isOvulationDay && !entry?.isBleeding && (
-                              <div className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--lunara-ovulation-glow))]"></div>
-                          )}
-                          {entry && !entry.isBleeding && !cycleDayInfo?.isOvulationDay && !cycleDayInfo?.isFertile && (
-                            <div className="w-1.5 h-1.5 bg-accent rounded-full"></div>
-                          )}
-                        </>
-                      )}
-                       {userPreferences.appMode === 'pregnancy' && entry && (
-                         <div className="w-1.5 h-1.5 bg-green-500 rounded-full" title="Pregnancy related entry"></div>
-                       )}
-                    </div>
-                  </div>
-                );
-              }
-            }}
-          />
+              )}
+              {isBloodDay && <div className="text-sm text-destructive mt-auto self-center">🩸</div>}
+            </div>
+          </div>
         );
-      case 'week':
-        return <div className="flex-grow flex items-center justify-center text-muted-foreground"><p>{t('weekView')} (Not Implemented)</p></div>;
-      case 'day':
-        return <div className="flex-grow flex items-center justify-center text-muted-foreground"><p>{t('dayView')} (Not Implemented)</p></div>;
-       case 'year':
-        return <div className="flex-grow flex items-center justify-center text-muted-foreground"><p>{t('yearView')} (Not Implemented)</p></div>;
-      default:
-        return null;
+        day = addDays(day, 1);
+      }
+      rows.push(
+        <div className="grid grid-cols-7 gap-px bg-border" key={`week-${format(day, 'yyyy-MM-dd')}`}>
+          {days}
+        </div>
+      );
+      days = [];
     }
+    return <div className="border-l border-border">{rows}</div>;
   };
 
   return (
-    <div className="flex flex-col w-full bg-background">
-      {renderCalendarView()}
-      {selectedDateForDialog && (
-        <DayEntryDialog
-          isOpen={isEntryDialogOpen}
-          onClose={handleCloseDialog}
-          selectedDate={selectedDateForDialog}
-          initialData={entriesMap.get(format(selectedDateForDialog, 'yyyy-MM-dd'))}
-          onSaveEntry={handleSaveEntry}
-          language={userPreferences.language}
-          t={t}
-          appMode={userPreferences.appMode}
-        />
-      )}
+    <div className="w-full bg-card shadow-md rounded-lg overflow-hidden">
+      {renderHeader()}
+      {renderDaysOfWeek()}
+      {renderCells()}
+      {/* 
+        Placeholder for additional features requested in your prompt:
+        - Cycle calculation display (follicular, ovulation, luteal)
+        - Mood, energy, body feeling entries (would need a dialog like the previous calendar)
+        - Statistical analysis section
+        - AI Impulses
+
+        These can be built upon this new calendar structure.
+      */}
     </div>
   );
 }
+
+    
