@@ -23,12 +23,12 @@ interface PeriodLogDialogProps {
   onSaveLog: (logEntry: PeriodLogEntry) => void;
 }
 
-const intensityOptions: { value: PeriodIntensity; label: string }[] = [
+const intensityOptions: { value: PeriodIntensity; label: string; icon?: string }[] = [
   { value: 'none', label: 'None' },
-  { value: 'spotting', label: 'Spotting' },
-  { value: 'light', label: 'Light' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'heavy', label: 'Heavy' },
+  { value: 'spotting', label: 'Spotting', icon: '🩸' },
+  { value: 'light', label: 'Light', icon: '🩸' },
+  { value: 'medium', label: 'Medium', icon: '🔴' },
+  { value: 'heavy', label: 'Heavy', icon: '🟥' },
 ];
 
 export function PeriodLogDialog({
@@ -70,33 +70,34 @@ export function PeriodLogDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md bg-background">
+      <DialogContent className="sm:max-w-md bg-card border-border rounded-lg">
         <DialogHeader>
           <DialogTitle>Period Log for {formattedDate}</DialogTitle>
           <DialogDescription>Log your flow, symptoms, and any notes for this day.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-6 py-4">
-          {/* Intensity */}
           <div className="grid gap-2">
-            <Label>Bleeding Intensity</Label>
+            <Label className="font-medium">Bleeding Intensity</Label>
             <RadioGroup
               value={intensity}
               onValueChange={(value: string) => setIntensity(value as PeriodIntensity)}
-              className="flex flex-wrap gap-x-4 gap-y-2"
+              className="flex flex-wrap gap-x-3 gap-y-2"
             >
               {intensityOptions.map(opt => (
                 <div key={opt.value} className="flex items-center space-x-2">
                   <RadioGroupItem value={opt.value} id={`intensity-${opt.value}`} />
-                  <Label htmlFor={`intensity-${opt.value}`} className="font-normal">{opt.label}</Label>
+                  <Label htmlFor={`intensity-${opt.value}`} className="font-normal flex items-center">
+                    {opt.icon && <span className={`mr-1.5 text-sm ${opt.value === 'light' || opt.value === 'spotting' ? 'text-primary' : opt.value === 'medium' ? 'text-red-500' : opt.value === 'heavy' ? 'text-red-700' : ''}`}>{opt.icon}</span>}
+                    {opt.label}
+                  </Label>
                 </div>
               ))}
             </RadioGroup>
           </div>
 
-          {/* Symptoms */}
           <div className="grid gap-2">
-            <Label>Symptoms</Label>
-            <ScrollArea className="h-40 w-full rounded-md border p-3 bg-input/30">
+            <Label className="font-medium">Symptoms</Label>
+            <ScrollArea className="h-36 w-full rounded-md border p-3 bg-input/50">
                 <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                 {SYMPTOMS_LIST.map(symptom => (
                     <div key={symptom} className="flex items-center space-x-2">
@@ -114,16 +115,15 @@ export function PeriodLogDialog({
             </ScrollArea>
           </div>
 
-          {/* Notes */}
           <div className="grid gap-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes" className="font-medium">Notes</Label>
             <Textarea
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Any additional thoughts or observations..."
               rows={3}
-              className="bg-input"
+              className="bg-input text-sm"
             />
           </div>
         </div>
@@ -131,7 +131,7 @@ export function PeriodLogDialog({
           <DialogClose asChild>
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
           </DialogClose>
-          <Button type="button" onClick={handleSave}>Save Log</Button>
+          <Button type="button" onClick={handleSave} className="bg-primary hover:bg-primary/90 text-primary-foreground">Save Log</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

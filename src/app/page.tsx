@@ -5,20 +5,20 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { useCycleContext } from '@/contexts/CycleContext';
 import { CycleCalendar } from '@/components/CycleCalendar';
-import { PeriodLogDialog } from '@/components/PeriodLogDialog'; // New component
+import { PeriodLogDialog } from '@/components/PeriodLogDialog';
 import { calculateCycleDay, getEstimatedNextPeriod } from '@/lib/cycle-utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from '@/components/ui/separator';
-import { format, parseISO, isValid, isToday, startOfDay } from 'date-fns';
+import { format, parseISO, isValid, differenceInDays } from 'date-fns';
 import type { TarotCard, WisdomAffirmation, DailyWisdom, PeriodLogEntry, PeriodIntensity, Symptom } from '@/lib/types';
 import { tarotCards, fallbackTarotCard } from '@/lib/tarot-data';
 import { drawNewDailyCard, updateRecentCardIds, getCardById } from '@/lib/tarot-utils';
 import { wisdomAffirmations } from '@/lib/affirmations-data';
 import { selectNewDailyAffirmation } from '@/lib/affirmation-utils';
-import { Droplet, CalendarDays, Repeat, Sparkles, RefreshCcw, BookOpen, Edit3, Trash2, PlusCircle, FileText } from 'lucide-react';
+import { Droplet, CalendarDays, Repeat, Sparkles, RefreshCcw, BookOpen, Edit3, FileText } from 'lucide-react';
 
 const DAILY_WISDOM_STORAGE_KEY = 'lunarRhythmsDailyWisdom_v1';
 
@@ -27,13 +27,12 @@ const initialDailyWisdomState: DailyWisdom = {
   affirmation: { text: null, author: null, displayDate: null, previousText: null },
 };
 
-// Helper to get intensity icon
-const IntensityIcon: React.FC<{ intensity: PeriodIntensity }> = ({ intensity }) => {
+const IntensityIconDisplay: React.FC<{ intensity: PeriodIntensity }> = ({ intensity }) => {
   switch (intensity) {
-    case 'spotting': return <Droplet className="h-4 w-4 text-pink-300" />;
-    case 'light': return <Droplet className="h-4 w-4 text-pink-400" />;
-    case 'medium': return <Droplet className="h-4 w-4 text-red-500" />;
-    case 'heavy': return <Droplet className="h-4 w-4 text-red-700" />;
+    case 'spotting': return <span className="text-primary" title="Spotting">🩸</span>;
+    case 'light': return <span className="text-primary" title="Light Flow">🩸</span>;
+    case 'medium': return <span className="text-red-500" title="Medium Flow">🔴</span>; // Example red color
+    case 'heavy': return <span className="text-red-700" title="Heavy Flow">🟥</span>; // Example darker red
     default: return null;
   }
 };
@@ -162,7 +161,6 @@ export default function HomePage() {
 
   const handleManualWisdomRefresh = () => {
     const todayStr = format(new Date(), 'yyyy-MM-dd');
-    // Refresh Tarot
     const drawnCard = drawNewDailyCard(tarotCards, dailyWisdom.tarot.recentIds);
     let newCardId = dailyWisdom.tarot.cardId;
     let newRecentIds = dailyWisdom.tarot.recentIds;
@@ -172,7 +170,6 @@ export default function HomePage() {
     }
     setCurrentTarotCard(getCardById(newCardId));
 
-    // Refresh Affirmation
     const affirmation = selectNewDailyAffirmation(wisdomAffirmations, dailyWisdom.affirmation.text);
     setCurrentAffirmation(affirmation);
     
@@ -204,6 +201,12 @@ export default function HomePage() {
     );
   }
 
+  const formattedStartDate = lastPeriodDate ? format(parseISO(lastPeriodDate), 'dd.MM') : '--.--';
+  const formattedEndDate = lastPeriodEndDate ? format(parseISO(lastPeriodEndDate), 'dd.MM') : '--.--';
+  const displayDuration = lastPeriodDuration ? `(${lastPeriodDuration} days)` : '';
+  const displayCycleDay = currentCycleDay ? `Day ${currentCycleDay}/28` : 'Day --/28';
+  const displayNextPeriod = estimatedNextPeriod ? `Next: ~${format(estimatedNextPeriod, 'dd.MM')}` : 'Next: ~--.--';
+
   return (
     <div className="flex flex-col min-h-screen p-4 md:p-6 bg-background text-foreground">
       <header className="w-full max-w-3xl mx-auto text-center my-6">
@@ -213,57 +216,57 @@ export default function HomePage() {
 
       {/* Top Section: Compact Date Display & Inputs */}
       <section className="w-full max-w-2xl mx-auto p-4 bg-card rounded-lg shadow-md mb-6">
+        <div className='mb-4'>
+            <h2 className="text-lg font-medium text-center mb-3 text-foreground/90">🌙 Your Current Cycle</h2>
+            <div className="text-sm text-center text-foreground/80 space-x-1 flex justify-center items-center flex-wrap">
+                <span className="text-lg">🩸</span> 
+                <span>{formattedStartDate}</span> 
+                {lastPeriodDate && lastPeriodEndDate && <span>&rarr;</span>}
+                {lastPeriodDate && lastPeriodEndDate && <span>{formattedEndDate}</span>}
+                {displayDuration && <span className="text-xs">{displayDuration}</span>}
+                <span className="text-muted-foreground mx-1">|</span>
+                <span className={currentCycleDay ? 'text-primary font-semibold' : ''}>{displayCycleDay}</span>
+                <span className="text-muted-foreground mx-1">|</span>
+                <span>{displayNextPeriod}</span>
+            </div>
+        </div>
+        
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
           <div>
-            <Label htmlFor="last-period-start-date" className="text-sm font-medium text-foreground/90">
-              <Droplet className="inline h-4 w-4 mr-1" /> Last Period Start
+            <Label htmlFor="last-period-start-date" className="text-xs font-medium text-foreground/90">
+              Last Period Start
             </Label>
             <Input
               type="date" id="last-period-start-date" value={inputStartDate} onChange={handleStartDateChange}
-              className="w-full bg-input border-border text-foreground placeholder:text-muted-foreground mt-1"
+              className="w-full bg-input border-border text-foreground placeholder:text-muted-foreground mt-1 text-sm h-9"
               max={format(new Date(), 'yyyy-MM-dd')}
             />
           </div>
           <div>
-            <Label htmlFor="last-period-end-date" className="text-sm font-medium text-foreground/90">
-             <Droplet className="inline h-4 w-4 mr-1" /> Last Period End (Optional)
+            <Label htmlFor="last-period-end-date" className="text-xs font-medium text-foreground/90">
+              Last Period End (Optional)
             </Label>
             <Input
               type="date" id="last-period-end-date" value={inputEndDate} onChange={handleEndDateChange}
-              className="w-full bg-input border-border text-foreground placeholder:text-muted-foreground mt-1"
+              className="w-full bg-input border-border text-foreground placeholder:text-muted-foreground mt-1 text-sm h-9"
               max={format(new Date(), 'yyyy-MM-dd')} min={inputStartDate || undefined} disabled={!inputStartDate}
             />
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 items-center mb-3">
-            <Button onClick={handleSaveDates} className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
+        <div className="flex flex-col sm:flex-row gap-2 items-center">
+            <Button onClick={handleSaveDates} className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground h-9 text-sm">
               Save Period Dates
             </Button>
             {(lastPeriodDate || lastPeriodEndDate) && (
-                 <Button onClick={handleClearDates} variant="outline" className="w-full sm:w-auto">
-                    Clear Period Dates
+                 <Button onClick={handleClearDates} variant="outline" className="w-full sm:w-auto h-9 text-sm">
+                    Clear Dates
                 </Button>
             )}
         </div>
-        {lastPeriodDate && (
-          <div className="text-sm text-center text-foreground/80 space-y-0.5">
-            <p><CalendarDays className="inline h-4 w-4 mr-1 text-accent" />
-              Cycle Day: <strong className="text-accent">{currentCycleDay || 'N/A'}</strong> / 28
-            </p>
-            {lastPeriodDuration && (
-              <p><Repeat className="inline h-4 w-4 mr-1 text-accent" />
-                Last Period: <strong className="text-accent">{lastPeriodDuration}</strong> days
-              </p>
-            )}
-            {estimatedNextPeriod && (
-              <p><CalendarDays className="inline h-4 w-4 mr-1 text-accent" />
-                Next Period: <strong className="text-accent">~{format(estimatedNextPeriod, 'dd.MM.yyyy')}</strong>
-              </p>
-            )}
-          </div>
-        )}
-        {!lastPeriodDate && <p className="text-center text-sm text-muted-foreground mt-2">Enter your last period start date to see cycle stats.</p>}
+         {!lastPeriodDate && <p className="text-center text-xs text-muted-foreground mt-3">Enter your last period start date to see cycle stats.</p>}
       </section>
+      <Separator className="my-6 max-w-3xl mx-auto" />
+
 
       {/* Middle Section: Interactive Calendar */}
       <section className="w-full max-w-3xl mx-auto mb-6">
@@ -279,46 +282,47 @@ export default function HomePage() {
           initialLogData={getPeriodLog(format(selectedDateForLog, 'yyyy-MM-dd'))}
         />
       )}
-
+      
+      <Separator className="my-6 max-w-3xl mx-auto" />
       {/* Bottom Section: Tabs for Logs & Affirmations */}
       <section className="w-full max-w-3xl mx-auto">
         <Tabs defaultValue="daily-wisdom" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-2 bg-muted/50">
             <TabsTrigger value="cycle-logs"><BookOpen className="inline h-4 w-4 mr-2"/>Cycle Logs</TabsTrigger>
             <TabsTrigger value="daily-wisdom"><Sparkles className="inline h-4 w-4 mr-2"/>Daily Wisdom</TabsTrigger>
           </TabsList>
           <TabsContent value="cycle-logs" className="p-4 bg-card rounded-b-lg shadow-md min-h-[200px]">
-            <h3 className="text-xl font-medium text-primary mb-3">Past Cycle Logs</h3>
+            <h3 className="text-lg font-medium text-primary mb-3">Past Cycle Logs</h3>
             {sortedPeriodLogs.length > 0 ? (
               <ul className="space-y-3 max-h-96 overflow-y-auto">
                 {sortedPeriodLogs.map(log => (
                   <li key={log.date} className="p-3 bg-background/50 rounded-md shadow-sm border border-border">
                     <div className="flex justify-between items-center">
-                      <span className="font-semibold">{format(parseISO(log.date), 'EEE, dd MMM yyyy')}</span>
-                      <IntensityIcon intensity={log.intensity} />
+                      <span className="font-semibold text-sm">{format(parseISO(log.date), 'EEE, dd MMM yyyy')}</span>
+                      <IntensityIconDisplay intensity={log.intensity} />
                     </div>
                     {log.symptoms && log.symptoms.length > 0 && (
                       <p className="text-xs text-muted-foreground mt-1">Symptoms: {log.symptoms.join(', ')}</p>
                     )}
                     {log.notes && <p className="text-sm mt-1 italic">"{log.notes}"</p>}
-                     <Button variant="ghost" size="sm" className="mt-1 text-xs h-auto p-1" onClick={() => {setSelectedDateForLog(parseISO(log.date)); setIsPeriodLogDialogOpen(true);}}>
+                     <Button variant="ghost" size="sm" className="mt-1 text-xs h-auto p-1 text-primary" onClick={() => {setSelectedDateForLog(parseISO(log.date)); setIsPeriodLogDialogOpen(true);}}>
                         <Edit3 className="h-3 w-3 mr-1"/> Edit
                     </Button>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-muted-foreground">No period logs recorded yet. Click a day on the calendar to add a log.</p>
+              <p className="text-muted-foreground text-sm">No period logs recorded yet. Click a day on the calendar to add a log.</p>
             )}
           </TabsContent>
           <TabsContent value="daily-wisdom" className="p-6 bg-card rounded-b-lg shadow-md min-h-[200px]">
             <div className="text-center mb-6">
-              <h3 className="text-lg font-semibold text-accent mb-2">✨ Today’s Reflection:</h3>
+              <h3 className="text-md font-semibold text-accent mb-2">✨ Today’s Reflection:</h3>
               {currentAffirmation?.text ? (
                 <>
-                  <p className="text-xl italic text-foreground/90">"{currentAffirmation.text}"</p>
+                  <p className="text-lg italic text-foreground/90">"{currentAffirmation.text}"</p>
                   {currentAffirmation.author && (
-                    <p className="text-sm text-muted-foreground mt-1">— {currentAffirmation.author}</p>
+                    <p className="text-xs text-muted-foreground mt-1">— {currentAffirmation.author}</p>
                   )}
                 </>
               ) : (
@@ -326,30 +330,30 @@ export default function HomePage() {
               )}
             </div>
 
-            <Separator className="my-6" />
+            <Separator className="my-4" />
 
             <div className="text-center">
-              <h3 className="text-lg font-semibold text-accent mb-3">🔮 Tarot Insight:</h3>
+              <h3 className="text-md font-semibold text-accent mb-3">🔮 Tarot Insight:</h3>
               {currentTarotCard && currentTarotCard.id !== 'fallback' ? (
-                <div className="flex flex-col items-center gap-3">
+                <div className="flex flex-col items-center gap-2">
                   <Image
-                    src={currentTarotCard.image} alt={currentTarotCard.title} width={120} height={200}
-                    className="rounded-lg shadow-lg border-2 border-primary/30 object-contain"
+                    src={currentTarotCard.image} alt={currentTarotCard.title} width={100} height={170}
+                    className="rounded-md shadow-lg border-2 border-primary/30 object-contain"
                     data-ai-hint="tarot card"
                     unoptimized={currentTarotCard.image.startsWith('https://placehold.co')}
                   />
-                  <h4 className="text-xl font-bold text-foreground mt-1">{currentTarotCard.title}</h4>
-                  <p className="text-sm text-muted-foreground italic max-w-xs">"{currentTarotCard.meaning}"</p>
+                  <h4 className="text-lg font-bold text-foreground mt-1">{currentTarotCard.title}</h4>
+                  <p className="text-xs text-muted-foreground italic max-w-xs">"{currentTarotCard.meaning}"</p>
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-3">
+                <div className="flex flex-col items-center gap-2">
                   <Image
-                    src={fallbackTarotCard.image} alt={fallbackTarotCard.title} width={120} height={200}
-                    className="rounded-lg shadow-md border-2 border-border object-contain opacity-70"
+                    src={fallbackTarotCard.image} alt={fallbackTarotCard.title} width={100} height={170}
+                    className="rounded-md shadow-md border-2 border-border object-contain opacity-70"
                     data-ai-hint="tarot card placeholder" unoptimized
                   />
-                  <h4 className="text-xl font-bold text-muted-foreground mt-1">{fallbackTarotCard.title}</h4>
-                  <p className="text-sm text-muted-foreground italic max-w-xs">"{fallbackTarotCard.meaning}"</p>
+                  <h4 className="text-lg font-bold text-muted-foreground mt-1">{fallbackTarotCard.title}</h4>
+                  <p className="text-xs text-muted-foreground italic max-w-xs">"{fallbackTarotCard.meaning}"</p>
                 </div>
               )}
             </div>

@@ -5,35 +5,67 @@
 
 @layer base {
   :root {
-    --background: 220 35% 15%; /* Midnight Blue */
-    --foreground: 210 15% 88%; /* Silver */
+    /* New Color Scheme: Soft white, Rose Quartz, Dark Charcoal */
+    --background: 0 0% 97.6%; /* #F9F9F9 - Soft White */
+    --foreground: 0 0% 20%;   /* #333333 - Dark Charcoal */
     
-    --card: 220 35% 22%; /* Slightly Lighter Midnight Blue */
-    --card-foreground: 210 15% 88%; /* Silver */
+    --card: 0 0% 100%; /* White for cards to stand out slightly on soft white bg */
+    --card-foreground: 0 0% 20%; /* Dark Charcoal */
     
-    --popover: 220 35% 20%;
-    --popover-foreground: 210 15% 88%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 20%;
     
-    --primary: 340 82% 76%; /* Rose */
-    --primary-foreground: 220 35% 10%; /* Darker Midnight Blue for text on Rose */
+    --primary: 356 75% 88%;    /* #F7CAC9 - Rose Quartz */
+    --primary-foreground: 0 0% 20%; /* Dark Charcoal for text on Rose Quartz */
     
-    --secondary: 340 60% 65%; /* Darker Rose / Muted Rose */
-    --secondary-foreground: 210 15% 95%; /* Lighter Silver */
+    --secondary: 356 60% 92%; /* Lighter Rose Quartz or complementary soft tone */
+    --secondary-foreground: 0 0% 20%;
     
-    --muted: 210 15% 45%; /* Muted Silver/Grey */
-    --muted-foreground: 210 15% 75%; /* Lighter Muted Silver */
+    --muted: 0 0% 90%;   /* Light Gray for muted elements */
+    --muted-foreground: 0 0% 40%; /* Slightly darker gray for muted text */
     
-    --accent: 340 70% 80%; /* Lighter Rose */
-    --accent-foreground: 220 35% 10%;
+    --accent: 356 70% 90%;     /* Slightly desaturated Rose Quartz for accents */
+    --accent-foreground: 0 0% 20%;
     
-    --destructive: 0 63% 31%;
+    --destructive: 0 84% 60%; /* Standard destructive red */
+    --destructive-foreground: 0 0% 98%; /* Light text for destructive */
+    
+    --border: 0 0% 85%;   /* Light Gray border */
+    --input: 0 0% 95%;    /* Slightly off-white for inputs */
+    --ring: 356 75% 88%;     /* Rose Quartz for focus rings */
+
+    --radius: 0.5rem; /* Default: 0.5rem. Can be adjusted. For "1px" like, use .rounded-xs or custom. */
+  }
+
+  .dark {
+    /* Define dark theme variables if needed in future, for now matches light */
+    --background: 0 0% 10%;
+    --foreground: 0 0% 95%;
+    
+    --card: 0 0% 15%;
+    --card-foreground: 0 0% 95%;
+    
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 95%;
+    
+    --primary: 356 75% 70%; /* Darker Rose for dark mode */
+    --primary-foreground: 0 0% 98%;
+    
+    --secondary: 356 60% 60%;
+    --secondary-foreground: 0 0% 98%;
+    
+    --muted: 0 0% 25%;
+    --muted-foreground: 0 0% 70%;
+    
+    --accent: 356 70% 65%;
+    --accent-foreground: 0 0% 98%;
+    
+    --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 98%;
     
-    --border: 210 15% 35%; /* Subtle Silver Border */
-    --input: 210 15% 25%;
-    --ring: 340 82% 76%; /* Rose for focus rings */
-
-    --radius: 0.5rem;
+    --border: 0 0% 30%;
+    --input: 0 0% 20%;
+    --ring: 356 75% 70%;
   }
 }
 
@@ -43,12 +75,16 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-geist-sans), sans-serif;
+    font-family: var(--font-geist-sans), sans-serif; /* Sticking with Geist, can be changed to Poppins */
     min-height: 100vh;
     display: flex;
     flex-direction: column;
   }
   main {
     flex-grow: 1;
+  }
+  /* Custom rounded-1px if truly needed, though not standard Tailwind/ShadCN */
+  .rounded-1px { 
+    border-radius: 1px;
   }
 }
