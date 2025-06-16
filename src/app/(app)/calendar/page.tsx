@@ -4,15 +4,13 @@
 import { useState, useEffect } from 'react';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, parseISO } from 'date-fns';
 import de from 'date-fns/locale/de';
-// Removed Image import as we'll display phase name as text for now
-// import Image from 'next/image';
 
 interface BloodEntry {
   [date: string]: boolean;
 }
 
 interface MoonPhaseData {
-  [date: string]: string; // e.g. 'new_moon', 'full_moon'
+  [date: string]: string; // Stores the moon phase name like 'new_moon'
 }
 
 const BLOOD_ENTRIES_STORAGE_KEY = 'myLunaraCycle_bloodEntries';
@@ -22,72 +20,60 @@ export default function CycleMoonCalendarPage() {
   const [bloodEntries, setBloodEntries] = useState<BloodEntry>({});
   const [moonData, setMoonData] = useState<MoonPhaseData>({});
 
+  // Mapping for moon phase names to emojis
+  const moonPhaseToEmoji: Record<string, string> = {
+    'new_moon': '🌑', 'waxing_crescent': '🌒', 'first_quarter': '🌓',
+    'waxing_gibbous': '🌔', 'full_moon': '🌕', 'waning_gibbous': '🌖',
+    'last_quarter': '🌗', 'waning_crescent': '🌘',
+  };
+  const moonPhaseNames: string[] = Object.keys(moonPhaseToEmoji);
+
   useEffect(() => {
-    // Load blood entries from localStorage
     const storedBloodEntries = localStorage.getItem(BLOOD_ENTRIES_STORAGE_KEY);
     if (storedBloodEntries) {
       try {
         setBloodEntries(JSON.parse(storedBloodEntries));
       } catch (e) {
         console.error("Failed to parse blood entries from localStorage", e);
-        // Initialize with empty if parsing fails
-        setBloodEntries({});
+        setBloodEntries({}); // Initialize empty if parsing fails
       }
     } else {
-        // Initialize with empty if not found
-        setBloodEntries({});
+        setBloodEntries({}); // Initialize empty if not found
     }
 
-    // Dummy moon phase loader – replace with NASA API or static JSON
-    // Note: Ensure your moon phase names here match what you expect for image file names if re-enabling images.
-    const exampleMoonData: MoonPhaseData = {
-      '2025-06-01': 'new_moon',
-      '2025-06-05': 'waxing_crescent',
-      '2025-06-09': 'first_quarter',
-      '2025-06-13': 'waxing_gibbous',
-      '2025-06-17': 'full_moon',
-      '2025-06-21': 'waning_gibbous',
-      '2025-06-25': 'last_quarter',
-      '2025-06-29': 'waning_crescent',
-      // Add more for other months or implement dynamic loading
-    };
-    // Example for current month to make dummy data more relevant
-    const MOCK_START_DATE_FOR_MOON = startOfMonth(new Date()); // Or currentMonth if you want it to change
+    // Dummy moon phase loader
+    const MOCK_START_DATE_FOR_MOON = startOfMonth(currentMonth);
     const localMoonData: MoonPhaseData = {};
-    for(let i = 0; i < 30; i++) {
-        const dateKey = format(addDays(MOCK_START_DATE_FOR_MOON, i), 'yyyy-MM-dd');
-        if (i % 29 === 0) localMoonData[dateKey] = 'new_moon';
-        else if (i % 29 === 7) localMoonData[dateKey] = 'first_quarter';
-        else if (i % 29 === 14) localMoonData[dateKey] = 'full_moon';
-        else if (i % 29 === 21) localMoonData[dateKey] = 'last_quarter';
-        else if (i % 29 < 7) localMoonData[dateKey] = 'waxing_crescent';
-        else if (i % 29 < 14) localMoonData[dateKey] = 'waxing_gibbous';
-        else if (i % 29 < 21) localMoonData[dateKey] = 'waning_gibbous';
-        else localMoonData[dateKey] = 'waning_crescent';
+    // Generate for current month + padding for previous/next month days shown in grid
+    const firstDayOfGrid = startOfWeek(startOfMonth(currentMonth), { locale: de, weekStartsOn: 1 });
+    const lastDayOfGrid = endOfWeek(endOfMonth(currentMonth), { locale: de, weekStartsOn: 1 });
+    
+    let tempDay = firstDayOfGrid;
+    while(tempDay <= lastDayOfGrid) {
+        const dateKey = format(tempDay, 'yyyy-MM-dd');
+        // Simple repeating cycle for phases for dummy data
+        const dayOffset = Math.abs(tempDay.getDate() - MOCK_START_DATE_FOR_MOON.getDate());
+        const phaseName = moonPhaseNames[dayOffset % moonPhaseNames.length];
+        localMoonData[dateKey] = phaseName;
+        tempDay = addDays(tempDay, 1);
     }
-
     setMoonData(localMoonData);
-  }, []); // Removed currentMonth from dependencies to prevent dummy moon data reloading on month change.
-            // If moon data should be fetched per month, adjust this effect.
+  }, [currentMonth]);
 
   const toggleBloodEntry = (day: Date) => {
     const dateStr = format(day, 'yyyy-MM-dd');
     setBloodEntries(prev => {
-      const newEntries = {
-        ...prev,
-        [dateStr]: !prev[dateStr],
-      };
-      // Save to localStorage
+      const newEntries = { ...prev, [dateStr]: !prev[dateStr] };
       localStorage.setItem(BLOOD_ENTRIES_STORAGE_KEY, JSON.stringify(newEntries));
       return newEntries;
     });
   };
 
   const renderHeader = () => (
-    <div className="flex justify-between items-center py-4 px-2 bg-background border-b border-border">
+    <div className="flex justify-between items-center py-4 px-2 bg-card border-b border-border">
       <button 
         onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-        className="p-2 rounded-md hover:bg-accent hover:text-accent-foreground"
+        className="p-2 rounded-md hover:bg-primary/30 text-foreground" // Adjusted hover for light theme
         aria-label="Previous month"
       >
         &lt;
@@ -97,7 +83,7 @@ export default function CycleMoonCalendarPage() {
       </h2>
       <button 
         onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-        className="p-2 rounded-md hover:bg-accent hover:text-accent-foreground"
+        className="p-2 rounded-md hover:bg-primary/30 text-foreground" // Adjusted hover
         aria-label="Next month"
       >
         &gt;
@@ -107,24 +93,22 @@ export default function CycleMoonCalendarPage() {
 
   const renderDaysOfWeek = () => {
     const daysHeader = [];
-    // Ensure Sunday is the start of the week for this header if locale implies it, or stick to Monday for 'de'
-    const weekStartsOn = de.options?.weekStartsOn ?? 1; // Default to Monday for 'de'
+    const weekStartsOn = de.options?.weekStartsOn ?? 1;
     const firstDayOfWeek = startOfWeek(new Date(), { locale: de, weekStartsOn });
 
     for (let i = 0; i < 7; i++) {
       daysHeader.push(
-        <div key={i} className="text-center font-medium text-muted-foreground text-sm py-2">
+        <div key={i} className="text-center font-medium text-foreground text-sm py-2"> {/* 14pt: text-sm */}
           {format(addDays(firstDayOfWeek, i), 'EE', { locale: de })}
         </div>
       );
     }
-    return <div className="grid grid-cols-7 gap-px border-b border-border bg-border">{daysHeader}</div>;
+    return <div className="grid grid-cols-7 gap-px border-b border-border bg-border/10">{daysHeader}</div>;
   };
 
   const renderCells = () => {
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(monthStart);
-    // For 'de' locale, week starts on Monday (1)
     const startDate = startOfWeek(monthStart, { locale: de, weekStartsOn: 1 });
     const endDate = endOfWeek(monthEnd, { locale: de, weekStartsOn: 1 });
 
@@ -136,71 +120,82 @@ export default function CycleMoonCalendarPage() {
       for (let i = 0; i < 7; i++) {
         const dateStr = format(day, 'yyyy-MM-dd');
         const isBloodDay = bloodEntries[dateStr];
-        const currentMoonPhase = moonData[dateStr];
-        const isCurrentMonth = isSameMonth(day, monthStart);
+        const moonPhaseName = moonData[dateStr];
+        const currentMoonEmoji = moonPhaseName ? moonPhaseToEmoji[moonPhaseName] : '';
+        const isCurrentMonthDay = isSameMonth(day, monthStart);
         const isToday = isSameDay(day, new Date());
 
+        let cellClasses = `min-h-[6rem] md:min-h-[7rem] p-2 flex flex-col items-start 
+                           cursor-pointer transition-colors duration-150 ease-in-out
+                           border-r border-b border-border/40 
+                           ${i === 6 ? 'border-r-0' : ''}`;
+        
+        let dayNumberStyle = "text-base font-medium self-end mr-0.5"; // 16pt: text-base. Margin for moon.
+        let moonIconStyle = "text-lg text-[hsl(var(--color-moon))]"; // 18pt: text-lg. Soft Lilac.
+        let bloodIndicator = null;
+
+        if (isToday) {
+          cellClasses += ' bg-[hsla(var(--calendar-current-day-bg-raw),0.2)]'; // Pale Sunrise 20%
+          dayNumberStyle += ' text-foreground'; // Slate Grey
+        } else if (!isCurrentMonthDay) {
+          cellClasses += ' bg-[hsl(var(--calendar-other-month-bg))]'; // Light Grey #ECEFF4
+          dayNumberStyle += ' text-[hsl(var(--calendar-other-month-fg))] opacity-50'; // Text for other month days with 50% opacity
+          moonIconStyle += ' opacity-50';
+        } else {
+          cellClasses += ' bg-background'; // Dawn Grey (default)
+          dayNumberStyle += ' text-foreground'; // Slate Grey
+        }
+
+        if (isBloodDay && isCurrentMonthDay) {
+            cellClasses += ' bg-[hsla(var(--calendar-bleeding-bg-raw),0.1)]'; // Crimson 10% opacity
+            // Day number text can remain slate, or a specific contrast if needed
+            bloodIndicator = <span className="text-[hsl(var(--calendar-bleeding-indicator))] text-xs absolute top-2 right-2">●</span>;
+        }
+        
         days.push(
           <div
             key={day.toISOString()}
-            className={`min-h-[6rem] md:min-h-[7rem] p-2 flex flex-col items-start 
-                        ${isCurrentMonth ? 'bg-background hover:bg-accent/10' : 'bg-muted/30 hover:bg-accent/20 text-muted-foreground/70'} 
-                        cursor-pointer transition-colors duration-150 ease-in-out
-                        border-r border-b border-border 
-                        ${i === 6 ? 'border-r-0' : ''} 
-                       `}
+            className={`${cellClasses} relative`} // Added relative for absolute positioning of dot
             onClick={() => toggleBloodEntry(day)}
             role="button"
             tabIndex={0}
             onKeyDown={(e) => e.key === 'Enter' && toggleBloodEntry(day)}
             aria-pressed={isBloodDay}
-            aria-label={`Date ${format(day, 'PPP', { locale: de })}${isBloodDay ? ', bleeding logged' : ''}${currentMoonPhase ? `, moon phase: ${currentMoonPhase}` : ''}`}
+            aria-label={`Date ${format(day, 'PPP', { locale: de })}${isBloodDay ? ', bleeding logged' : ''}${currentMoonEmoji ? `, moon phase: ${moonPhaseName}` : ''}`}
           >
-            <span className={`text-xs font-medium self-end ${isToday ? 'bg-primary text-primary-foreground rounded-full px-1.5 py-0.5' : isCurrentMonth ? 'text-foreground' : 'text-muted-foreground/70'}`}>
+            {bloodIndicator}
+            <span className={dayNumberStyle}>
               {format(day, 'd')}
-              {format(day,'d') === '1' && !isCurrentMonth && <span className="ml-1">{format(day, 'MMM', {locale: de})}</span>}
+              {format(day,'d') === '1' && !isCurrentMonthDay && <span className="ml-1 text-xs">{format(day, 'MMM', {locale: de})}</span>}
             </span>
             
-            <div className="flex-grow mt-1 w-full space-y-1">
-              {currentMoonPhase && (
-                <div className="text-xs text-muted-foreground">
-                  {/* Replace with Image component when SVGs are available in public/moon/ */}
-                  {/* <Image src={`/moon/${currentMoonPhase}.svg`} alt={currentMoonPhase} width={16} height={16} data-ai-hint="moon phase" /> */}
-                   <span>{currentMoonPhase.replace(/_/g, ' ')}</span>
-                </div>
+            <div className="flex-grow mt-1 w-full flex items-center justify-center">
+              {currentMoonEmoji && (
+                <span className={moonIconStyle} title={moonPhaseName}>
+                   {currentMoonEmoji}
+                </span>
               )}
-              {isBloodDay && <div className="text-sm text-destructive mt-auto self-center">🩸</div>}
             </div>
           </div>
         );
         day = addDays(day, 1);
       }
       rows.push(
-        <div className="grid grid-cols-7 gap-px bg-border" key={`week-${format(day, 'yyyy-MM-dd')}`}>
+        <div className="grid grid-cols-7 gap-px bg-border/20" key={`week-${format(day, 'yyyy-MM-dd')}`}>
           {days}
         </div>
       );
       days = [];
     }
-    return <div className="border-l border-border">{rows}</div>;
+    return <div className="border-l border-border/40">{rows}</div>;
   };
 
   return (
-    <div className="w-full bg-card shadow-md rounded-lg overflow-hidden">
+    <div className="w-full bg-card shadow-sm rounded-lg overflow-hidden">
       {renderHeader()}
       {renderDaysOfWeek()}
       {renderCells()}
-      {/* 
-        Placeholder for additional features requested in your prompt:
-        - Cycle calculation display (follicular, ovulation, luteal)
-        - Mood, energy, body feeling entries (would need a dialog like the previous calendar)
-        - Statistical analysis section
-        - AI Impulses
-
-        These can be built upon this new calendar structure.
-      */}
     </div>
   );
 }
 
-    

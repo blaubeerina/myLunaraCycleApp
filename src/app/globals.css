@@ -5,122 +5,111 @@
 
 @layer base {
   :root {
-    /* Cosmic Palette */
-    --background: 248 43% 8%; /* #0F0A1D Midnight Indigo */
-    --foreground: 240 10% 85%; /* Light silver/off-white for text */
+    /* Dawn Grey Palette */
+    --background: 220 33% 95%; /* #E5E9F0 Dawn Grey */
+    --foreground: 220 13% 35%; /* #4C566A Slate Grey */
     
-    --card: 246 30% 12%; 
-    --card-foreground: 240 10% 85%;
+    --card: 220 25% 93%; /* #E0E4EB Slightly off Dawn Grey for cards */
+    --card-foreground: 220 13% 35%; /* #4C566A */
     
-    --popover: 246 30% 10%;
-    --popover-foreground: 240 10% 85%;
+    --popover: 220 33% 97%; /* Lighter grey for popovers */
+    --popover-foreground: 220 13% 35%;
     
-    /* Primary: Soft Crimson (#E53E3E) for bleeding days & general accents */
-    --primary: 0 79% 57%; 
-    --primary-foreground: 0 0% 98%; /* White/very light for text on crimson */
+    /* Primary: Using Pale Sunrise for highlights as per current day spec */
+    --primary: 220 29% 88%; /* #D8DEE9 Pale Sunrise */
+    --primary-foreground: 220 13% 25%; /* Darker Slate for text on Pale Sunrise */
 
-    /* Rose Quartz for specific highlights */
-    --color-rose-quartz: 356 70% 88%; /* #F7CAC9 */
+    /* Accent: Soft Lilac for moon icons and other accents */
+    --accent: 320 30% 70%; /* #B48EAD Soft Lilac */
+    --accent-foreground: 220 33% 98%; /* Very light for text on Lilac */
     
-    /* Accents for fertile window & ovulation */
-    --color-fertile-start: 46 90% 68%; /* #F6D365 Golden Sunrise Start */
-    --color-fertile-end: 20 98% 75%;   /* #FDA085 Sunrise Orange End */
-    --color-ovulation: 12 100% 73%;    /* #FF9A76 Luminous Peach */
-    --color-ovulation-foreground: 240 20% 10%; /* Darker text for peach background */
+    /* Secondary can be a variation or another subtle color */
+    --secondary: 220 15% 60%; /* #818C99 A medium grey for secondary elements */
+    --secondary-foreground: 220 33% 98%; 
 
-    /* Secondary & Accent will map to these new specific colors for broader theme use */
-    --secondary: 12 100% 73%; /* Luminous Peach as Secondary */
-    --secondary-foreground: 240 20% 10%;
-    --accent: 46 90% 68%; /* Golden Sunrise as Accent */
-    --accent-foreground: 240 20% 10%;
-
-    /* Muted: Darker gray/indigo for subtle elements */
-    --muted: 240 15% 25%;
-    --muted-foreground: 240 10% 65%; /* Lighter muted text */
+    /* Muted: For less prominent elements */
+    --muted: 220 20% 85%; /* #D1D5DB */
+    --muted-foreground: 220 10% 50%; /* #717985 */
     
-    --destructive: 0 79% 57%; /* Same as primary for now, or can be a more intense red */
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 79% 57%; /* #E53E3E Soft Crimson (kept for bleeding days) */
+    --destructive-foreground: 0 0% 98%; /* White/very light for text on crimson */
     
-    --border: 240 10% 30%;   /* Subtle border for dark theme */
-    --input: 240 15% 18%;    /* Dark input background */
-    --ring: 46 90% 68%;     /* Golden for focus rings (matches fertile start) */
+    --border: 220 10% 80%;   /* #C4C9D4 Subtle border for light theme */
+    --input: 220 20% 98%;    /* #F8F9FA Very light input background */
+    --ring: 220 29% 88%;     /* Pale Sunrise for focus rings */
 
     --radius: 0.5rem; 
     --radius-sm: 0.25rem; 
     
-    /* Specific Calendar Colors */
-    --calendar-normal-text: 240 10% 85%; 
-    --calendar-default-cell-bg: 0 0% 96%; /* #F5F5F5 Light gray for default cells */
-    --text-charcoal: 0 0% 20%; /* #333333 Dark charcoal text for light gray bg */
-
-    --calendar-bleeding-bg-raw: 0 79% 57%; /* #E53E3E Soft Crimson */
-    --calendar-bleeding-text: 0 0% 98%; 
-    --calendar-bleeding-indicator: 0 79% 57%; /* Crimson for dot indicator */
+    /* Specific Calendar Colors from prompt */
+    --calendar-current-day-bg-raw: 220 29% 88%; /* #D8DEE9 Pale Sunrise (raw for opacity) */
+    --calendar-other-month-bg: 220 33% 97%; /* #ECEFF4 Light Grey (for bg of other month days) */
+    --calendar-other-month-fg: 225 10% 65%; /* #9EA8B8 (derived from #A3A8B8 for text) */
+    --color-moon: 320 30% 70%; /* #B48EAD Soft Lilac (for moon icons) */
     
-    --calendar-today-bg-raw: 240 15% 25%; 
-    --calendar-today-text: 46 90% 68%;    /* Accent color for today text */
+    --calendar-normal-text: 220 13% 35%; /* Slate Grey for normal day text */
+    --calendar-default-cell-bg: 220 33% 95%; /* #E5E9F0 Dawn Grey (same as page bg) */
     
-    --color-moon: 0 0% 75%; /* Silver #C0C0C0 */
+    --calendar-bleeding-bg-raw: 0 79% 57%; /* #E53E3E Soft Crimson for bleeding bg */
+    --calendar-bleeding-text: 0 0% 98%; /* Text on bleeding bg */
+    --calendar-bleeding-indicator: 0 79% 57%; /* Color for the dot */
+    
+    --calendar-today-text: 220 13% 35%; /* Slate Grey for current day text, bg is primary */
 
-    /* Sidebar specific variables if needed, defaults to card/background */
-    --sidebar-background: 246 30% 10%; 
-    --sidebar-foreground: 240 10% 80%;
-    --sidebar-primary: 0 79% 57%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 46 90% 68%;
-    --sidebar-accent-foreground: 240 20% 10%;
-    --sidebar-border: 240 10% 25%;
-    --sidebar-ring: 46 90% 68%;
+
+    /* Sidebar specific variables, adapt to light theme */
+    --sidebar-background: 220 25% 93%; /* #E0E4EB */
+    --sidebar-foreground: 220 13% 35%;
+    --sidebar-primary: 220 29% 88%; /* Pale Sunrise */
+    --sidebar-primary-foreground: 220 13% 25%;
+    --sidebar-accent: 320 30% 70%; /* Soft Lilac */
+    --sidebar-accent-foreground: 220 33% 98%;
+    --sidebar-border: 220 10% 80%;
+    --sidebar-ring: 220 29% 88%;
   }
 
+  /* Remove .dark specific overrides if the app is now always light themed */
+  /* or update .dark to reflect a true dark variant of the Dawn Grey palette */
   .dark {
-    /* Dark theme is the default for this palette */
-    --background: 248 43% 8%;
-    --foreground: 240 10% 85%;
-    --card: 246 30% 12%;
-    --card-foreground: 240 10% 85%;
-    --popover: 246 30% 10%;
-    --popover-foreground: 240 10% 85%;
-    --primary: 0 79% 57%;
-    --primary-foreground: 0 0% 98%;
-    --color-rose-quartz: 356 70% 88%;
-
-    --color-fertile-start: 46 90% 68%;
-    --color-fertile-end: 20 98% 75%;
-    --color-ovulation: 12 100% 73%;
-    --color-ovulation-foreground: 240 20% 10%;
-
-    --secondary: 12 100% 73%; 
-    --secondary-foreground: 240 20% 10%;
-    --accent: 46 90% 68%; 
-    --accent-foreground: 240 20% 10%;
-
-    --muted: 240 15% 25%;
-    --muted-foreground: 240 10% 65%;
+    --background: 220 33% 95%;
+    --foreground: 220 13% 35%;
+    --card: 220 25% 93%;
+    --card-foreground: 220 13% 35%;
+    --popover: 220 33% 97%;
+    --popover-foreground: 220 13% 35%;
+    --primary: 220 29% 88%;
+    --primary-foreground: 220 13% 25%;
+    --accent: 320 30% 70%;
+    --accent-foreground: 220 33% 98%;
+    --secondary: 220 15% 60%;
+    --secondary-foreground: 220 33% 98%;
+    --muted: 220 20% 85%;
+    --muted-foreground: 220 10% 50%;
     --destructive: 0 79% 57%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 10% 30%;
-    --input: 240 15% 18%;
-    --ring: 46 90% 68%;
+    --border: 220 10% 80%;
+    --input: 220 20% 98%;
+    --ring: 220 29% 88%;
 
-    --calendar-normal-text: 240 10% 85%;
-    --calendar-default-cell-bg: 0 0% 96%;
-    --text-charcoal: 0 0% 20%;
+    --calendar-current-day-bg-raw: 220 29% 88%;
+    --calendar-other-month-bg: 220 33% 97%;
+    --calendar-other-month-fg: 225 10% 65%;
+    --color-moon: 320 30% 70%;
+    --calendar-normal-text: 220 13% 35%;
+    --calendar-default-cell-bg: 220 33% 95%;
     --calendar-bleeding-bg-raw: 0 79% 57%;
     --calendar-bleeding-text: 0 0% 98%;
     --calendar-bleeding-indicator: 0 79% 57%;
-    --calendar-today-bg-raw: 240 15% 25%;
-    --calendar-today-text: 46 90% 68%;
-    --color-moon: 0 0% 75%;
+    --calendar-today-text: 220 13% 35%;
 
-    --sidebar-background: 246 30% 10%;
-    --sidebar-foreground: 240 10% 80%;
-    --sidebar-primary: 0 79% 57%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 46 90% 68%;
-    --sidebar-accent-foreground: 240 20% 10%;
-    --sidebar-border: 240 10% 25%;
-    --sidebar-ring: 46 90% 68%;
+    --sidebar-background: 220 25% 93%;
+    --sidebar-foreground: 220 13% 35%;
+    --sidebar-primary: 220 29% 88%;
+    --sidebar-primary-foreground: 220 13% 25%;
+    --sidebar-accent: 320 30% 70%;
+    --sidebar-accent-foreground: 220 33% 98%;
+    --sidebar-border: 220 10% 80%;
+    --sidebar-ring: 220 29% 88%;
   }
 }
 
@@ -144,17 +133,17 @@
 }
 
 @layer utilities {
-  .animate-pulse-ovulation {
+  .animate-pulse-ovulation { 
     animation: pulse-ovulation 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
   @keyframes pulse-ovulation {
     0%, 100% {
-      /* Using secondary color (Luminous Peach) for ovulation pulse */
-      box-shadow: 0 0 0 0 hsla(var(--color-ovulation), 0.7);
+      /* Use a color suitable for the new theme if this animation is kept */
+      box-shadow: 0 0 0 0 hsla(var(--accent), 0.7); 
     }
     50% {
-      box-shadow: 0 0 0 8px hsla(var(--color-ovulation), 0);
+      box-shadow: 0 0 0 8px hsla(var(--accent), 0);
     }
   }
 }
