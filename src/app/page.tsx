@@ -5,46 +5,85 @@ import React, { useState, useEffect } from 'react';
 import { useCycleContext } from '@/contexts/CycleContext';
 import { CycleCalendar } from '@/components/CycleCalendar';
 import { calculateCycleDay, getEstimatedNextPeriod } from '@/lib/cycle-utils';
-import { Input } from '@/components/ui/input'; // Assuming Input is styled by theme
-import { Button } from '@/components/ui/button'; // Assuming Button is styled by theme
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { format, parseISO, isValid } from 'date-fns';
+import { format, parseISO, isValid, differenceInDays } from 'date-fns';
 
 export default function HomePage() {
-  const { lastPeriodDate, setLastPeriodDate, isLoading } = useCycleContext();
-  const [inputDate, setInputDate] = useState<string>('');
+  const { 
+    lastPeriodDate, 
+    lastPeriodEndDate,
+    lastPeriodDuration,
+    setPeriodDates, 
+    isLoading,
+    clearPeriodData
+  } = useCycleContext();
+  
+  const [inputStartDate, setInputStartDate] = useState<string>('');
+  const [inputEndDate, setInputEndDate] = useState<string>('');
   const [currentCycleDay, setCurrentCycleDay] = useState<number | null>(null);
   const [estimatedNextPeriod, setEstimatedNextPeriod] = useState<Date | null>(null);
 
   useEffect(() => {
     if (lastPeriodDate) {
-      setInputDate(lastPeriodDate);
+      setInputStartDate(lastPeriodDate);
       const today = new Date();
       setCurrentCycleDay(calculateCycleDay(lastPeriodDate, today));
       setEstimatedNextPeriod(getEstimatedNextPeriod(lastPeriodDate));
     } else {
-        setInputDate(''); // Clear input if context has no date
-        setCurrentCycleDay(null);
-        setEstimatedNextPeriod(null);
+      setInputStartDate('');
+      setCurrentCycleDay(null);
+      setEstimatedNextPeriod(null);
     }
-  }, [lastPeriodDate]);
+    if (lastPeriodEndDate) {
+      setInputEndDate(lastPeriodEndDate);
+    } else {
+      setInputEndDate('');
+    }
+  }, [lastPeriodDate, lastPeriodEndDate]);
 
-  const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setInputDate(event.target.value);
+  const handleStartDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInputStartDate(event.target.value);
   };
 
-  const handleSaveDate = () => {
-    if (inputDate && isValid(parseISO(inputDate))) {
-      setLastPeriodDate(inputDate);
-    } else {
-      // Basic error feedback, could use a toast
-      alert("Please enter a valid date in YYYY-MM-DD format.");
+  const handleEndDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInputEndDate(event.target.value);
+  };
+
+  const handleSaveDates = () => {
+    let finalStartDate: string | null = null;
+    let finalEndDate: string | null = null;
+
+    if (inputStartDate && isValid(parseISO(inputStartDate))) {
+      finalStartDate = inputStartDate;
+    } else if (inputStartDate) { // if input is not empty but invalid
+        alert("Please enter a valid start date in YYYY-MM-DD format.");
+        return;
     }
+
+
+    if (inputEndDate && isValid(parseISO(inputEndDate))) {
+      finalEndDate = inputEndDate;
+    } else if (inputEndDate) { // if input is not empty but invalid
+        alert("Please enter a valid end date in YYYY-MM-DD format.");
+        return;
+    }
+    
+    if (finalStartDate && finalEndDate && parseISO(finalEndDate) < parseISO(finalStartDate)) {
+        alert("Period end date cannot be before the start date.");
+        return;
+    }
+    
+    // If only start date is provided, save it and keep/clear end date based on context logic
+    // If both are provided (or cleared), update context.
+    setPeriodDates(finalStartDate, finalEndDate);
   };
   
-  const handleClearDate = () => {
-    setLastPeriodDate(null);
-    setInputDate('');
+  const handleClearDates = () => {
+    clearPeriodData();
+    setInputStartDate('');
+    setInputEndDate('');
   };
 
   if (isLoading) {
@@ -64,30 +103,55 @@ export default function HomePage() {
 
       <main className="w-full max-w-4xl">
         <section className="mb-8 p-6 bg-card rounded-lg shadow-md">
-          <Label htmlFor="last-period-date" className="block text-md font-medium mb-2 text-primary">
-            Date of Your Last Period
-          </Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-4">
+            <div>
+              <Label htmlFor="last-period-start-date" className="block text-md font-medium mb-2 text-primary">
+                Start Date of Your Last Period
+              </Label>
+              <Input
+                type="date"
+                id="last-period-start-date"
+                value={inputStartDate}
+                onChange={handleStartDateChange}
+                className="w-full bg-input border-border text-foreground placeholder:text-muted-foreground"
+                max={format(new Date(), 'yyyy-MM-dd')}
+              />
+            </div>
+            <div>
+              <Label htmlFor="last-period-end-date" className="block text-md font-medium mb-2 text-primary">
+                End Date of Your Last Period
+              </Label>
+              <Input
+                type="date"
+                id="last-period-end-date"
+                value={inputEndDate}
+                onChange={handleEndDateChange}
+                className="w-full bg-input border-border text-foreground placeholder:text-muted-foreground"
+                max={format(new Date(), 'yyyy-MM-dd')}
+                min={inputStartDate || undefined} // End date cannot be before start date
+                disabled={!inputStartDate} // Disable if no start date
+              />
+            </div>
+          </div>
           <div className="flex flex-col sm:flex-row gap-3 items-center">
-            <Input
-              type="date"
-              id="last-period-date"
-              value={inputDate}
-              onChange={handleDateChange}
-              className="w-full sm:w-auto flex-grow bg-input border-border text-foreground placeholder:text-muted-foreground"
-              max={format(new Date(), 'yyyy-MM-dd')} // Prevent future dates
-            />
-            <Button onClick={handleSaveDate} className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
-              Save Date
+            <Button onClick={handleSaveDates} className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
+              Save Dates
             </Button>
-            {lastPeriodDate && (
-                 <Button onClick={handleClearDate} variant="outline" className="w-full sm:w-auto">
-                    Clear & Reset Cycle
+            {(lastPeriodDate || lastPeriodEndDate) && (
+                 <Button onClick={handleClearDates} variant="outline" className="w-full sm:w-auto">
+                    Clear & Reset Cycle Data
                 </Button>
             )}
           </div>
+          
           {lastPeriodDate && currentCycleDay && (
             <p className="mt-4 text-center text-lg">
               You are on <strong className="text-accent">Cycle Day {currentCycleDay}</strong> of an estimated 28-day cycle.
+            </p>
+          )}
+          {lastPeriodDuration !== null && (
+            <p className="mt-2 text-center text-sm text-muted-foreground">
+              Your last period lasted <strong className="text-accent">{lastPeriodDuration}</strong> days.
             </p>
           )}
            {estimatedNextPeriod && (
@@ -97,12 +161,15 @@ export default function HomePage() {
           )}
           {!lastPeriodDate && (
             <p className="mt-4 text-center text-muted-foreground">
-              Enter your last period date to begin tracking your cycle.
+              Enter your last period start date to begin tracking your cycle.
             </p>
           )}
         </section>
 
-        <CycleCalendar lastPeriodDate={lastPeriodDate} />
+        <CycleCalendar 
+          lastPeriodStartDate={lastPeriodDate} 
+          lastPeriodEndDate={lastPeriodEndDate} 
+        />
       </main>
 
       <footer className="w-full max-w-3xl text-center my-12 text-sm text-muted-foreground">

@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   format,
   addMonths,
@@ -13,21 +13,39 @@ import {
   addDays,
   isSameMonth,
   isSameDay,
-  isBefore,
+  isWithinInterval,
   parseISO,
+  isValid,
 } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { calculateCycleDay } from '@/lib/cycle-utils';
 import { getMoonPhase, getMoonEmoji, getAffirmationForMoonPhase } from '@/lib/moon-utils';
 import type { DailyCalendarInfo } from '@/lib/types';
-import { Button } from '@/components/ui/button'; // Assuming Button component exists and is styled by theme
+import { Button } from '@/components/ui/button';
 
 interface CycleCalendarProps {
-  lastPeriodDate: string | null;
+  lastPeriodStartDate: string | null;
+  lastPeriodEndDate: string | null; // New prop
 }
 
-export function CycleCalendar({ lastPeriodDate }: CycleCalendarProps) {
+export function CycleCalendar({ lastPeriodStartDate, lastPeriodEndDate }: CycleCalendarProps) {
   const [currentDisplayMonth, setCurrentDisplayMonth] = useState(new Date());
+  const [periodInterval, setPeriodInterval] = useState<{start: Date, end: Date} | null>(null);
+
+  useEffect(() => {
+    if (lastPeriodStartDate && lastPeriodEndDate) {
+      const start = parseISO(lastPeriodStartDate);
+      const end = parseISO(lastPeriodEndDate);
+      if (isValid(start) && isValid(end) && end >= start) {
+        setPeriodInterval({ start: startOfDay(start), end: startOfDay(end) });
+      } else {
+        setPeriodInterval(null);
+      }
+    } else {
+      setPeriodInterval(null);
+    }
+  }, [lastPeriodStartDate, lastPeriodEndDate]);
+
 
   const renderHeader = () => {
     return (
@@ -57,7 +75,7 @@ export function CycleCalendar({ lastPeriodDate }: CycleCalendarProps) {
 
   const renderDaysOfWeek = () => {
     const daysHeader = [];
-    const firstDayOfWeek = startOfWeek(new Date()); // Any date to get week days
+    const firstDayOfWeek = startOfWeek(new Date()); 
     for (let i = 0; i < 7; i++) {
       daysHeader.push(
         <div key={i} className="text-center font-medium text-muted-foreground text-sm py-2">
@@ -71,19 +89,20 @@ export function CycleCalendar({ lastPeriodDate }: CycleCalendarProps) {
   const renderCells = () => {
     const monthStart = startOfMonth(currentDisplayMonth);
     const monthEnd = endOfMonth(monthStart);
-    const startDate = startOfWeek(monthStart, { weekStartsOn: 1 }); // Assuming week starts on Monday
+    const startDate = startOfWeek(monthStart, { weekStartsOn: 1 }); 
     const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
     const rows: JSX.Element[] = [];
-    let days: DailyCalendarInfo[] = [];
+    let daysData: DailyCalendarInfo[] = [];
     let dayPointer = startDate;
 
     while (dayPointer <= endDate) {
       for (let i = 0; i < 7; i++) {
-        const cycleDay = calculateCycleDay(lastPeriodDate, dayPointer);
+        const cycleDay = calculateCycleDay(lastPeriodStartDate, dayPointer);
         const moonPhaseName = getMoonPhase(dayPointer);
+        const isPeriod = periodInterval ? isWithinInterval(startOfDay(dayPointer), periodInterval) : false;
         
-        days.push({
+        daysData.push({
           date: new Date(dayPointer),
           dayOfMonth: parseInt(format(dayPointer, 'd')),
           isCurrentMonth: isSameMonth(dayPointer, monthStart),
@@ -92,16 +111,18 @@ export function CycleCalendar({ lastPeriodDate }: CycleCalendarProps) {
           moonPhase: moonPhaseName,
           moonEmoji: getMoonEmoji(moonPhaseName),
           affirmation: getAffirmationForMoonPhase(moonPhaseName),
+          isPeriodDay: isPeriod,
         });
         dayPointer = addDays(dayPointer, 1);
       }
       rows.push(
         <div className="grid grid-cols-7 gap-px bg-border" key={`week-${format(dayPointer, 'yyyy-MM-dd')}`}>
-          {days.map((dayInfo) => (
+          {daysData.map((dayInfo) => (
             <div
               key={dayInfo.date.toISOString()}
               className={`min-h-[8rem] md:min-h-[9rem] p-2 flex flex-col items-start
                           ${dayInfo.isCurrentMonth ? 'bg-card hover:bg-card/80' : 'bg-background/50 hover:bg-card/60 text-muted-foreground/70'}
+                          ${dayInfo.isPeriodDay ? 'bg-primary/20' : ''}
                           cursor-default transition-colors duration-150 ease-in-out
                           border-r border-b border-border 
                           ${dayInfo.date.getDay() === 0 ? 'border-r-0' : ''} 
@@ -119,7 +140,10 @@ export function CycleCalendar({ lastPeriodDate }: CycleCalendarProps) {
               
               <div className="flex-grow mt-1 w-full space-y-1 text-left">
                 {dayInfo.cycleDay && (
-                  <p className="text-xs text-primary">Cycle Day {dayInfo.cycleDay}</p>
+                  <p className={`text-xs ${dayInfo.isPeriodDay ? 'text-primary font-semibold' : 'text-primary'}`}>
+                    Cycle Day {dayInfo.cycleDay}
+                    {dayInfo.isPeriodDay && <span className="ml-1">🩸</span>}
+                  </p>
                 )}
                 <p className="text-xs text-foreground/80 leading-tight">
                   {dayInfo.affirmation}
@@ -129,7 +153,7 @@ export function CycleCalendar({ lastPeriodDate }: CycleCalendarProps) {
           ))}
         </div>
       );
-      days = [];
+      daysData = [];
     }
     return <div className="border-l border-border">{rows}</div>;
   };

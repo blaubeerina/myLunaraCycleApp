@@ -1,6 +1,8 @@
 
 export interface LocalStorageData {
   lastPeriodDate: string | null;
+  lastPeriodEndDate: string | null; // New field
+  lastPeriodDuration: number | null; // New field
 }
 
 export type MoonPhaseName =
@@ -22,4 +24,5 @@ export interface DailyCalendarInfo {
   moonPhase: MoonPhaseName;
   moonEmoji: string;
   affirmation: string;
+  isPeriodDay?: boolean; // Optional: for highlighting period days in calendar
 }

@@ -1,5 +1,5 @@
 
-import { differenceInDays, parseISO, startOfDay, addDays } from 'date-fns';
+import { differenceInDays, parseISO, startOfDay, addDays, isValid } from 'date-fns';
 
 const DEFAULT_CYCLE_LENGTH = 28;
 
@@ -36,4 +36,26 @@ export function getEstimatedNextPeriod(lastPeriodDateString: string | null): Dat
     } catch {
         return null;
     }
+}
+
+export function calculatePeriodDuration(
+  startDateString: string | null,
+  endDateString: string | null
+): number | null {
+  if (!startDateString || !endDateString) {
+    return null;
+  }
+  try {
+    const startDate = parseISO(startDateString);
+    const endDate = parseISO(endDateString);
+
+    if (!isValid(startDate) || !isValid(endDate) || endDate < startDate) {
+      return null;
+    }
+    // Add 1 because if start and end are same day, duration is 1 day
+    return differenceInDays(endDate, startDate) + 1;
+  } catch (error) {
+    console.error("Error calculating period duration:", error);
+    return null;
+  }
 }
