@@ -3,283 +3,37 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-}
-
-/* Removed .fairy-fields-active-button-bg as it's no longer used */
-
 @layer base {
-  :root,
-  html[data-theme="lunar-skin"] { /* Default Theme: Lunar Skin (Cloud Whisper inspired) */
-    --background: 274 27% 96%; /* #F4F0F9 (helles Flieder) */
-    --foreground: 248 39% 39%; /* #483D8B (Pflaume for text) */
+  :root {
+    --background: 220 35% 15%; /* Midnight Blue */
+    --foreground: 210 15% 88%; /* Silver */
     
-    --card: 0 0% 100%; /* #FFFFFF Dream Mist */
-    --card-foreground: 248 39% 39%; /* #483D8B */
+    --card: 220 35% 22%; /* Slightly Lighter Midnight Blue */
+    --card-foreground: 210 15% 88%; /* Silver */
     
-    --popover: 220 13% 94%; /* #E8EBF0 cloud-blush as popover */
-    --popover-foreground: 248 39% 39%; /* #483D8B */
+    --popover: 220 35% 20%;
+    --popover-foreground: 210 15% 88%;
     
-    --primary: 270 54% 82%; /* #D0B8E8 Lavender */
-    --primary-foreground: 248 39% 39%; /* #483D8B Plum text on Lavender buttons */
+    --primary: 340 82% 76%; /* Rose */
+    --primary-foreground: 220 35% 10%; /* Darker Midnight Blue for text on Rose */
     
-    --secondary: 220 13% 94%; /* #E8EBF0 cloud-blush */
-    --secondary-foreground: 248 39% 39%; /* #483D8B */
+    --secondary: 340 60% 65%; /* Darker Rose / Muted Rose */
+    --secondary-foreground: 210 15% 95%; /* Lighter Silver */
     
-    --muted: 210 16% 84%; /* #CED4DA mist-grey */
-    --muted-foreground: 248 9% 41%; /* #62616D muted plum */
+    --muted: 210 15% 45%; /* Muted Silver/Grey */
+    --muted-foreground: 210 15% 75%; /* Lighter Muted Silver */
     
-    --accent: 248 39% 39%; /* #483D8B Plum for accents like links, focus rings */
-    --accent-foreground: 0 0% 100%; /* White text on Plum accents */
+    --accent: 340 70% 80%; /* Lighter Rose */
+    --accent-foreground: 220 35% 10%;
     
-    --destructive: 348 69% 70%; /* #E88DA1 bleeding-days-red */
-    --destructive-foreground: 0 0% 100%; /* White */
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 98%;
     
-    --border: 210 16% 84%; /* #CED4DA mist-grey */
-    --input: 0 0% 100%; /* #FFFFFF white */
-    --ring: 248 39% 39%; /* #483D8B Plum for focus ring */
-    
-    --chart-1: 270 54% 82%; /* Lavender */
-    --chart-2: 248 39% 39%; /* Plum */
-    --chart-3: 52 100% 92%; /* #FFF7D6 Hellgelb */
-    --chart-4: 120 60% 90%; /* #D5F8D5 Hellgrün */
-    --chart-5: 0 0% 71%;    /* #B4B4B4 Grau */
+    --border: 210 15% 35%; /* Subtle Silver Border */
+    --input: 210 15% 25%;
+    --ring: 340 82% 76%; /* Rose for focus rings */
 
-    --sidebar-background: 273 33% 97%; /* #F8F6FC Lighter light-lilac */
-    --sidebar-foreground: 248 39% 39%;
-    --sidebar-primary: 270 54% 82%;
-    --sidebar-primary-foreground: 248 39% 39%;
-    --sidebar-accent: 248 39% 39%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 210 16% 84%;
-    --sidebar-ring: 248 39% 39%;
-
-    --lunara-ovulation-glow: 52 100% 92%; /* #FFF7D6 Hellgelb */
-    --lunara-pregnancy-growth: 120 60% 90%; /* #D5F8D5 Hellgrün */
-    --lunara-luteal-phase: 270 50% 80%; /* Horizon Lilac (was #C3B4D9) */
-  }
-
-  html[data-theme="midnight-ritual"] {
-    --background: 220 68% 13%; /* #0B1C3A Moonshadow Blue */
-    --foreground: 210 11% 80%; /* #C7CCD1 Lunar Silver */
-    --card: 220 61% 16%; /* #121C3D Nocturne Blue */
-    --card-foreground: 210 11% 80%;
-    --popover: 221 53% 20%; /* #1F294A Lighter Nocturne Blue */
-    --popover-foreground: 210 11% 80%;
-    --primary: 302 96% 16%; /* #4B014E Eclipse Violet */
-    --primary-foreground: 210 11% 80%;
-    --secondary: 302 40% 28%; /* #5D3754 Velvet Plum */
-    --secondary-foreground: 210 11% 80%;
-    --muted: 0 0% 19%; /* #303030 Darker shade */
-    --muted-foreground: 310 18% 72%; /* #BFA3B8 Mystic Rose */
-    --accent: 45 55% 64%; /* #D1B679 Golden Smoke */
-    --accent-foreground: 220 68% 13%; /* Moonshadow Blue text on gold */
-    --destructive: 346 78% 30%; /* #8A0F2C Darker red */
-    --destructive-foreground: 210 11% 80%;
-    --border: 302 40% 28%; /* #5D3754 Velvet Plum */
-    --input: 221 53% 20%; /* #1F294A Lighter Nocturne Blue */
-    --ring: 45 55% 64%; /* Golden Smoke */
-    --chart-1: 45 55% 64%; 
-    --chart-2: 302 96% 16%; 
-    --chart-3: 210 11% 80%; 
-    --chart-4: 310 18% 72%; 
-    --chart-5: 302 40% 28%; 
-    --sidebar-background: 0 0% 4%; /* #0A0A0A Slightly darker */
-    --sidebar-foreground: 210 11% 80%;
-    --sidebar-primary: 302 96% 16%;
-    --sidebar-primary-foreground: 210 11% 80%;
-    --sidebar-accent: 45 55% 64%;
-    --sidebar-accent-foreground: 220 68% 13%;
-    --sidebar-border: 302 40% 28%;
-    --sidebar-ring: 45 55% 64%;
-    --lunara-ovulation-glow: 45 55% 64%; /* Golden Smoke */
-    --lunara-pregnancy-growth: 210 11% 80%; /* Lunar Silver */
-  }
-
-  html[data-theme="fairy-fields"] {
-    --background: 47 20% 87%;         /* #E1DCCB fairy-dust-beige */
-    --foreground: 60 10% 29%;         /* #4A4A3A Darker moss-grey */
-    --card: 180 5% 85%;               /* #D6D9D8 morning-fog */
-    --card-foreground: 60 10% 29%;   /* #4A4A3A */
-    --popover: 180 5% 88%;            /* #E0E3E2 Lighter morning-fog */
-    --popover-foreground: 60 10% 29%;/* #4A4A3A */
-    --primary: 120 20% 49%;            /* #679267 forest-fern */
-    --primary-foreground: 60 40% 96%; /* #F8F9F0 Very light from lemon-light */
-    --secondary: 300 33% 90%;          /* #E8D8EB butterfly-lilac */
-    --secondary-foreground: 60 10% 29%; /* #4A4A3A */
-    --muted: 150 7% 82%;              /* #C8CCC7 Lighter morning-fog */
-    --muted-foreground: 60 7% 41%;  /* #6A6A5A Lighter moss-grey */
-    --accent: 120 20% 72%;             /* #A7C7A7 Softer forest-fern */
-    --accent-foreground: 120 29% 29%;  /* #3A5A3A Darker forest-fern text */
-    --destructive: 0 28% 43%;         /* #8A5050 Muted red-brown */
-    --destructive-foreground: 60 40% 96%;/* #F8F9F0 */
-    --border: 195 4% 79%;             /* #C0C3C2 Slightly darker morning-fog */
-    --input: 180 5% 85%;              /* #D6D9D8 morning-fog */
-    --ring: 120 20% 49%;               /* #679267 forest-fern */
-    --chart-1: 120 20% 49%;
-    --chart-2: 300 33% 90%;
-    --chart-3: 62 80% 83%;
-    --chart-4: 60 0% 35%;
-    --chart-5: 120 20% 72%;
-    --sidebar-background: 48 27% 91%; /* #E9E5D9 */
-    --sidebar-foreground: 60 10% 29%;
-    --sidebar-primary: 120 20% 49%;
-    --sidebar-primary-foreground: 60 40% 96%;
-    --sidebar-accent: 120 20% 72%;
-    --sidebar-accent-foreground: 120 29% 29%;
-    --sidebar-border: 195 4% 79%;
-    --sidebar-ring: 120 20% 49%;
-    --lunara-ovulation-glow: 62 80% 83%; /* #F8F1AD lemon-light */
-    --lunara-pregnancy-growth: 120 20% 72%; /* #A7C7A7 Softer forest-fern */
-  }
-
-  html[data-theme="cool-summer"] {
-    --background: 220 23% 93%; /* #E8EBF0 cloud-blush */
-    --foreground: 211 20% 43%; /* #566B83 Darker blue-haze */
-    --card: 0 0% 100%; /* #FFFFFF white */
-    --card-foreground: 211 20% 43%;
-    --popover: 216 25% 95%; /* #F0F3F7 Lighter cloud-blush */
-    --popover-foreground: 211 20% 43%;
-    --primary: 241 40% 83%; /* #C4C3E3 cool-lavender */
-    --primary-foreground: 211 20% 43%; /* Darker blue-haze on lavender */
-    --secondary: 210 41% 76%; /* #A9C1D9 blue-haze */
-    --secondary-foreground: 0 0% 100%; /* White text on blue-haze */
-    --muted: 210 16% 84%; /* #CED4DA mist-grey */
-    --muted-foreground: 210 19% 63%; /* #899AAE Lighter blue-haze */
-    --accent: 348 67% 83%; /* #F2C6D0 soft-rose */
-    --accent-foreground: 211 20% 43%; /* Darker blue-haze on soft-rose */
-    --destructive: 347 55% 75%; /* #E5A8B6 Darker soft-rose */
-    --destructive-foreground: 0 0% 100%;
-    --border: 210 16% 84%; /* #CED4DA mist-grey */
-    --input: 0 0% 100%; /* #FFFFFF white */
-    --ring: 241 40% 83%; /* #C4C3E3 cool-lavender */
-    --chart-1: 241 40% 83%;
-    --chart-2: 210 41% 76%;
-    --chart-3: 348 67% 83%;
-    --chart-4: 13 76% 88%; /* #F6D3C9 cool-peach */
-    --chart-5: 210 16% 84%;
-    --sidebar-background: 210 100% 99%; /* #FDFEFF Very light cloud-blush */
-    --sidebar-foreground: 211 20% 43%;
-    --sidebar-primary: 241 40% 83%;
-    --sidebar-primary-foreground: 211 20% 43%;
-    --sidebar-accent: 348 67% 83%;
-    --sidebar-accent-foreground: 211 20% 43%;
-    --sidebar-border: 210 16% 84%;
-    --sidebar-ring: 241 40% 83%;
-    --lunara-ovulation-glow: 13 76% 88%; /* #F6D3C9 cool-peach */
-    --lunara-pregnancy-growth: 210 41% 76%; /* #A9C1D9 blue-haze */
-  }
-
-  html[data-theme="warm-autumn"] {
-    --background: 19 29% 19%; /* #3D2B22 Dark acorn-brown variation */
-    --foreground: 38 33% 90%; /* #EAE0D5 Light creamy color */
-    --card: 19 35% 28%; /* #5C4033 acorn-brown */
-    --card-foreground: 38 33% 90%;
-    --popover: 19 25% 34%; /* #6B4F43 Lighter acorn-brown */
-    --popover-foreground: 38 33% 90%;
-    --primary: 15 53% 51%; /* #C4623F burnt-sienna */
-    --primary-foreground: 0 0% 100%; /* White text on sienna */
-    --secondary: 50 22% 44%; /* #847E5D moss-green */
-    --secondary-foreground: 0 0% 100%; /* White text on moss-green */
-    --muted: 19 29% 23%; /* #4A362D Darker background shade */
-    --muted-foreground: 38 22% 70%; /* #B8AFA5 */
-    --accent: 45 86% 71%; /* #F3C969 harvest-gold */
-    --accent-foreground: 19 29% 19%; /* Dark text on gold */
-    --destructive: 19 74% 30%; /* #8A3B12 rust-red */
-    --destructive-foreground: 38 33% 90%;
-    --border: 50 22% 44%; /* #847E5D moss-green */
-    --input: 19 25% 34%; /* #6B4F43 Lighter acorn-brown */
-    --ring: 45 86% 71%; /* #F3C969 harvest-gold */
-    --chart-1: 15 53% 51%;
-    --chart-2: 28 60% 59%; /* #D99058 spice-orange */
-    --chart-3: 45 86% 71%;
-    --chart-4: 50 22% 44%;
-    --chart-5: 19 74% 30%;
-    --sidebar-background: 19 38% 13%; /* #2E1F16 Even darker brown */
-    --sidebar-foreground: 38 33% 90%;
-    --sidebar-primary: 15 53% 51%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 45 86% 71%;
-    --sidebar-accent-foreground: 19 29% 19%;
-    --sidebar-border: 50 22% 44%;
-    --sidebar-ring: 45 86% 71%;
-    --lunara-ovulation-glow: 45 86% 71%; /* #F3C969 harvest-gold */
-    --lunara-pregnancy-growth: 50 22% 44%; /* #847E5D moss-green */
-  }
-
-  html[data-theme="warm-winter"] {
-    --background: 0 0% 18%; /* #2E2E2E deep-charcoal */
-    --foreground: 36 43% 96%; /* #F6F2EC glacier-cream */
-    --card: 0 0% 25%; /* #404040 Lighter charcoal */
-    --card-foreground: 36 43% 96%;
-    --popover: 0 0% 31%; /* #4F4F4F Even lighter charcoal */
-    --popover-foreground: 36 43% 96%;
-    --primary: 350 70% 38%; /* #A71D31 cranberry-red */
-    --primary-foreground: 36 43% 96%; /* Glacier cream on cranberry */
-    --secondary: 165 35% 18%; /* #1F4037 pine-green */
-    --secondary-foreground: 36 43% 96%; /* Glacier cream on pine */
-    --muted: 0 0% 13%; /* #202020 Darker charcoal */
-    --muted-foreground: 345 38% 90%; /* #EEDDE2 frosted-rose */
-    --accent: 36 43% 96%; /* #F6F2EC glacier-cream */
-    --accent-foreground: 0 0% 18%; /* Charcoal text on cream accent */
-    --destructive: 338 62% 31%; /* #811F3F garnet-glow */
-    --destructive-foreground: 36 43% 96%;
-    --border: 165 35% 18%; /* #1F4037 pine-green */
-    --input: 0 0% 31%; /* #4F4F4F Lighter charcoal */
-    --ring: 350 70% 38%; /* #A71D31 cranberry-red */
-    --chart-1: 350 70% 38%;
-    --chart-2: 165 35% 18%;
-    --chart-3: 338 62% 31%;
-    --chart-4: 345 38% 90%;
-    --chart-5: 36 43% 96%;
-    --sidebar-background: 0 0% 10%; /* #1A1A1A Very dark charcoal */
-    --sidebar-foreground: 36 43% 96%;
-    --sidebar-primary: 350 70% 38%;
-    --sidebar-primary-foreground: 36 43% 96%;
-    --sidebar-accent: 36 43% 96%;
-    --sidebar-accent-foreground: 0 0% 18%;
-    --sidebar-border: 165 35% 18%;
-    --sidebar-ring: 350 70% 38%;
-    --lunara-ovulation-glow: 345 38% 90%; /* #EEDDE2 frosted-rose */
-    --lunara-pregnancy-growth: 165 35% 18%; /* #1F4037 pine-green */
-  }
-
-  html[data-theme="cool-spring"] {
-    --background: 40 67% 97%; /* #FBF8F4 soft-white */
-    --foreground: 214 19% 42%; /* #5A677D Muted dark periwinkle/grey */
-    --card: 0 0% 100%; /* #FFFFFF pure white */
-    --card-foreground: 214 19% 42%;
-    --popover: 216 56% 95%; /* #F0F5FA Lighter soft-white / pale blue */
-    --popover-foreground: 214 19% 42%;
-    --primary: 213 67% 80%; /* #AACCEB sky-periwinkle */
-    --primary-foreground: 0 0% 100%; /* White text on periwinkle */
-    --secondary: 158 65% 90%; /* #D5F2E3 mint-mist */
-    --secondary-foreground: 214 19% 42%; /* Muted dark text on mint */
-    --muted: 167 51% 81%; /* #A9E3D6 pale-aqua */
-    --muted-foreground: 214 22% 63%; /* #8DA0B5 Lighter muted text */
-    --accent: 10 86% 80%; /* #F6B2A2 coral-pink */
-    --accent-foreground: 0 0% 100%; /* White text on coral */
-    --destructive: 9 68% 71%; /* #E89080 Darker coral */
-    --destructive-foreground: 0 0% 100%;
-    --border: 167 51% 81%; /* #A9E3D6 pale-aqua */
-    --input: 0 0% 100%; /* #FFFFFF pure white */
-    --ring: 213 67% 80%; /* #AACCEB sky-periwinkle */
-    --chart-1: 213 67% 80%;
-    --chart-2: 10 86% 80%;
-    --chart-3: 51 85% 85%; /* #FAEDB6 butter-blush */
-    --chart-4: 158 65% 90%;
-    --chart-5: 167 51% 81%;
-    --sidebar-background: 216 56% 95%; /* #F0F5FA */
-    --sidebar-foreground: 214 19% 42%;
-    --sidebar-primary: 213 67% 80%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 10 86% 80%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 167 51% 81%;
-    --sidebar-ring: 213 67% 80%;
-    --lunara-ovulation-glow: 51 85% 85%; /* #FAEDB6 butter-blush */
-    --lunara-pregnancy-growth: 158 65% 90%; /* #D5F2E3 mint-mist */
+    --radius: 0.5rem;
   }
 }
 
@@ -289,6 +43,7 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-geist-sans), sans-serif;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -297,41 +52,3 @@ body {
     flex-grow: 1;
   }
 }
-
-/* Styles for react-masonry-css */
-.my-masonry-grid {
-  /* display: -webkit-box; */ /* Not needed if using flex */
-  /* display: -ms-flexbox; */ /* Not needed if using flex */
-  /* display: flex; */ /* Already in PinterestJournalGrid.tsx className */
-  /* margin-left: -24px; */ /* Adjust based on column padding, handled in PinterestJournalGrid.tsx */
-  /* width: auto; */
-}
-.my-masonry-grid_column {
-  /* padding-left: 24px; */ /* gutter size, handled in PinterestJournalGrid.tsx */
-  /* background-clip: padding-box; */ /* Already in PinterestJournalGrid.tsx className */
-}
-
-/* Style for individual masonry items, if needed globally, but better per component */
-.my-masonry-grid_column > div { /* Example: if cards are direct children */
-  /* margin-bottom: 24px; */ /* Handled by mb-6 on card motion.div */
-}
-
-/* Wavy paper edges for Pinterest Journal Cards */
-.journal-card {
-  /* This SVG creates a subtle wavy bottom edge.
-     It's a white wave. For dark themes, you might need to adjust fill or use a different SVG.
-     The current prompt uses a Vintage/Cream theme, so white might be okay, or #F5F5DC.
-     The example in PinterestJournalCard.tsx uses an inline SVG data URI with #F5F5DC.
-     So this global class might not be strictly necessary if handled inline, but good for reference.
-  */
-  /* 
-  background-image: url("data:image/svg+xml,%3Csvg width='100' height='10' viewBox='0 0 100 10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 5 Q 12.5 0, 25 5 T 50 5 T 75 5 T 100 5 L100 10 L0 10 Z' fill='white'/%3E%3C/svg%3E");
-  background-size: 50px 10px;
-  background-repeat: repeat-x;
-  background-position: bottom;
-  padding-bottom: 10px; // Ensure content doesn't overlap the wave if wave is part of background
-  */
-}
-
-
-    

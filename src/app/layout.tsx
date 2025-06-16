@@ -1,22 +1,18 @@
+
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist } from 'next/font/google'; // Using Geist as it's in the original project
 import './globals.css';
-import { AppContextProvider } from '@/contexts/AppContext';
-import { Toaster } from "@/components/ui/toaster";
+import { CycleProvider } from '@/contexts/CycleContext';
+import { Toaster } from "@/components/ui/toaster"; // Keep toaster for potential future use
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
 });
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
-
 export const metadata: Metadata = {
-  title: 'myLunaraCycle',
-  description: 'Track your cycle, understand your body, and embrace your feminine power.',
+  title: 'Lunar Cycle Tracker',
+  description: 'A minimalistic menstrual cycle tracker integrating lunar phases.',
 };
 
 export default function RootLayout({
@@ -26,11 +22,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}>
-        <AppContextProvider>
+      <body className={`${geistSans.variable} font-sans antialiased`}>
+        <CycleProvider>
           {children}
           <Toaster />
-        </AppContextProvider>
+        </CycleProvider>
       </body>
     </html>
   );

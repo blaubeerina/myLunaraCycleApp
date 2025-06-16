@@ -1,7 +1,3 @@
-import {genkit} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
 
-export const ai = genkit({
-  plugins: [googleAI()],
-  model: 'googleai/gemini-2.0-flash',
-});
+// This file is intentionally left empty as Genkit AI features are not part of the minimalistic app.
+// It can be used to configure Genkit if AI features are added back later.

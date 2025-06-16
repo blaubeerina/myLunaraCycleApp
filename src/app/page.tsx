@@ -1,59 +1,113 @@
+
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { LogoIcon } from '@/components/icons/LogoIcon';
-import Link from 'next/link';
-import { useAppContext } from '@/contexts/AppContext';
-import { ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useCycleContext } from '@/contexts/CycleContext';
+import { CycleCalendar } from '@/components/CycleCalendar';
+import { calculateCycleDay, getEstimatedNextPeriod } from '@/lib/cycle-utils';
+import { Input } from '@/components/ui/input'; // Assuming Input is styled by theme
+import { Button } from '@/components/ui/button'; // Assuming Button is styled by theme
+import { Label } from '@/components/ui/label';
+import { format, parseISO, isValid } from 'date-fns';
 
-export default function LandingPage() {
-  const { t } = useAppContext();
+export default function HomePage() {
+  const { lastPeriodDate, setLastPeriodDate, isLoading } = useCycleContext();
+  const [inputDate, setInputDate] = useState<string>('');
+  const [currentCycleDay, setCurrentCycleDay] = useState<number | null>(null);
+  const [estimatedNextPeriod, setEstimatedNextPeriod] = useState<Date | null>(null);
+
+  useEffect(() => {
+    if (lastPeriodDate) {
+      setInputDate(lastPeriodDate);
+      const today = new Date();
+      setCurrentCycleDay(calculateCycleDay(lastPeriodDate, today));
+      setEstimatedNextPeriod(getEstimatedNextPeriod(lastPeriodDate));
+    } else {
+        setInputDate(''); // Clear input if context has no date
+        setCurrentCycleDay(null);
+        setEstimatedNextPeriod(null);
+    }
+  }, [lastPeriodDate]);
+
+  const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInputDate(event.target.value);
+  };
+
+  const handleSaveDate = () => {
+    if (inputDate && isValid(parseISO(inputDate))) {
+      setLastPeriodDate(inputDate);
+    } else {
+      // Basic error feedback, could use a toast
+      alert("Please enter a valid date in YYYY-MM-DD format.");
+    }
+  };
+  
+  const handleClearDate = () => {
+    setLastPeriodDate(null);
+    setInputDate('');
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-background text-foreground">
+        <p>Loading your sacred space...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="p-4 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <LogoIcon className="h-8 w-8" />
-          <h1 className="text-2xl font-bold text-primary">{t('appName')}</h1>
-        </div>
-        <LanguageSwitcher />
+    <div className="flex flex-col items-center min-h-screen p-4 md:p-8 bg-background text-foreground">
+      <header className="w-full max-w-3xl text-center my-8">
+        <h1 className="text-4xl font-semibold text-primary mb-2">Lunar Rhythms</h1>
+        <p className="text-lg text-foreground/80">Track your cycle, align with the moon.</p>
       </header>
-      <main className="flex-grow flex flex-col items-center justify-center text-center p-6 bg-gradient-to-br from-background to-secondary/30">
-        <div className="max-w-2xl">
-          <div className="mb-8 flex justify-center">
-            <LogoIcon className="h-24 w-24" />
-          </div>
-          <h2 className="text-4xl md:text-5xl font-extrabold mb-4 text-foreground">
-            {t('landingTitle')}
-          </h2>
-          <p className="text-lg md:text-xl text-muted-foreground mb-10">
-            {t('landingSubtitle')}
-          </p>
-          <Link href="/dashboard" passHref>
-            <Button size="lg" className="rounded-full shadow-lg hover:shadow-xl transition-shadow duration-300">
-              {t('getStarted')} <ArrowRight className="ml-2 h-5 w-5" />
+
+      <main className="w-full max-w-4xl">
+        <section className="mb-8 p-6 bg-card rounded-lg shadow-md">
+          <Label htmlFor="last-period-date" className="block text-md font-medium mb-2 text-primary">
+            Date of Your Last Period
+          </Label>
+          <div className="flex flex-col sm:flex-row gap-3 items-center">
+            <Input
+              type="date"
+              id="last-period-date"
+              value={inputDate}
+              onChange={handleDateChange}
+              className="w-full sm:w-auto flex-grow bg-input border-border text-foreground placeholder:text-muted-foreground"
+              max={format(new Date(), 'yyyy-MM-dd')} // Prevent future dates
+            />
+            <Button onClick={handleSaveDate} className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
+              Save Date
             </Button>
-          </Link>
-        </div>
+            {lastPeriodDate && (
+                 <Button onClick={handleClearDate} variant="outline" className="w-full sm:w-auto">
+                    Clear & Reset Cycle
+                </Button>
+            )}
+          </div>
+          {lastPeriodDate && currentCycleDay && (
+            <p className="mt-4 text-center text-lg">
+              You are on <strong className="text-accent">Cycle Day {currentCycleDay}</strong> of an estimated 28-day cycle.
+            </p>
+          )}
+           {estimatedNextPeriod && (
+            <p className="mt-2 text-center text-sm text-muted-foreground">
+              Next estimated period around: {format(estimatedNextPeriod, 'MMMM do, yyyy')}.
+            </p>
+          )}
+          {!lastPeriodDate && (
+            <p className="mt-4 text-center text-muted-foreground">
+              Enter your last period date to begin tracking your cycle.
+            </p>
+          )}
+        </section>
+
+        <CycleCalendar lastPeriodDate={lastPeriodDate} />
       </main>
-      <footer className="text-center p-4 text-sm text-muted-foreground">
-        © {new Date().getFullYear()} myLunaraCycle. All rights reserved.
+
+      <footer className="w-full max-w-3xl text-center my-12 text-sm text-muted-foreground">
+        <p>&copy; {new Date().getFullYear()} Lunar Rhythms. Embrace your flow.</p>
       </footer>
     </div>
-  );
-}
-
-// LanguageSwitcher needs to be defined or imported if it's specific to this page,
-// otherwise ensure it's available globally or via AppContext/Header.
-// For now, creating a minimal one here, assuming it would be a shared component.
-function LanguageSwitcher() {
-  const { userPreferences, setUserPreferences } = useAppContext();
-  const toggleLanguage = () => {
-    setUserPreferences(prev => ({ ...prev, language: prev.language === 'en' ? 'de' : 'en' }));
-  };
-  return (
-    <Button variant="outline" onClick={toggleLanguage} className="rounded-full">
-      {userPreferences.language === 'en' ? 'DE' : 'EN'}
-    </Button>
   );
 }
