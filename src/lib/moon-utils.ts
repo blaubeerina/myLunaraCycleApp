@@ -29,16 +29,8 @@ const MOON_EMOJIS: Record<MoonPhaseName, string> = {
   'Waning Crescent': '🌘',
 };
 
-const MOON_AFFIRMATIONS: Record<MoonPhaseName, string> = {
-  'New Moon': "A fresh start, new intentions.",
-  'Waxing Crescent': "Nurture your growing dreams.",
-  'First Quarter': "Take action on your goals.",
-  'Waxing Gibbous': "Refine and perfect your plans.",
-  'Full Moon': "Celebrate, release what's old.",
-  'Waning Gibbous': "Give thanks and share wisdom.",
-  'Last Quarter': "Reflect and let go gently.",
-  'Waning Crescent': "Rest and restore your energy.",
-};
+// Moon-phase based affirmations are removed as per new requirement for wisdom affirmations.
+// const MOON_AFFIRMATIONS: Record<MoonPhaseName, string> = { ... };
 
 export function getMoonPhase(date: Date): MoonPhaseName {
   const daysSinceReference = differenceInDays(date, REFERENCE_NEW_MOON_DATE);
@@ -51,6 +43,4 @@ export function getMoonEmoji(phaseName: MoonPhaseName): string {
   return MOON_EMOJIS[phaseName] || '🌑';
 }
 
-export function getAffirmationForMoonPhase(phaseName: MoonPhaseName): string {
-  return MOON_AFFIRMATIONS[phaseName] || "Embrace the rhythm of this moment.";
-}
+// getAffirmationForMoonPhase is removed.

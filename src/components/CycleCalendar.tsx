@@ -21,9 +21,9 @@ import {
 } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { calculateCycleDay } from '@/lib/cycle-utils';
-import { getMoonPhase, getMoonEmoji, getAffirmationForMoonPhase } from '@/lib/moon-utils';
-import { getDailyTarotCard } from '@/lib/tarot-utils';
-import type { DailyCalendarInfo, TarotCard } from '@/lib/types';
+import { getMoonPhase, getMoonEmoji } from '@/lib/moon-utils';
+// getAffirmationForMoonPhase is removed as affirmations are now global
+import type { DailyCalendarInfo } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -44,7 +44,6 @@ export function CycleCalendar({ lastPeriodStartDate, lastPeriodEndDate }: CycleC
   const [currentDisplayMonth, setCurrentDisplayMonth] = useState(new Date());
   const [periodInterval, setPeriodInterval] = useState<{start: Date, end: Date} | null>(null);
   const [selectedDay, setSelectedDay] = useState<DailyCalendarInfo | null>(null);
-  const [selectedDayTarot, setSelectedDayTarot] = useState<TarotCard | null>(null);
 
   useEffect(() => {
     if (lastPeriodStartDate && lastPeriodEndDate) {
@@ -66,15 +65,6 @@ export function CycleCalendar({ lastPeriodStartDate, lastPeriodEndDate }: CycleC
       setPeriodInterval(null);
     }
   }, [lastPeriodStartDate, lastPeriodEndDate]);
-
-  useEffect(() => {
-    if (selectedDay) {
-      const tarot = getDailyTarotCard(selectedDay.date);
-      setSelectedDayTarot(tarot);
-    } else {
-      setSelectedDayTarot(null);
-    }
-  }, [selectedDay]);
 
   const handleDayClick = (dayInfo: DailyCalendarInfo) => {
     setSelectedDay(dayInfo);
@@ -143,7 +133,6 @@ export function CycleCalendar({ lastPeriodStartDate, lastPeriodEndDate }: CycleC
           cycleDay: cycleDay,
           moonPhase: moonPhaseName,
           moonEmoji: getMoonEmoji(moonPhaseName),
-          affirmation: getAffirmationForMoonPhase(moonPhaseName), // Keep for detail view
           isPeriodDay: isPeriod,
         });
         dayPointer = addDays(dayPointer, 1);
@@ -154,7 +143,7 @@ export function CycleCalendar({ lastPeriodStartDate, lastPeriodEndDate }: CycleC
             <div
               key={dayInfo.date.toISOString()}
               onClick={() => handleDayClick(dayInfo)}
-              className={`min-h-[6rem] md:min-h-[7rem] p-2 flex flex-col items-start justify-between
+              className={`min-h-[4.5rem] md:min-h-[5rem] p-2 flex flex-col items-start justify-between
                           ${dayInfo.isCurrentMonth ? 'bg-card hover:bg-card/80' : 'bg-background/50 hover:bg-card/60 text-muted-foreground/70'}
                           ${dayInfo.isPeriodDay ? 'bg-primary/10' : ''}
                           cursor-pointer transition-colors duration-150 ease-in-out
@@ -170,7 +159,7 @@ export function CycleCalendar({ lastPeriodStartDate, lastPeriodEndDate }: CycleC
               </div>
               
               <div className="flex flex-col items-center justify-center w-full flex-grow space-y-1">
-                <span className={`text-2xl ${!dayInfo.isCurrentMonth ? 'opacity-50' : ''}`}>
+                <span className={`text-xl ${!dayInfo.isCurrentMonth ? 'opacity-50' : ''}`}>
                   {dayInfo.moonEmoji}
                 </span>
                 {dayInfo.cycleDay && (
@@ -195,7 +184,7 @@ export function CycleCalendar({ lastPeriodStartDate, lastPeriodEndDate }: CycleC
       {renderDaysOfWeek()}
       {renderCells()}
 
-      {selectedDay && selectedDayTarot && (
+      {selectedDay && (
         <Dialog open={!!selectedDay} onOpenChange={(isOpen) => !isOpen && setSelectedDay(null)}>
           <DialogContent className="sm:max-w-md bg-card text-card-foreground p-6">
             <DialogHeader className="text-center mb-4">
@@ -210,41 +199,19 @@ export function CycleCalendar({ lastPeriodStartDate, lastPeriodEndDate }: CycleC
                     {selectedDay.isPeriodDay && <span className="ml-1 text-primary"> (Period)</span>}
                   </span>
                 )}
+                {!selectedDay.cycleDay && !lastPeriodStartDate && (
+                    <span>Enter your last period start date to see cycle information.</span>
+                )}
               </DialogDescription>
             </DialogHeader>
             
             <Separator className="my-4 bg-border" />
 
-            <div className="text-center space-y-3">
-              <p className="text-sm font-medium text-primary">Your Card Today</p>
-              <h3 className="text-xl font-semibold text-foreground">{selectedDayTarot.title}</h3>
-              <div className="flex justify-center my-3">
-                <Image
-                  src={selectedDayTarot.image}
-                  alt={selectedDayTarot.title}
-                  width={128}
-                  height={200}
-                  className="rounded-lg shadow-md border-2 border-primary/30 object-contain"
-                  data-ai-hint="tarot card"
-                  unoptimized={selectedDayTarot.image.startsWith('https://placehold.co')}
-                />
-              </div>
-              {selectedDayTarot.meaning && (
-                <p className="text-xs text-muted-foreground italic px-4">
-                  "{selectedDayTarot.meaning}"
-                </p>
-              )}
-            </div>
-
-            <Separator className="my-4 bg-border" />
+            {/* Tarot card and affirmation are now displayed on the main page, not here */}
+            <p className="text-center text-sm text-muted-foreground">
+                Daily wisdom and Tarot insights are available on the main page.
+            </p>
             
-            <div className="text-center space-y-2">
-              <p className="text-sm font-medium text-primary">Moon Affirmation</p>
-              <p className="text-md italic text-foreground">
-                "{selectedDay.affirmation}"
-              </p>
-            </div>
-
             <DialogClose asChild>
               <Button variant="outline" className="mt-6 w-full">Close</Button>
             </DialogClose>

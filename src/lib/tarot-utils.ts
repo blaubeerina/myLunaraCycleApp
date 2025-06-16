@@ -1,50 +1,54 @@
 
-import { format } from 'date-fns';
 import { tarotCards, fallbackTarotCard } from './tarot-data';
 import type { TarotCard } from './types';
 
-export function getDailyTarotCard(date: Date): TarotCard {
-  if (!tarotCards || tarotCards.length === 0) {
+const MAX_RECENT_CARDS = 7;
+
+/**
+ * Draws a new daily Tarot card, avoiding cards from the recentIds list.
+ * @param allCards - The full list of available TarotCard objects.
+ * @param recentIds - An array of card IDs that should not be drawn.
+ * @returns A TarotCard object or null if no suitable card can be drawn.
+ */
+export function drawNewDailyCard(allCards: TarotCard[], recentIds: string[]): TarotCard | null {
+  if (!allCards || allCards.length === 0) {
     return fallbackTarotCard;
   }
 
-  const dateString = format(date, 'yyyy-MM-dd');
-  const storageKey = `dailyTarotCard_${dateString}`;
+  const availableCards = allCards.filter(card => !recentIds.includes(card.id));
 
-  try {
-    const storedCardJson = localStorage.getItem(storageKey);
-    if (storedCardJson) {
-      const storedCard = JSON.parse(storedCardJson) as TarotCard;
-      // Basic validation to ensure the stored card is still in our list (e.g., if tarot-data.ts changed)
-      // And has a valid image path (not a placeholder from a previous error)
-      if (tarotCards.find(card => card.id === storedCard.id) && storedCard.image && !storedCard.image.startsWith('https://placehold.co')) {
-        return storedCard;
-      } else {
-        localStorage.removeItem(storageKey); // Clear invalid stored card
-      }
-    }
-  } catch (error) {
-    console.error("Error reading daily tarot card from localStorage:", error);
-    // Proceed to pick a new card
+  if (availableCards.length === 0) {
+    // This case means all cards have been seen recently, or recentIds somehow contains all card IDs.
+    // To prevent errors, we can either return a fallback or pick randomly from all cards again,
+    // effectively resetting the "no repeat" if the pool is exhausted.
+    // For simplicity, let's pick from all cards if available pool is empty.
+    const randomIndexFallback = Math.floor(Math.random() * allCards.length);
+    return allCards[randomIndexFallback] || fallbackTarotCard;
   }
 
-  // Simple pseudo-random number generator based on the date to ensure the same card for the same day
-  // This provides a deterministic "random" pick without complex seeding.
-  // Combining year, month, and day for the seed.
-  const seed = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
-  
-  // A simple way to get a somewhat distributed index.
-  // The exact distribution isn't critical, just that it's deterministic for the date.
-  const pseudoRandomIndex = Math.abs(Math.floor(Math.sin(seed) * tarotCards.length)) % tarotCards.length;
-  
-  const selectedCard = tarotCards[pseudoRandomIndex] || fallbackTarotCard;
-
-  try {
-    localStorage.setItem(storageKey, JSON.stringify(selectedCard));
-  } catch (error) {
-    console.error("Error saving daily tarot card to localStorage:", error);
-    // App can continue, card just won't be persisted for this session if storage fails
-  }
-
-  return selectedCard;
+  const randomIndex = Math.floor(Math.random() * availableCards.length);
+  return availableCards[randomIndex] || fallbackTarotCard;
 }
+
+/**
+ * Updates the list of recent card IDs.
+ * @param newCardId - The ID of the newly drawn card.
+ * @param currentRecentIds - The current array of recent card IDs.
+ * @returns An updated array of recent card IDs.
+ */
+export function updateRecentCardIds(newCardId: string, currentRecentIds: string[]): string[] {
+  const updatedRecent = [newCardId, ...currentRecentIds.filter(id => id !== newCardId)];
+  return updatedRecent.slice(0, MAX_RECENT_CARDS);
+}
+
+/**
+ * Finds a Tarot card by its ID.
+ * @param cardId The ID of the card to find.
+ * @returns The TarotCard object or fallbackTarotCard if not found.
+ */
+export function getCardById(cardId: string | null): TarotCard {
+    if (!cardId) return fallbackTarotCard;
+    return tarotCards.find(card => card.id === cardId) || fallbackTarotCard;
+}
+
+// The old getDailyTarotCard(date: Date) is removed as the logic is now centralized in page.tsx

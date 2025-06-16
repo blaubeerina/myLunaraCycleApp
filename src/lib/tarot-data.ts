@@ -78,10 +78,10 @@ export const tarotCards: TarotCard[] = [
     meaning: 'Endings, beginnings, change, transformation, transition.',
   },
   {
-    id: 'king-of-cups', // Or a more descriptive ID like 'cups-king'
-    title: 'King of Cups', // English title for consistency
-    image: '/cards/king-of-cups.png', // Assumed filename
-    meaning: 'Emotional balance, compassion, diplomacy. (König der Kellche)',
+    id: 'king-of-cups',
+    title: 'King of Cups',
+    image: '/cards/king-of-cups.png',
+    meaning: 'Emotional balance, compassion, diplomacy. (König der Kelche)',
   },
   {
     id: '10-of-coins',
@@ -89,23 +89,24 @@ export const tarotCards: TarotCard[] = [
     image: '/cards/zehn-der-muenzen.png',
     meaning: 'Legacy, inheritance, family wealth, lasting success, abundance. (Zehn der Münzen)',
   },
-  // Add all 22 Major Arcana, or your desired subset
-  // { id: 'justice', title: 'Justice', image: '/cards/justice.png', meaning: '...' },
-  // { id: 'the-hanged-man', title: 'The Hanged Man', image: '/cards/the-hanged-man.png', meaning: '...' },
-  // { id: 'temperance', title: 'Temperance', image: '/cards/temperance.png', meaning: '...' },
-  // { id: 'the-devil', title: 'The Devil', image: '/cards/the-devil.png', meaning: '...' },
-  // { id: 'the-tower', title: 'The Tower', image: '/cards/the-tower.png', meaning: '...' },
-  // { id: 'the-star', title: 'The Star', image: '/cards/the-star.png', meaning: '...' },
-  // { id: 'the-moon', title: 'The Moon', image: '/cards/the-moon.png', meaning: '...' },
-  // { id: 'the-sun', title: 'The Sun', image: '/cards/the-sun.png', meaning: '...' },
-  // { id: 'judgement', title: 'Judgement', image: '/cards/judgement.png', meaning: '...' },
-  // { id: 'the-world', title: 'The World', image: '/cards/the-world.png', meaning: '...' },
+  // Add more cards as needed, ensuring 'image' path is correct and image exists in public/cards/
+  // Example of more Major Arcana - ensure you have images for these
+  { id: '11-justice', title: 'Justice', image: 'https://placehold.co/128x200.png', meaning: 'Fairness, truth, law, cause and effect.' },
+  { id: '12-the-hanged-man', title: 'The Hanged Man', image: 'https://placehold.co/128x200.png', meaning: 'Pause, surrender, letting go, new perspectives.' },
+  { id: '14-temperance', title: 'Temperance', image: 'https://placehold.co/128x200.png', meaning: 'Balance, moderation, patience, purpose.' },
+  { id: '15-the-devil', title: 'The Devil', image: 'https://placehold.co/128x200.png', meaning: 'Shadow self, attachment, addiction, restriction.' },
+  { id: '16-the-tower', title: 'The Tower', image: 'https://placehold.co/128x200.png', meaning: 'Sudden change, upheaval, chaos, revelation.' },
+  { id: '17-the-star', title: 'The Star', image: 'https://placehold.co/128x200.png', meaning: 'Hope, faith, purpose, renewal, spirituality.' },
+  { id: '18-the-moon', title: 'The Moon', image: 'https://placehold.co/128x200.png', meaning: 'Illusion, fear, anxiety, subconscious, intuition.' },
+  { id: '19-the-sun', title: 'The Sun', image: 'https://placehold.co/128x200.png', meaning: 'Positivity, fun, warmth, success, vitality.' },
+  { id: '20-judgement', title: 'Judgement', image: 'https://placehold.co/128x200.png', meaning: 'Judgement, rebirth, inner calling, absolution.' },
+  { id: '21-the-world', title: 'The World', image: 'https://placehold.co/128x200.png', meaning: 'Completion, integration, accomplishment, travel.' },
 ];
 
 // Fallback card if something goes wrong or no cards are defined
 export const fallbackTarotCard: TarotCard = {
   id: 'fallback',
   title: 'Mystery Card',
-  image: 'https://placehold.co/128x200.png', // Placeholder if no local fallback image
-  meaning: 'The path ahead is yet to be revealed.',
+  image: 'https://placehold.co/128x200.png', 
+  meaning: 'The path ahead is yet to be revealed. Ensure your tarot images are in public/cards/.',
 };
