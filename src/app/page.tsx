@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Image from 'next/image';
+// Image import removed as Tarot card display is removed from this page
 import { useCycleContext } from '@/contexts/CycleContext';
 import { CycleCalendar } from '@/components/CycleCalendar';
 import { PeriodLogDialog } from '@/components/PeriodLogDialog';
@@ -14,10 +14,9 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from '@/components/ui/separator';
 import { format, parseISO, isValid, isToday, startOfDay } from 'date-fns';
-import type { TarotCard, WisdomAffirmation, DailyWisdom, PeriodLogEntry, MoonPhaseName, PeriodIntensity } from '@/lib/types';
-import { tarotCards, fallbackTarotCard } from '@/lib/tarot-data';
-import { drawNewDailyCard, updateRecentCardIds, getCardById } from '@/lib/tarot-utils';
-// wisdomAffirmations is no longer imported directly as it's fetched
+import type { WisdomAffirmation, DailyWisdom, PeriodLogEntry, MoonPhaseName, PeriodIntensity } from '@/lib/types'; // TarotCard import removed
+// tarotCards, fallbackTarotCard imports removed
+// drawNewDailyCard, updateRecentCardIds, getCardById imports removed
 import { selectNewDailyAffirmation } from '@/lib/affirmation-utils';
 import { Droplet, Sparkles, RefreshCcw, BookOpen, Edit3, FileText, Moon as MoonIcon, CalendarDays } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -25,7 +24,7 @@ import { cn } from '@/lib/utils';
 const DAILY_WISDOM_STORAGE_KEY = 'lunarRhythmsDailyWisdom_v1'; 
 
 const initialDailyWisdomState: DailyWisdom = {
-  tarot: { cardId: null, drawDate: null, recentIds: [] },
+  tarot: { cardId: null, drawDate: null, recentIds: [] }, // Tarot part remains in data structure, just not used here
   affirmation: { text: null, author: null, displayDate: null, previousText: null },
 };
 
@@ -48,7 +47,7 @@ export default function HomePage() {
   const [calculatedPeriodDuration, setCalculatedPeriodDuration] = useState<number | null>(null);
   
   const [dailyWisdom, setDailyWisdom] = useState<DailyWisdom>(initialDailyWisdomState);
-  const [currentTarotCard, setCurrentTarotCard] = useState<TarotCard>(fallbackTarotCard);
+  // currentTarotCard state removed
   const [currentAffirmation, setCurrentAffirmation] = useState<WisdomAffirmation | null>(null);
   const [isUiLoading, setIsUiLoading] = useState(true);
   const [isAffirmationLoading, setIsAffirmationLoading] = useState(false);
@@ -83,32 +82,21 @@ export default function HomePage() {
       const storedData = localStorage.getItem(DAILY_WISDOM_STORAGE_KEY);
       if (storedData) {
         storedWisdom = JSON.parse(storedData) as DailyWisdom;
+        // Ensure substructures exist to prevent errors, tarot part is kept for data integrity
         if (!storedWisdom.tarot) storedWisdom.tarot = initialDailyWisdomState.tarot;
-        if (!storedWisdom.affirmation) storedWisdom.affirmation = initialDailyWisdomState.affirmation;
         if (!Array.isArray(storedWisdom.tarot.recentIds)) storedWisdom.tarot.recentIds = [];
+        if (!storedWisdom.affirmation) storedWisdom.affirmation = initialDailyWisdomState.affirmation;
       }
     } catch (error) { console.error("Failed to load daily wisdom", error); }
 
     const todayStr = format(new Date(), 'yyyy-MM-dd');
     let wisdomNeedsUpdate = false;
 
-    // Tarot Card Logic (remains synchronous)
-    let newCardId = storedWisdom.tarot.cardId;
-    if (storedWisdom.tarot.drawDate !== todayStr || !newCardId) {
-      const drawnCard = drawNewDailyCard(tarotCards, storedWisdom.tarot.recentIds);
-      if (drawnCard) {
-        newCardId = drawnCard.id;
-        storedWisdom.tarot = {
-          cardId: newCardId,
-          drawDate: todayStr,
-          recentIds: updateRecentCardIds(drawnCard.id, storedWisdom.tarot.recentIds),
-        };
-        wisdomNeedsUpdate = true;
-      }
-    }
-    setCurrentTarotCard(getCardById(newCardId));
+    // Tarot Card Logic (part related to setting currentTarotCard for display is removed)
+    // The dailyWisdom.tarot part of the object in localStorage will persist, but not be actively updated by this page's refresh button.
+    // It might still be updated if other parts of the app interact with it or if logic changes.
 
-    // Affirmation Logic (now asynchronous)
+    // Affirmation Logic (remains asynchronous)
     let newAffirmationText = storedWisdom.affirmation.text;
     let newAffirmationAuthor = storedWisdom.affirmation.author;
 
@@ -124,7 +112,6 @@ export default function HomePage() {
         wisdomNeedsUpdate = true;
       } catch (error) {
         console.error("Failed to fetch new affirmation for daily wisdom", error);
-        // Use existing or fallback if API fails
         newAffirmationText = newAffirmationText || "Embrace the quiet moments.";
         newAffirmationAuthor = newAffirmationAuthor || "System";
       }
@@ -132,7 +119,7 @@ export default function HomePage() {
     setCurrentAffirmation({ text: newAffirmationText || "", author: newAffirmationAuthor });
     setIsAffirmationLoading(false);
 
-    setDailyWisdom(storedWisdom);
+    setDailyWisdom(storedWisdom); // Store the whole object, including potentially stale tarot info
     if (wisdomNeedsUpdate) {
       localStorage.setItem(DAILY_WISDOM_STORAGE_KEY, JSON.stringify(storedWisdom));
     }
@@ -186,20 +173,12 @@ export default function HomePage() {
     setIsAffirmationLoading(true);
     const todayStr = format(new Date(), 'yyyy-MM-dd');
     
-    // Tarot card refresh (synchronous)
-    const drawnCard = drawNewDailyCard(tarotCards, dailyWisdom.tarot.recentIds);
-    let newCardId = dailyWisdom.tarot.cardId;
-    let newRecentIds = dailyWisdom.tarot.recentIds;
-    if (drawnCard) {
-      newCardId = drawnCard.id;
-      newRecentIds = updateRecentCardIds(drawnCard.id, dailyWisdom.tarot.recentIds);
-    }
-    setCurrentTarotCard(getCardById(newCardId));
+    // Tarot card refresh logic removed for this button.
+    // It will now only refresh the affirmation.
 
-    // Affirmation refresh (asynchronous)
     let affirmation: WisdomAffirmation = { text: "Loading affirmation...", author: "" };
     try {
-        affirmation = await selectNewDailyAffirmation(dailyWisdom.affirmation.text);
+        affirmation = await selectNewDailyAffirmation(dailyWisdom.affirmation.text); // Pass current text to potentially avoid repeats
     } catch (error) {
         console.error("Failed to fetch new affirmation on manual refresh", error);
         affirmation = { text: "Breathe deeply and find your center.", author: "System Fallback"};
@@ -207,9 +186,15 @@ export default function HomePage() {
     setCurrentAffirmation(affirmation);
     setIsAffirmationLoading(false);
     
+    // Update only the affirmation part of dailyWisdom in state and localStorage
     const newDailyWisdomData: DailyWisdom = {
-        tarot: { cardId: newCardId, drawDate: todayStr, recentIds: newRecentIds },
-        affirmation: { text: affirmation.text, author: affirmation.author, displayDate: todayStr, previousText: affirmation.text }
+        ...dailyWisdom, // Keep existing tarot data as is
+        affirmation: { 
+            text: affirmation.text, 
+            author: affirmation.author, 
+            displayDate: todayStr, 
+            previousText: affirmation.text 
+        }
     };
     setDailyWisdom(newDailyWisdomData);
     localStorage.setItem(DAILY_WISDOM_STORAGE_KEY, JSON.stringify(newDailyWisdomData));
@@ -242,7 +227,7 @@ export default function HomePage() {
   
   const todayForPeriodCheck = startOfDay(new Date());
   const isTodayActuallyAPeriodDay = !!(
-      hasSufficientDataForDisplay && // Only consider if baseline data exists
+      hasSufficientDataForDisplay && 
       lastPeriodDate &&
       lastPeriodEndDate &&
       isValid(parseISO(lastPeriodDate)) &&
@@ -427,33 +412,10 @@ export default function HomePage() {
               )}
             </div>
 
-            <Separator className="my-4 bg-border/30" />
+            {/* Tarot Insight section removed */}
+            {/* <Separator className="my-4 bg-border/30" /> */} 
+            {/* Removed separator that was between affirmation and tarot */}
 
-            <div className="text-center">
-              <h3 className="text-md font-semibold text-accent mb-3">🔮 Tarot Insight:</h3>
-              {currentTarotCard && currentTarotCard.id !== 'fallback' ? (
-                <div className="flex flex-col items-center gap-2">
-                  <Image
-                    src={currentTarotCard.image} alt={currentTarotCard.title} width={100} height={170}
-                    className="rounded-md shadow-lg border-2 border-primary/30 object-contain"
-                    data-ai-hint="tarot card"
-                    unoptimized={currentTarotCard.image.startsWith('https://placehold.co')}
-                  />
-                  <h4 className="text-lg font-bold text-foreground mt-1">{currentTarotCard.title}</h4>
-                  <p className="text-xs text-muted-foreground italic max-w-xs">"{currentTarotCard.meaning}"</p>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-2">
-                  <Image
-                    src={fallbackTarotCard.image} alt={fallbackTarotCard.title} width={100} height={170}
-                    className="rounded-md shadow-md border-2 border-border object-contain opacity-70"
-                    data-ai-hint="tarot card placeholder" unoptimized
-                  />
-                  <h4 className="text-lg font-bold text-muted-foreground mt-1">{fallbackTarotCard.title}</h4>
-                  <p className="text-xs text-muted-foreground italic max-w-xs">"{fallbackTarotCard.meaning}"</p>
-                </div>
-              )}
-            </div>
             <div className="mt-6 flex flex-col sm:flex-row justify-center items-center gap-3">
               <Button onClick={handleManualWisdomRefresh} variant="outline" size="sm" className="rounded-sm text-muted-foreground hover:text-foreground border-border hover:bg-muted/50" disabled={isAffirmationLoading}>
                 <RefreshCcw className="mr-2 h-4 w-4" /> New Wisdom
