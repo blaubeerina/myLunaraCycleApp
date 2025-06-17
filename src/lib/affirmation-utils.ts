@@ -1,6 +1,5 @@
 
 import type { WisdomAffirmation } from './types';
-// wisdomAffirmations import is removed as we fetch from API
 
 /**
  * Selects a new daily affirmation by fetching from ZenQuotes.io.
@@ -15,10 +14,11 @@ export async function selectNewDailyAffirmation(
   try {
     // Using /api/today for a consistent quote for the day
     // ZenQuotes API has CORS enabled.
-    const response = await fetch('https://zenquotes.io/api/today');
+    // Added { cache: 'no-store' } to ensure fresh data and potentially avoid some network/caching issues.
+    const response = await fetch('https://zenquotes.io/api/today', { cache: 'no-store' });
     if (!response.ok) {
-      console.error('ZenQuotes API request failed with status:', response.status);
-      throw new Error('Failed to fetch affirmation');
+      console.error('ZenQuotes API request failed with status:', response.status, await response.text());
+      throw new Error(`Failed to fetch affirmation, status: ${response.status}`);
     }
     const data = await response.json();
     if (Array.isArray(data) && data.length > 0) {
@@ -32,8 +32,9 @@ export async function selectNewDailyAffirmation(
       throw new Error('No affirmation data received');
     }
   } catch (error) {
-    console.error("Error fetching affirmation from ZenQuotes.io:", error);
+    console.error("Error fetching affirmation from ZenQuotes.io. Using fallback.", error);
     // Fallback affirmation
     return { text: "Every day holds the possibility of a miracle.", author: "System Fallback" };
   }
 }
+
