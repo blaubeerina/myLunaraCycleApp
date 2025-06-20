@@ -20,7 +20,10 @@ const nextConfig: NextConfig = {
     ],
   },
   experimental: {
-    serverComponentsExternalPackages: ['genkit', '@google-ai/genkit'],
+    serverComponentsExternalPackages: [
+      '@genkit-ai/core',
+      '@genkit-ai/googleai'
+    ],
   },
 };
 

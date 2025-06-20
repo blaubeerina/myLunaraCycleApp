@@ -8,7 +8,7 @@
  * - GenerateAffirmationOutput - The return type for the generateAffirmation function.
  */
 
-import { ai, defaultModel } from '@/ai/genkit'; // Use the global ai object
+import { ai, textModel } from '@/ai/genkit'; // Use the global ai object and new textModel
 import { z } from 'zod';
 
 // Define the input schema for the affirmation generation
@@ -61,7 +61,7 @@ const affirmationPrompt = ai.definePrompt({
     Generate the affirmation now.
   `,
   config: {
-    model: defaultModel, // Use the globally defined default model
+    model: textModel, // Use the globally defined textModel
     temperature: 0.8, // Slightly more creative
     maxOutputTokens: 60,
      safetySettings: [ // Example safety settings
