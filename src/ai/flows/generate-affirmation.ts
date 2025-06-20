@@ -8,34 +8,32 @@
  * - GenerateAffirmationOutput - The return type for the generateAffirmation function.
  */
 
-import { generateText } from '@/ai/server-ai'; 
-import { z } from 'zod';
+import { generateText } from '@/ai/server-ai';
+// Zod import removed as schemas are replaced with plain types for demo mode
 
-// Define the input schema for the affirmation generation
-const GenerateAffirmationInputSchema = z.object({
-  mood: z.string().optional().describe('The user\'s current mood (e.g., emoji or text like "happy", "stressed").'),
-  journalEntry: z.string().optional().describe('A snippet of the user\'s recent journal entry for context.'),
-  currentCyclePhase: z.string().optional().describe('The user\'s current menstrual cycle phase (e.g., "Follicular", "Luteal").'),
-  currentMoonPhase: z.string().optional().describe('The current moon phase (e.g., "New Moon", "Full Moon").'),
-  language: z.enum(['en', 'de']).default('en').describe('The desired language for the affirmation.'),
-});
-export type GenerateAffirmationInput = z.infer<typeof GenerateAffirmationInputSchema>;
+// Define the input type for the affirmation generation
+export type GenerateAffirmationInput = {
+  mood?: string;
+  journalEntry?: string;
+  currentCyclePhase?: string;
+  currentMoonPhase?: string;
+  language: 'en' | 'de';
+};
 
-// Define the output schema for the affirmation
-const GenerateAffirmationOutputSchema = z.object({
-  affirmation: z.string().describe('The generated daily affirmation text.'),
-});
-export type GenerateAffirmationOutput = z.infer<typeof GenerateAffirmationOutputSchema>;
+// Define the output type for the affirmation
+export type GenerateAffirmationOutput = {
+  affirmation: string;
+};
 
 
 // Wrapper function to be called by the frontend
 export async function generateAffirmation(input: GenerateAffirmationInput): Promise<GenerateAffirmationOutput> {
   // DEMO MODE: Return a hardcoded affirmation
   console.log("DEMO MODE: Affirmation generation skipped, returning static affirmation.");
-  const demoAffirmation = input.language === 'de' 
-    ? "Dies ist eine Demo-Affirmation: Du bist wunderbar so wie du bist." 
+  const demoAffirmation = input.language === 'de'
+    ? "Dies ist eine Demo-Affirmation: Du bist wunderbar so wie du bist."
     : "This is a demo affirmation: You are wonderful just as you are.";
-  
+
   // Simulate a slight delay as if an API call was made
   await new Promise(resolve => setTimeout(resolve, 300));
 
@@ -44,7 +42,7 @@ export async function generateAffirmation(input: GenerateAffirmationInput): Prom
   // Original AI call logic (commented out for demo mode):
   /*
   let promptContent = `
-    You are a compassionate and wise AI assistant for the myLunaraCycle app. 
+    You are a compassionate and wise AI assistant for the myLunaraCycle app.
     Your task is to generate a short, uplifting, and relevant daily affirmation for the user.
     The affirmation should be in ${input.language}.
 
@@ -92,4 +90,3 @@ export async function generateAffirmation(input: GenerateAffirmationInput): Prom
   }
   */
 }
-
