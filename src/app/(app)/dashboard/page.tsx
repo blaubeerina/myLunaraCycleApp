@@ -111,15 +111,7 @@ export default function DashboardPage() {
                   </div>
               )}
               */}
-              <p className="text-muted-foreground mb-4">{t('viewYourCycleMilestones', {defaultValue: 'View your cycle, ovulation, or pregnancy milestones.'})}</p>
-              <Image 
-                src="https://placehold.co/600x400.png" 
-                alt="Calendar placeholder" 
-                width={600} 
-                height={400} 
-                className="rounded-md aspect-video object-cover"
-                data-ai-hint="calendar schedule" 
-              />
+              
               <Link href="/calendar" passHref className="mt-4 block">
                 <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary/10">{t('viewCalendar')}</Button>
               </Link>
@@ -174,4 +166,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
 
