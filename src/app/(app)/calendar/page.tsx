@@ -6,14 +6,14 @@ import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, en
 import { de } from 'date-fns/locale';
 import { useAppContext } from '@/contexts/AppContext';
 import { useAuth } from '@/components/auth/AuthContext';
-import type { DailyEntryData, MoonPhaseName, CalendarCellData, CyclePhaseName, BleedingIntensity } from '@/lib/types';
+import type { DailyEntryData, MoonPhaseName, CalendarCellData, CyclePhaseName, BleedingIntensity, AppMode } from '@/lib/types';
 import { getMoonPhase, getMoonEmoji } from '@/lib/moon-utils';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Loader2, Droplet, Sun, Leaf, Flower2, AlertTriangle } from 'lucide-react';
 import { DayEntryDialog } from '@/components/calendar/DayEntryDialog';
 import { cn } from '@/lib/utils';
 import { 
-  getMostRecentPeriodStart,
+  getMostRecentPeriodStart, // Still used by dialog logic if not overridden
   calculateCycleDayNumber,
   determineCyclePhase,
   DEFAULT_CYCLE_LENGTH,
@@ -22,57 +22,68 @@ import {
   getPredictedFertileWindow,
   getPredictedNextPeriodDates,
   getBleedingBackgroundClass,
-  calculateFullCycleInfoForDate,
+  calculateFullCycleInfoForDate, // Not directly used for grid, but can be for dialog context
 } from '@/lib/cycle-utils';
 
 
-async function fetchMoonDataForMonth(date: Date): Promise<Record<string, MoonPhaseName>> {
-  const monthStart = startOfMonth(date);
-  const gridStart = startOfWeek(monthStart, { weekStartsOn: 1 }); 
-  const gridEnd = endOfWeek(endOfMonth(date), { weekStartsOn: 1 });
-  
-  const data: Record<string, MoonPhaseName> = {};
-  let currentDay = gridStart;
-  while (currentDay <= gridEnd) {
-    const dateStr = format(currentDay, 'yyyy-MM-dd');
-    data[dateStr] = getMoonPhase(currentDay);
-    currentDay = addDays(currentDay, 1);
-  }
-  return data;
-}
+// Removed fetchMoonDataForMonth as moon data will be calculated directly or mocked
 
 export default function CalendarPage() {
   const { t, userPreferences, appData, saveDailyEntry, loadAppData } = useAppContext();
   const { user } = useAuth();
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  // Mock current month to June 2025 for the demo
+  const [currentMonth, setCurrentMonth] = useState(new Date('2025-06-01T00:00:00'));
+  
+  // monthMoonData can be used by DayEntryDialog if needed, populate it statically.
   const [monthMoonData, setMonthMoonData] = useState<Record<string, MoonPhaseName>>({});
-  const [isLoadingMoonData, setIsLoadingMoonData] = useState(true);
+  const [isLoadingMoonData, setIsLoadingMoonData] = useState(false); // Keep for consistency, but set to false
+
   const [isEntryDialogOpen, setIsEntryDialogOpen] = useState(false);
   const [selectedDateForEntry, setSelectedDateForEntry] = useState<Date | null>(null);
 
   const userId = user?.id;
 
-  useEffect(() => {
-    if (userId) {
-        loadAppData(userId);
-    }
-  }, [userId, loadAppData]);
+  // Mock "today" for consistent display in the mock-up
+  const MOCK_TODAY_DATE = useMemo(() => new Date('2025-06-19T00:00:00'), []);
 
-  const loadMoonDataForCurrentMonth = useCallback(async () => {
-    setIsLoadingMoonData(true);
-    try {
-      const data = await fetchMoonDataForMonth(currentMonth);
-      setMonthMoonData(data);
-    } catch (error) {
-      console.error("Error fetching moon data:", error);
-    } finally {
-      setIsLoadingMoonData(false);
-    }
-  }, [currentMonth]);
 
+  // Mock user preferences for the calendar view, forcing cycle mode
+  const mockUserPreferences = useMemo(() => ({
+    language: userPreferences.language,
+    appMode: 'cycle' as AppMode,
+    theme: userPreferences.theme,
+  }), [userPreferences.language, userPreferences.theme]);
+
+  // Define the mock period
+  const MOCK_PERIOD_START_DATE_STR = '2025-05-29';
+  const MOCK_PERIOD_END_DATE_STR = '2025-06-01';
+  const MOCK_PERIOD_START_DATE = useMemo(() => parseISO(MOCK_PERIOD_START_DATE_STR), []);
+  const MOCK_PERIOD_END_DATE = useMemo(() => parseISO(MOCK_PERIOD_END_DATE_STR), []);
+
+  // Disable dynamic data loading effects for the mock-up
   useEffect(() => {
-    loadMoonDataForCurrentMonth();
-  }, [loadMoonDataForCurrentMonth]);
+    // console.log("DEMO MODE: Skipping appData load for calendar mock.");
+    // console.log("DEMO MODE: Skipping moon data load for calendar mock, calculating per cell or statically.");
+    setIsLoadingMoonData(false); // Ensure loading is false
+
+    // Statically populate monthMoonData for DayEntryDialog or other potential uses
+    const monthStart = startOfMonth(currentMonth);
+    const monthEndVal = endOfMonth(currentMonth);
+    const gridStart = startOfWeek(monthStart, { weekStartsOn: 1, locale: mockUserPreferences.language === 'de' ? de : undefined });
+    const gridEnd = endOfWeek(monthEndVal, { weekStartsOn: 1, locale: mockUserPreferences.language === 'de' ? de : undefined });
+    
+    const staticMoonData: Record<string, MoonPhaseName> = {};
+    let dayPointerMoon = gridStart;
+    while (dayPointerMoon <= gridEnd) {
+      const dateStr = format(dayPointerMoon, 'yyyy-MM-dd');
+      staticMoonData[dateStr] = getMoonPhase(dayPointerMoon);
+      dayPointerMoon = addDays(dayPointerMoon, 1);
+    }
+    setMonthMoonData(staticMoonData);
+
+  }, [currentMonth, mockUserPreferences.language]);
+
 
   const handleDayClick = (day: Date) => {
     setSelectedDateForEntry(day);
@@ -86,6 +97,8 @@ export default function CalendarPage() {
 
   const handleSaveEntry = async (entryData: DailyEntryData) => {
     if (userId) {
+      // Note: This will save to the actual appData via context,
+      // but the calendar grid itself is based on mock data and won't visually update from this save.
       await saveDailyEntry(userId, entryData);
     }
     handleCloseEntryDialog();
@@ -98,19 +111,19 @@ export default function CalendarPage() {
         size="icon"
         onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
         className="text-foreground hover:bg-primary/10"
-        aria-label={t('previousMonth', { month: format(subMonths(currentMonth,1), 'MMMM')})}
+        aria-label={t('previousMonth', { month: format(subMonths(currentMonth,1), 'MMMM yyyy', { locale: mockUserPreferences.language === 'de' ? de : undefined })})}
       >
         <ChevronLeft className="h-6 w-6" />
       </Button>
       <h2 className="text-lg md:text-xl font-semibold text-primary">
-        {format(currentMonth, 'MMMM yyyy', { locale: userPreferences.language === 'de' ? de : undefined })}
+        {format(currentMonth, 'MMMM yyyy', { locale: mockUserPreferences.language === 'de' ? de : undefined })}
       </h2>
       <Button 
         variant="ghost"
         size="icon"
         onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
         className="text-foreground hover:bg-primary/10"
-        aria-label={t('nextMonth', { month: format(addMonths(currentMonth,1), 'MMMM')})}
+        aria-label={t('nextMonth', { month: format(addMonths(currentMonth,1), 'MMMM yyyy', { locale: mockUserPreferences.language === 'de' ? de : undefined })})}
       >
         <ChevronRight className="h-6 w-6" />
       </Button>
@@ -120,12 +133,12 @@ export default function CalendarPage() {
   const renderDaysOfWeek = () => {
     const daysHeader = [];
     const weekStartsOn = 1; 
-    const firstDayOfWeek = startOfWeek(new Date(), { locale: userPreferences.language === 'de' ? de : undefined, weekStartsOn });
+    const firstDayOfWeek = startOfWeek(new Date(), { locale: mockUserPreferences.language === 'de' ? de : undefined, weekStartsOn });
 
     for (let i = 0; i < 7; i++) {
       daysHeader.push(
         <div key={i} className="text-center font-medium text-muted-foreground text-xs sm:text-sm py-2 border-b border-border">
-          {format(addDays(firstDayOfWeek, i), 'EE', { locale: userPreferences.language === 'de' ? de : undefined })}
+          {format(addDays(firstDayOfWeek, i), 'EE', { locale: mockUserPreferences.language === 'de' ? de : undefined })}
         </div>
       );
     }
@@ -134,93 +147,76 @@ export default function CalendarPage() {
 
   const calendarGridData = useMemo(() => {
     const monthStart = startOfMonth(currentMonth);
-    const monthEnd = endOfMonth(monthStart);
+    const monthEndValue = endOfMonth(monthStart); // Corrected: use monthStart
     const weekStartsOn = 1; // Monday
-    const startDate = startOfWeek(monthStart, { locale: userPreferences.language === 'de' ? de : undefined, weekStartsOn });
-    const endDate = endOfWeek(monthEnd, { locale: userPreferences.language === 'de' ? de : undefined, weekStartsOn });
+    const startDate = startOfWeek(monthStart, { locale: mockUserPreferences.language === 'de' ? de : undefined, weekStartsOn });
+    const endDate = endOfWeek(monthEndValue, { locale: mockUserPreferences.language === 'de' ? de : undefined, weekStartsOn });
     
     const grid: CalendarCellData[] = [];
     let dayPointer = startDate;
 
-    const lastPeriodStartEntry = userPreferences.appMode === 'cycle' ? getMostRecentPeriodStart(appData.dailyEntries) : null;
-    const lastPeriodStartDate = lastPeriodStartEntry ? parseISO(lastPeriodStartEntry.date) : null;
-
-    // Predict for the next 3 cycles
-    const futurePeriods = lastPeriodStartDate ? getPredictedNextPeriodDates(lastPeriodStartDate, 3) : [];
-    const futureOvulations: { date: Date; fertileWindow: { start: Date; end: Date } }[] = [];
-    if (lastPeriodStartDate) {
-        for (let i = 0; i < 3; i++) { // Predict for current and next 2 cycles
-            const cycleStartDate = addDays(lastPeriodStartDate, DEFAULT_CYCLE_LENGTH * i);
-            const ovDate = getPredictedOvulationDate(cycleStartDate);
-            futureOvulations.push({ date: ovDate, fertileWindow: getPredictedFertileWindow(ovDate) });
-        }
-    }
+    const mockOvulationDate = getPredictedOvulationDate(MOCK_PERIOD_START_DATE);
+    const mockFertileWindow = getPredictedFertileWindow(mockOvulationDate);
+    const mockNextPeriodDates = getPredictedNextPeriodDates(MOCK_PERIOD_START_DATE, 1);
 
     while(dayPointer <= endDate) {
       const dateStr = format(dayPointer, 'yyyy-MM-dd');
-      const dailyEntry = appData?.dailyEntries?.[dateStr];
-      const cycleInfo = userPreferences.appMode === 'cycle' ? calculateFullCycleInfoForDate(dayPointer, appData.dailyEntries) : null;
+      const dayStart = startOfDay(dayPointer);
+
+      const cycleDay = calculateCycleDayNumber(MOCK_PERIOD_START_DATE_STR, dayPointer);
+      let currentPhase = determineCyclePhase(dayPointer, MOCK_PERIOD_START_DATE_STR, DEFAULT_CYCLE_LENGTH, DEFAULT_PERIOD_LENGTH);
+      let bleedingIntensity: BleedingIntensity | undefined = undefined;
+      let isPeriodStartMarker = false;
+      let isPeriodEndMarker = false;
+
+      if (dayStart >= MOCK_PERIOD_START_DATE && dayStart <= MOCK_PERIOD_END_DATE) {
+        currentPhase = 'Menstruation';
+        if (isSameDay(dayStart, MOCK_PERIOD_START_DATE)) {
+          bleedingIntensity = 'medium'; isPeriodStartMarker = true;
+        } else if (isSameDay(dayStart, addDays(MOCK_PERIOD_START_DATE, 1))) { // May 30th
+          bleedingIntensity = 'heavy';
+        } else if (isSameDay(dayStart, addDays(MOCK_PERIOD_START_DATE, 2))) { // May 31st
+          bleedingIntensity = 'medium';
+        } else if (isSameDay(dayStart, MOCK_PERIOD_END_DATE)) { // June 1st
+          bleedingIntensity = 'light'; isPeriodEndMarker = true;
+        }
+      }
 
       let cellData: CalendarCellData = {
         date: dateStr,
         dayOfMonth: dayPointer.getDate(),
         isCurrentMonth: isSameMonth(dayPointer, monthStart),
-        isToday: isSameDay(dayPointer, new Date()),
-        mood: dailyEntry?.mood,
-        notes: dailyEntry?.notes,
-        bleeding: dailyEntry?.bleeding,
-        isPeriodStart: dailyEntry?.isPeriodStart,
-        isPeriodEnd: dailyEntry?.isPeriodEnd,
-        moonPhaseName: monthMoonData[dateStr],
-        currentCyclePhase: cycleInfo?.phase || 'Unknown',
-        cycleDayNumber: cycleInfo?.cycleDay,
+        isToday: isSameDay(dayPointer, MOCK_TODAY_DATE), // Use mocked "today"
+        mood: undefined, notes: undefined, // No mood/notes in this static mock grid
+        bleeding: bleedingIntensity ? { intensity: bleedingIntensity } : undefined,
+        isPeriodStart: isPeriodStartMarker,
+        isPeriodEnd: isPeriodEndMarker,
+        moonPhaseName: getMoonPhase(dayPointer), // Calculate moon phase
+        currentCyclePhase: currentPhase,
+        cycleDayNumber: cycleDay || undefined,
         isFertilePredicted: false,
         isOvulationPredicted: false,
         isNextPeriodPredicted: false,
       };
 
-      if (userPreferences.appMode === 'cycle') {
-        // Check against logged data first
-        if (dailyEntry?.isPeriodStart || (dailyEntry?.bleeding && dailyEntry.bleeding.intensity !== 'none')) {
-            cellData.currentCyclePhase = 'Menstruation';
-        } else if (cycleInfo) {
-            cellData.currentCyclePhase = cycleInfo.phase;
-            // If the day is beyond the last logged period and within predicted windows:
-            if (cycleInfo.estimatedFertileWindow && dayPointer >= cycleInfo.estimatedFertileWindow.start && dayPointer <= cycleInfo.estimatedFertileWindow.end) {
-                cellData.isFertilePredicted = true;
-                if (cycleInfo.estimatedOvulationDate && isSameDay(dayPointer, cycleInfo.estimatedOvulationDate)) {
-                    cellData.isOvulationPredicted = true;
-                    cellData.currentCyclePhase = 'Ovulation'; // Override if ovulation is predicted
-                } else if(cellData.currentCyclePhase !== 'Menstruation') {
-                     // Don't override if it's a logged menstruation day that happens to fall in predicted fertile window
-                    cellData.currentCyclePhase = 'Follicular'; // Default to Follicular if fertile but not ovulation
-                }
-            }
-        }
-
-        // Check against future predictions
-        futureOvulations.forEach(ov => {
-            if (isSameDay(dayPointer, ov.date)) {
-                cellData.isOvulationPredicted = true;
-                if (cellData.currentCyclePhase !== 'Menstruation') cellData.currentCyclePhase = 'Ovulation';
-            }
-            if (dayPointer >= ov.fertileWindow.start && dayPointer <= ov.fertileWindow.end) {
-                cellData.isFertilePredicted = true;
-                 if (cellData.currentCyclePhase !== 'Menstruation' && cellData.currentCyclePhase !== 'Ovulation') cellData.currentCyclePhase = 'Follicular';
-            }
-        });
-        futurePeriods.forEach(fp => {
-            if (isSameDay(dayPointer, fp)) {
-                cellData.isNextPeriodPredicted = true;
-                 if (cellData.currentCyclePhase !== 'Menstruation') cellData.currentCyclePhase = 'Menstruation'; // Predicted menstruation
-            }
-        });
+      if (isSameDay(dayPointer, mockOvulationDate)) {
+          cellData.isOvulationPredicted = true;
+          if (cellData.currentCyclePhase !== 'Menstruation') cellData.currentCyclePhase = 'Ovulation';
       }
+      if (dayPointer >= mockFertileWindow.start && dayPointer <= mockFertileWindow.end) {
+          cellData.isFertilePredicted = true;
+           if (cellData.currentCyclePhase !== 'Menstruation' && cellData.currentCyclePhase !== 'Ovulation') cellData.currentCyclePhase = 'Follicular';
+      }
+      if (mockNextPeriodDates[0] && isSameDay(dayPointer, mockNextPeriodDates[0])) {
+          cellData.isNextPeriodPredicted = true;
+           if (cellData.currentCyclePhase !== 'Menstruation') cellData.currentCyclePhase = 'Menstruation';
+      }
+      
       grid.push(cellData);
       dayPointer = addDays(dayPointer, 1);
     }
     return grid;
-  }, [currentMonth, appData.dailyEntries, monthMoonData, userPreferences.appMode, userPreferences.language]);
+  }, [currentMonth, mockUserPreferences.language, MOCK_PERIOD_START_DATE, MOCK_PERIOD_END_DATE, MOCK_TODAY_DATE]);
 
 
   const renderCells = () => {
@@ -229,7 +225,7 @@ export default function CalendarPage() {
     
     for (let i = 0; i < calendarGridData.length; i++) {
       const cellInfo = calendarGridData[i];
-      const day = parseISO(cellInfo.date); // for date operations
+      const day = parseISO(cellInfo.date); 
 
       let cellClasses = `min-h-[7rem] md:min-h-[8rem] p-1.5 flex flex-col 
                          cursor-pointer transition-colors duration-150 ease-in-out
@@ -258,14 +254,14 @@ export default function CalendarPage() {
       let phaseIcon = null;
       let phaseTooltip = "";
 
-      if (userPreferences.appMode === 'cycle' && cellInfo.isCurrentMonth) {
+      if (mockUserPreferences.appMode === 'cycle' && cellInfo.isCurrentMonth) {
         const isLoggedBleeding = cellInfo.bleeding && cellInfo.bleeding.intensity !== 'none';
         
         if (isLoggedBleeding) {
             cellClasses = cn(cellClasses, getBleedingBackgroundClass(cellInfo.bleeding?.intensity));
             phaseIcon = <Droplet className="h-4 w-4 text-destructive-foreground/80" />;
             phaseTooltip = t('calendarPhaseMenstruation');
-        } else { // Not actively bleeding, check phases and predictions
+        } else { 
             switch (cellInfo.currentCyclePhase) {
                 case 'Follicular':
                     cellClasses = cn(cellClasses, 'bg-green-500/10 dark:bg-green-800/20');
@@ -273,26 +269,25 @@ export default function CalendarPage() {
                     phaseTooltip = t('calendarPhaseFollicular');
                     break;
                 case 'Ovulation':
-                    cellClasses = cn(cellClasses, 'bg-accent/30 dark:bg-accent/20'); // Using accent from theme
+                    cellClasses = cn(cellClasses, 'bg-accent/30 dark:bg-accent/20');
                     phaseIcon = <Sun className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />;
                     phaseTooltip = t('calendarPhaseOvulation');
                     break;
                 case 'Luteal':
                     cellClasses = cn(cellClasses, 'bg-purple-500/10 dark:bg-purple-800/20');
-                    // phaseIcon = <Moon className="h-3 w-3 text-purple-600 dark:text-purple-400" />; // Using Moon for moon phase
                     phaseTooltip = t('calendarPhaseLuteal');
                     break;
             }
         }
 
         if (cellInfo.isFertilePredicted && !isLoggedBleeding && cellInfo.currentCyclePhase !== 'Ovulation') {
-             cellClasses = cn(cellClasses, 'bg-accent/20'); // Consistent with ovulation color but lighter
+             cellClasses = cn(cellClasses, 'bg-accent/20');
              if (!phaseIcon) phaseIcon = <Flower2 className="h-3 w-3 text-yellow-700 dark:text-yellow-500 opacity-70" />;
              phaseTooltip = phaseTooltip ? `${phaseTooltip} - ${t('calendarPhaseFertile')}` : t('calendarPhaseFertile');
         }
-        if (cellInfo.isOvulationPredicted && cellInfo.currentCyclePhase === 'Ovulation') { // Ensure it's marked as ovulation
-             if(!isLoggedBleeding) cellClasses = cn(cellClasses, 'bg-accent/40'); // Stronger for predicted ovulation
-             phaseIcon = <Sun className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />; // Sun icon for ovulation
+        if (cellInfo.isOvulationPredicted && cellInfo.currentCyclePhase === 'Ovulation') {
+             if(!isLoggedBleeding) cellClasses = cn(cellClasses, 'bg-accent/40');
+             phaseIcon = <Sun className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />;
              phaseTooltip = `${t('calendarPhaseOvulation')} ${t('calendarPredicted')}`;
         }
          if (cellInfo.isNextPeriodPredicted && !isLoggedBleeding) {
@@ -302,7 +297,6 @@ export default function CalendarPage() {
         }
       }
       
-      // Period start/end markers
       if (cellInfo.isPeriodStart && cellInfo.isCurrentMonth) {
         cellClasses = cn(cellClasses, 'border-l-4 border-l-primary'); 
       }
@@ -318,8 +312,8 @@ export default function CalendarPage() {
           role="button"
           tabIndex={0}
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleDayClick(day)}
-          aria-label={`Date ${format(day, 'PPP', { locale: userPreferences.language === 'de' ? de : undefined })}${phaseTooltip ? ', ' + phaseTooltip : ''}${cellInfo.moonPhaseName ? `, ${t('moonPhaseLabel')}: ${cellInfo.moonPhaseName}` : ''}`}
-          title={phaseTooltip || format(day, 'PPP', { locale: userPreferences.language === 'de' ? de : undefined })}
+          aria-label={`Date ${format(day, 'PPP', { locale: mockUserPreferences.language === 'de' ? de : undefined })}${phaseTooltip ? ', ' + phaseTooltip : ''}${cellInfo.moonPhaseName ? `, ${t('moonPhaseLabel')}: ${cellInfo.moonPhaseName}` : ''}`}
+          title={phaseTooltip || format(day, 'PPP', { locale: mockUserPreferences.language === 'de' ? de : undefined })}
         >
           <div className="flex justify-between items-start w-full">
               <span className={dayNumberStyle}>
@@ -334,6 +328,7 @@ export default function CalendarPage() {
           
           <div className="mt-auto flex flex-col items-start w-full space-y-0.5">
             {phaseIcon && <div className="self-start">{phaseIcon}</div>}
+            {/* Mood and notes display can be kept if dialog saves them, but grid is static for mock */}
             {cellInfo.isCurrentMonth && cellInfo.mood && (
                <div className="text-lg" title={cellInfo.mood}>
                   {cellInfo.mood}
@@ -344,7 +339,7 @@ export default function CalendarPage() {
                 {cellInfo.notes.substring(0,15)}{cellInfo.notes.length > 15 ? '...' : ''}
               </p>
             )}
-            {userPreferences.appMode === 'cycle' && cellInfo.isCurrentMonth && cellInfo.cycleDayNumber && cellInfo.cycleDayNumber > 0 && (
+            {mockUserPreferences.appMode === 'cycle' && cellInfo.isCurrentMonth && cellInfo.cycleDayNumber && cellInfo.cycleDayNumber > 0 && (
                  <span className="text-[10px] text-muted-foreground/80">D{cellInfo.cycleDayNumber}</span>
             )}
           </div>
@@ -361,14 +356,18 @@ export default function CalendarPage() {
     }
     return <div className="border-l border-border/40 bg-background flex-grow">{rows}</div>;
   };
+  
+  // Find initial data for dialog from the static grid data
+  const getInitialDialogData = () => {
+    if (!selectedDateForEntry) return undefined;
+    const dateStr = format(selectedDateForEntry, 'yyyy-MM-dd');
+    return calendarGridData.find(cell => cell.date === dateStr);
+  };
+
 
   return (
     <div className="w-full h-full flex flex-col bg-card shadow-sm rounded-lg overflow-hidden">
-      {userPreferences.appMode === 'cycle' && !getMostRecentPeriodStart(appData.dailyEntries) && (
-          <div className="p-3 text-sm bg-accent/20 text-accent-foreground border-b border-border text-center">
-              {t('calendarPhaseUnknown')}: Please log your period start date in the calendar to enable cycle phase tracking and predictions.
-          </div>
-      )}
+      {/* Removed the "Please log period start" notice for mock-up */}
       {renderHeader()}
       {renderDaysOfWeek()}
       <div className="flex-grow overflow-y-auto">
@@ -380,14 +379,15 @@ export default function CalendarPage() {
           isOpen={isEntryDialogOpen}
           onClose={handleCloseEntryDialog}
           selectedDate={selectedDateForEntry}
-          initialData={appData?.dailyEntries?.[format(selectedDateForEntry, 'yyyy-MM-dd')]}
+          initialData={getInitialDialogData()} // Use data from the static grid
           onSaveEntry={handleSaveEntry}
-          language={userPreferences.language}
+          language={mockUserPreferences.language}
           t={t}
-          appMode={userPreferences.appMode}
+          appMode={mockUserPreferences.appMode}
           currentMoonPhase={monthMoonData[format(selectedDateForEntry, 'yyyy-MM-dd')]}
         />
       )}
     </div>
   );
 }
+
