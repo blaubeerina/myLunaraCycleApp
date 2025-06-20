@@ -220,7 +220,7 @@ export default function CalendarPage() {
       const cellInfo = calendarGridData[i];
       const day = parseISO(cellInfo.date); 
 
-      let cellClasses = `min-h-[7rem] md:min-h-[8rem] p-1.5 flex flex-col 
+      let cellClasses = `min-h-[6rem] sm:min-h-[7rem] md:min-h-[8rem] p-1 sm:p-1.5 flex flex-col 
                          cursor-pointer transition-colors duration-150 ease-in-out
                          border-r border-b border-border/40 relative group text-xs`;
       

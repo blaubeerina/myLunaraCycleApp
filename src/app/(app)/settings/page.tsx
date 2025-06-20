@@ -47,7 +47,7 @@ export default function SettingsPage() {
             <RadioGroup
               value={userPreferences.language}
               onValueChange={(value) => handleLanguageChange(value as Language)}
-              className="flex space-x-4"
+              className="flex flex-wrap gap-4"
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="en" id="lang-en" className="border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground" />
@@ -65,7 +65,7 @@ export default function SettingsPage() {
             <RadioGroup
               value={userPreferences.appMode}
               onValueChange={(value) => handleModeChange(value as AppMode)}
-              className="flex space-x-4"
+              className="flex flex-wrap gap-4"
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="cycle" id="mode-cycle" className="border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground" />
