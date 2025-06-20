@@ -9,8 +9,8 @@ import { useAuth } from '@/components/auth/AuthContext';
 import type { DailyEntryData, MoonPhaseName } from '@/lib/types';
 import { getMoonPhase, getMoonEmoji } from '@/lib/moon-utils';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
-import { DayEntryDialog } from '@/components/calendar/DayEntryDialog'; // New dialog
+import { ChevronLeft, ChevronRight, Loader2, Droplet } from 'lucide-react'; // Added Droplet
+import { DayEntryDialog } from '@/components/calendar/DayEntryDialog';
 import { cn } from '@/lib/utils';
 
 // Mock function to simulate fetching NASA moon data - replace with actual API call later
@@ -80,8 +80,6 @@ export default function CalendarPage() {
       await saveDailyEntry(userId, entryData);
     }
     handleCloseEntryDialog();
-    // Optionally, trigger a re-fetch or optimistic update for the calendar display
-    // For now, AppContext update should trigger re-render if appData is used as dependency
   };
 
   const renderHeader = () => (
@@ -145,18 +143,17 @@ export default function CalendarPage() {
         const isCurrentMonthDay = isSameMonth(day, monthStart);
         const isToday = isSameDay(day, new Date());
 
-        const hasBleeding = dailyEntry?.bleeding && dailyEntry.bleeding.intensity !== 'none';
+        const hasBleeding = !!dailyEntry?.bleeding; // Simplified: if bleeding object exists, it's logged
 
         let cellClasses = `min-h-[6rem] md:min-h-[7rem] p-1.5 flex flex-col 
                            cursor-pointer transition-colors duration-150 ease-in-out
                            border-r border-b border-border/40 relative group`;
         
-        if (i === 6) cellClasses = cn(cellClasses, 'border-r-0'); // No right border for last cell in row
+        if (i === 6) cellClasses = cn(cellClasses, 'border-r-0'); 
 
         let dayNumberStyle = "text-sm font-medium self-start text-foreground/90";
         let moonIconStyle = "text-lg text-[hsl(var(--color-moon))] opacity-70 group-hover:opacity-90";
         
-        // Hover effect
         cellClasses = cn(cellClasses, 'hover:bg-muted/20');
 
         if (isToday) {
@@ -173,8 +170,7 @@ export default function CalendarPage() {
         }
         
         if (hasBleeding && isCurrentMonthDay) {
-            // Selected day (bleeding) style: #E8B4BC (destructive color)
-            cellClasses = cn(cellClasses, 'bg-destructive/20'); 
+            cellClasses = cn(cellClasses, 'bg-destructive/30'); // Increased opacity
         }
         
         days.push(
@@ -199,8 +195,8 @@ export default function CalendarPage() {
             </div>
             
             {isCurrentMonthDay && hasBleeding && (
-                <div className="absolute bottom-1.5 right-1.5 flex items-center">
-                    <span className="h-2 w-2 rounded-full bg-destructive opacity-80" title={t('bleedingLogged')}></span>
+                <div className="absolute bottom-1.5 right-1.5 flex items-center" title={t('bleedingLogged')}>
+                    <Droplet className="h-4 w-4 text-destructive" />
                 </div>
             )}
             {isCurrentMonthDay && dailyEntry?.mood && (
@@ -209,7 +205,6 @@ export default function CalendarPage() {
                  </div>
             )}
 
-            {/* Display first few characters of notes if available */}
             {isCurrentMonthDay && dailyEntry?.notes && (
               <p className="text-xs text-muted-foreground mt-auto truncate w-full">
                 {dailyEntry.notes.substring(0,15)}{dailyEntry.notes.length > 15 ? '...' : ''}
@@ -246,10 +241,11 @@ export default function CalendarPage() {
           onSaveEntry={handleSaveEntry}
           language={userPreferences.language}
           t={t}
-          appMode={userPreferences.appMode} // Pass appMode
+          appMode={userPreferences.appMode}
           currentMoonPhase={monthMoonData[format(selectedDateForEntry, 'yyyy-MM-dd')]}
         />
       )}
     </div>
   );
 }
+
