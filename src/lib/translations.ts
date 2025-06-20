@@ -100,6 +100,7 @@ export const translations: AllTranslations = {
     currentMoonPhaseLabel: 'Moon',
     dayAbbreviation: 'D',
     logPeriodForCycleInfo: 'Log period start in calendar to see cycle info.',
+    mockJournalEntrySnippet: "today I went for a long walk and many thoughts about my ex came to my mind...",
     // Reminders
     remindersDescription: 'Configure personalized reminders.',
     // Mood Selector (for journal entries)
@@ -271,6 +272,7 @@ export const translations: AllTranslations = {
     currentMoonPhaseLabel: 'Mond',
     dayAbbreviation: 'T',
     logPeriodForCycleInfo: 'Trage den Beginn deiner Periode im Kalender ein, um Zyklusinfos zu sehen.',
+    mockJournalEntrySnippet: "Heute war ich lange spazieren und viele Gedanken an meinen Ex kamen hoch...",
     // Reminders
     remindersDescription: 'Konfiguriere personalisierte Erinnerungen.',
     // Mood Selector (for journal entries)
@@ -365,3 +367,4 @@ export function getTranslator(language: Language): (key: string, params?: Record
     return translation;
   };
 }
+

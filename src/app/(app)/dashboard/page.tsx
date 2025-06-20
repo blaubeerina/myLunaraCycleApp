@@ -131,7 +131,10 @@ export default function DashboardPage() {
               <CardTitle className="flex items-center gap-2 text-important-text"><BookHeart className="h-6 w-6 text-primary"/>{t('journal')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground mb-4">{t('journalCardDescription', {defaultValue: 'Record your daily mood and journal entries.'})}</p>
+              <p className="text-muted-foreground mb-2">{t('journalCardDescription', {defaultValue: 'Record your daily mood and journal entries.'})}</p>
+              <p className="text-sm text-foreground italic bg-muted/30 p-3 rounded-md mb-4">
+                "{t('mockJournalEntrySnippet')}"
+              </p>
                <Image 
                 src="https://placehold.co/600x400.png" 
                 alt="Journal placeholder" 
