@@ -179,13 +179,19 @@ export const translations: AllTranslations = {
     calendarPhaseUnknown: "Unknown",
     calendarPredicted: "(Predicted)",
     // Payment Notice
-    paymentNoticeTitle: "Unlock Full Access",
-    paymentNoticePriceInfo: "One-time payment of {price} for:",
+    paymentNoticeTitle: "Unlock Full Access", // Old key
+    paymentNoticePriceInfo: "One-time payment of {price} for:", // Old key
     paymentNoticeFeature1: "Unlimited entries",
-    paymentNoticeFeature2: "Moon phase analysis",
+    paymentNoticeFeature2: "Moon phase analysis", // Old key
     paymentNoticeFeature3: "Premium support",
-    paymentNoticeButtonDemo: "Buy Now (Demo)",
-    paymentDemoAlert: "This is a demo – payment not implemented.",
+    paymentNoticeButtonDemo: "Buy Now (Demo)", // Old key
+    paymentDemoAlert: "This is a demo – payment not implemented.", // Old key
+
+    paymentNoticeTitleUpdated: "Unlock Full Access",
+    paymentNoticePriceInfoUpdated: "One-time payment of {price} for:",
+    paymentNoticeFeature2Updated: "Personal Moon Analysis",
+    paymentNoticeButtonUpdated: "Unlock Now",
+    paymentNoticeAlertUpdated: "In the full version, the payment process would start now.",
   },
   de: {
     appName: 'myLunaraCycle',
@@ -356,13 +362,19 @@ export const translations: AllTranslations = {
     calendarPhaseUnknown: "Unbekannt",
     calendarPredicted: "(Vorhergesagt)",
     // Payment Notice
-    paymentNoticeTitle: "Vollzugang freischalten",
-    paymentNoticePriceInfo: "Einmalige Zahlung von {price} für:",
+    paymentNoticeTitle: "Vollzugang freischalten", // Old key
+    paymentNoticePriceInfo: "Einmalige Zahlung von {price} für:", // Old key
     paymentNoticeFeature1: "Unbegrenzte Einträge",
-    paymentNoticeFeature2: "Mondphasen-Analysen",
+    paymentNoticeFeature2: "Mondphasen-Analysen", // Old key
     paymentNoticeFeature3: "Premium-Support",
-    paymentNoticeButtonDemo: "Jetzt kaufen (Demo)",
-    paymentDemoAlert: "Dies ist eine Demo – Zahlung nicht implementiert.",
+    paymentNoticeButtonDemo: "Jetzt kaufen (Demo)", // Old key
+    paymentDemoAlert: "Dies ist eine Demo – Zahlung nicht implementiert.", // Old key
+    
+    paymentNoticeTitleUpdated: "Vollzugang freischalten",
+    paymentNoticePriceInfoUpdated: "Einmalig {price} für:",
+    paymentNoticeFeature2Updated: "Persönliche Mondanalysen",
+    paymentNoticeButtonUpdated: "Jetzt freischalten",
+    paymentNoticeAlertUpdated: "In der Vollversion würde jetzt der Bezahlvorgang starten.",
   },
 };
 
@@ -377,6 +389,3 @@ export function getTranslator(language: Language): (key: string, params?: Record
     return translation;
   };
 }
-
-
-    
