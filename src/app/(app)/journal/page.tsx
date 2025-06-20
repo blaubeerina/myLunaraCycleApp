@@ -5,13 +5,14 @@ import { useState, useEffect, useCallback } from 'react';
 import type { DailyEntryData, MoodEmoji } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { PlusCircle, Edit3, Trash2, Loader2, Sparkles } from 'lucide-react';
+import { PlusCircle, Edit3, Trash2, Loader2, Sparkles, Droplet } from 'lucide-react';
 import { useAppContext } from '@/contexts/AppContext';
 import { useAuth } from '@/components/auth/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { DayEntryDialog } from '@/components/calendar/DayEntryDialog'; // Reusing for journal entry
 import { AffirmationGenerator } from '@/components/journal/AffirmationGenerator'; // For AI affirmation
 import { format, parseISO } from 'date-fns';
+import { getMoonEmoji } from '@/lib/moon-utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,7 +27,7 @@ import {
 const JOURNAL_STORAGE_KEY_PREFIX = 'myLunaraCycle_dailyEntries_';
 
 export default function JournalPage() {
-  const { t, userPreferences } = useAppContext();
+  const { t, userPreferences, appData, saveDailyEntry, loadAppData } = useAppContext(); // Added appData, saveDailyEntry, loadAppData
   const { user } = useAuth();
   const [entries, setEntries] = useState<DailyEntryData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,30 +36,46 @@ export default function JournalPage() {
   const [entryToDelete, setEntryToDelete] = useState<DailyEntryData | null>(null);
   const [currentAffirmation, setCurrentAffirmation] = useState<string | null>(null);
 
-  const userId = user?.id || 'mockUserId'; // Fallback for mock
+  const userId = user?.id;
 
-  const getStorageKey = useCallback(() => `${JOURNAL_STORAGE_KEY_PREFIX}${userId}`, [userId]);
-
-  const loadEntries = useCallback(async () => {
+  const loadEntriesFromAppContext = useCallback(() => {
+    if (!userId) return;
     setIsLoading(true);
     try {
-      const storedData = localStorage.getItem(getStorageKey());
-      const allEntriesObject: Record<string, DailyEntryData> = storedData ? JSON.parse(storedData) : {};
-      const entriesArray = Object.values(allEntriesObject).sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
+      const allEntriesObject = appData.dailyEntries;
+      const entriesArray = Object.values(allEntriesObject)
+        .filter(entry => entry.mood || entry.notes || entry.journalText) // Ensure it's a journal-like entry
+        .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
       setEntries(entriesArray);
     } catch (error) {
-      console.error("Error fetching entries:", error);
-      toast({ title: t('entrySavedError'), variant: "destructive" }); // Using a generic error message
+      console.error("Error processing entries from AppContext:", error);
+      toast({ title: t('entrySavedError'), variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
-  }, [getStorageKey, t]);
+  }, [userId, appData.dailyEntries, t]);
+
 
   useEffect(() => {
     if (userId) {
-      loadEntries();
+      loadAppData(userId).then(() => {
+        // Data is loaded, now filter and set entries
+        // This effect will run again when appData.dailyEntries changes if it's in dependency array
+      });
     }
-  }, [userId, loadEntries]);
+  }, [userId, loadAppData]);
+
+  useEffect(() => {
+    // This effect reacts to changes in appData.dailyEntries (e.g., after loadAppData completes or an entry is saved)
+    if (userId && Object.keys(appData.dailyEntries).length > 0) {
+      loadEntriesFromAppContext();
+    } else if (userId) {
+      // If appData is loaded but empty, or initial load.
+      setIsLoading(false);
+      setEntries([]);
+    }
+  }, [userId, appData.dailyEntries, loadEntriesFromAppContext]);
+
 
   const handleOpenEntryModal = (date?: Date | string) => {
     setCurrentEditingDate(date ? (typeof date === 'string' ? parseISO(date) : date) : new Date());
@@ -71,14 +88,14 @@ export default function JournalPage() {
   };
 
   const handleSaveEntry = async (entryData: DailyEntryData) => {
+    if (!userId) {
+      toast({ title: t('entrySavedError'), description: "User not found.", variant: 'destructive' });
+      return;
+    }
     try {
-      const storedData = localStorage.getItem(getStorageKey());
-      const allEntriesObject: Record<string, DailyEntryData> = storedData ? JSON.parse(storedData) : {};
-      allEntriesObject[entryData.date] = entryData;
-      localStorage.setItem(getStorageKey(), JSON.stringify(allEntriesObject));
-      
+      await saveDailyEntry(userId, entryData); // Use AppContext to save
       toast({ title: t('entrySavedSuccess') });
-      loadEntries(); 
+      // loadEntriesFromAppContext will be triggered by AppContext's appData update
       handleCloseEntryModal();
     } catch (error) {
       console.error("Failed to save entry:", error);
@@ -91,16 +108,36 @@ export default function JournalPage() {
   };
 
   const handleDeleteEntry = async () => {
-    if (!entryToDelete) return;
+    if (!entryToDelete || !userId) return;
     try {
-      const storedData = localStorage.getItem(getStorageKey());
-      const allEntriesObject: Record<string, DailyEntryData> = storedData ? JSON.parse(storedData) : {};
-      delete allEntriesObject[entryToDelete.date];
-      localStorage.setItem(getStorageKey(), JSON.stringify(allEntriesObject));
+      // To delete, we save an entry with its journal-specific fields cleared,
+      // or if no other data exists for that day, we could remove it entirely.
+      // For simplicity, let's just clear journal fields.
+      // A more robust delete would involve checking if other data (like bleeding) exists.
+      const updatedEntry = { ...entryToDelete, mood: undefined, notes: undefined, journalText: undefined, affirmationGenerated: undefined };
+      
+      // If the entry has no other relevant data (e.g. bleeding, period markers) it could be fully removed
+      // This part depends on how "deletion" is defined: just journal part or whole day entry
+      // For now, we'll just update it via saveDailyEntry which will clear its journal aspects
+      // but keep other data like bleeding if it was logged via calendar.
+      // A true "delete" from the dailyEntries map would require a new AppContext function.
+      // Let's assume for now deleting a journal entry just clears its text/mood.
+
+      const newAppDataEntries = { ...appData.dailyEntries };
+      // If we want to fully remove the entry IF it only contains journal data:
+      const currentEntryForDate = appData.dailyEntries[entryToDelete.date];
+      if (currentEntryForDate && !currentEntryForDate.bleeding && !currentEntryForDate.isPeriodStart && !currentEntryForDate.isPeriodEnd /* add other checks if necessary */) {
+        delete newAppDataEntries[entryToDelete.date];
+         // Need a direct way to set appData or a new delete function in AppContext
+         // For now, this local manipulation won't persist correctly without calling a dedicated delete in context
+         // Let's revert to "clearing" the journal part via saveDailyEntry
+      }
+
+      await saveDailyEntry(userId, updatedEntry); // This will update or overwrite the entry
 
       toast({ title: t('entryDeletedSuccess') });
-      loadEntries(); 
-      setEntryToDelete(null); 
+      setEntryToDelete(null);
+      // loadEntriesFromAppContext will re-filter
     } catch (error) {
       console.error("Failed to delete entry:", error);
       toast({ title: t('entryDeletedError'), variant: 'destructive' });
@@ -108,16 +145,16 @@ export default function JournalPage() {
     }
   };
 
+
   const getInitialDataForModal = (): Partial<DailyEntryData> | undefined => {
-    if (!currentEditingDate) return undefined;
+    if (!currentEditingDate || !userId) return undefined;
     const dateStr = format(currentEditingDate, 'yyyy-MM-dd');
-    return entries.find(e => e.date === dateStr);
+    return appData.dailyEntries[dateStr]; // Get initial data from AppContext
   };
   
   const handleAffirmationGenerated = (affirmation: string) => {
     setCurrentAffirmation(affirmation);
     // Optionally save to today's journal entry if one exists or create one
-    // For simplicity, just displaying it for now.
   };
 
   return (
@@ -148,7 +185,21 @@ export default function JournalPage() {
                       <h3 className="text-lg font-semibold text-important-text">
                         {format(parseISO(entry.date), 'PPP', { locale: userPreferences.language === 'de' ? require('date-fns/locale/de').default : require('date-fns/locale/en-US').default })}
                       </h3>
-                      {entry.mood && <p className="text-2xl ">{entry.mood}</p>}
+                      <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-1">
+                        {entry.moonPhaseName && (
+                          <span className="flex items-center" title={t(`moonPhase${entry.moonPhaseName.replace(/\s/g, '')}` as any, {defaultValue: entry.moonPhaseName})}>
+                            {getMoonEmoji(entry.moonPhaseName)} 
+                            <span className="ml-1">{t(`moonPhase${entry.moonPhaseName.replace(/\s/g, '')}` as any, {defaultValue: entry.moonPhaseName})}</span>
+                          </span>
+                        )}
+                        {entry.bleeding && entry.bleeding.intensity !== "none" && (
+                          <span className="flex items-center" title={t('bleedingLogged')}>
+                            <Droplet className="h-4 w-4 text-destructive/80 mr-1" /> 
+                            {t(`dayEntryBleedingStrength${entry.bleeding.intensity.charAt(0).toUpperCase() + entry.bleeding.intensity.slice(1)}` as any, {defaultValue: entry.bleeding.intensity})}
+                          </span>
+                        )}
+                      </div>
+                      {entry.mood && <p className="text-2xl mt-1">{entry.mood}</p>}
                     </div>
                     <div className="flex space-x-1">
                        <Button variant="ghost" size="icon" onClick={() => handleOpenEntryModal(entry.date)} className="text-primary hover:text-primary/80">
@@ -159,13 +210,10 @@ export default function JournalPage() {
                       </Button>
                     </div>
                   </div>
-                  {entry.journalText && <p className="mt-2 text-sm text-card-foreground whitespace-pre-wrap">{entry.journalText}</p>}
-                  {/* Display other info like symptoms, energy if available */}
-                  {entry.symptoms && entry.symptoms.length > 0 && (
-                     <p className="text-xs text-muted-foreground mt-1">Symptoms: {entry.symptoms.join(', ')}</p>
-                  )}
-                  {entry.bleedingStrength && entry.bleedingStrength !== "none" && (
-                     <p className="text-xs text-muted-foreground mt-1">Bleeding: {t(`dayEntryBleedingStrength${entry.bleedingStrength.charAt(0).toUpperCase() + entry.bleedingStrength.slice(1)}` as any)}</p>
+                  {(entry.notes || entry.journalText) && <p className="mt-2 text-sm text-card-foreground whitespace-pre-wrap">{entry.notes || entry.journalText}</p>}
+                  
+                  {entry.bleeding?.symptoms && entry.bleeding.symptoms.length > 0 && (
+                     <p className="text-xs text-muted-foreground mt-1">Symptoms: {entry.bleeding.symptoms.join(', ')}</p>
                   )}
                   {entry.affirmationGenerated && (
                     <p className="text-xs italic text-primary mt-1">Affirmation: "{entry.affirmationGenerated}"</p>
@@ -179,7 +227,6 @@ export default function JournalPage() {
         </CardContent>
       </Card>
 
-      {/* Affirmation Generator Section */}
       <Card id="affirmation" className="shadow-lg bg-card text-card-foreground">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-primary">
@@ -191,8 +238,8 @@ export default function JournalPage() {
         </CardHeader>
         <CardContent>
           <AffirmationGenerator
-            mood={entries[0]?.mood || ''} // Pass latest mood
-            journalText={entries[0]?.journalText || ''} // Pass latest journal text
+            mood={entries[0]?.mood || ''} 
+            journalText={entries[0]?.notes || entries[0]?.journalText || ''} 
             onAffirmationGenerated={handleAffirmationGenerated}
           />
           {currentAffirmation && (
@@ -203,8 +250,7 @@ export default function JournalPage() {
         </CardContent>
       </Card>
 
-
-      {isEntryModalOpen && currentEditingDate && (
+      {isEntryModalOpen && currentEditingDate && userId && (
         <DayEntryDialog
           isOpen={isEntryModalOpen}
           onClose={handleCloseEntryModal}
@@ -214,6 +260,7 @@ export default function JournalPage() {
           language={userPreferences.language}
           t={t}
           appMode={userPreferences.appMode}
+          currentMoonPhase={appData.dailyEntries[format(currentEditingDate, 'yyyy-MM-dd')]?.moonPhaseName} // Pass moon phase for the selected date
         />
       )}
 
@@ -238,3 +285,5 @@ export default function JournalPage() {
     </div>
   );
 }
+
+    
