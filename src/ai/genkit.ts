@@ -1,19 +1,16 @@
 
-'use server';
-
 import { configureGenkit } from '@genkit-ai/core';
 import { googleAI } from '@genkit-ai/googleai';
-import { geminiPro } from '@genkit-ai/googleai/models';
 
 // Initialize Genkit with Google AI
 export const ai = configureGenkit({
   plugins: [
     googleAI({
-      apiKey: process.env.GOOGLE_AI_API_KEY, // Set in .env or .env.local
+      apiKey: process.env.GOOGLE_AI_API_KEY,
     })
   ],
-  logLevel: 'debug'
+  // logLevel: 'debug', // Removed as per Genkit 1.x guidance
 });
 
-// Export the model for direct use
-export const textModel = geminiPro;
+// Export the model identifier string for direct use
+export const textModel = 'googleai/gemini-pro';
