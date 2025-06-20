@@ -8,13 +8,20 @@ import { Info } from 'lucide-react';
 export default function AboutPage() {
   const { t } = useAppContext();
 
-  const features = [
-    { key: 'Feature1', text: t('aboutAppExplanationFeature1') },
-    { key: 'Feature2', text: t('aboutAppExplanationFeature2') },
-    { key: 'Feature3', text: t('aboutAppExplanationFeature3') },
-    { key: 'Feature4', text: t('aboutAppExplanationFeature4') },
-    { key: 'Feature5', text: t('aboutAppExplanationFeature5') },
-    { key: 'Feature6', text: t('aboutAppExplanationFeature6') },
+  const featuresList = [
+    { key: 'Feature1', textKey: 'about_new_feature1' },
+    { key: 'Feature2', textKey: 'about_new_feature2' },
+    { key: 'Feature3', textKey: 'about_new_feature3' },
+    { key: 'Feature4', textKey: 'about_new_feature4' },
+    { key: 'Feature5', textKey: 'about_new_feature5' },
+    { key: 'Feature6', textKey: 'about_new_feature6' },
+  ];
+
+  const tipsList = [
+    { key: 'Tip1', textKey: 'about_new_tip1' },
+    { key: 'Tip2', textKey: 'about_new_tip2' },
+    { key: 'Tip3', textKey: 'about_new_tip3' },
+    { key: 'Tip4', textKey: 'about_new_tip4' },
   ];
 
   return (
@@ -23,28 +30,44 @@ export default function AboutPage() {
         <CardHeader>
           <CardTitle className="text-3xl font-bold text-primary flex items-center">
             <Info className="mr-3 h-8 w-8" />
-            {t('aboutAppTitle')}
+            {t('about_new_welcomeTitle')}
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            {t('aboutAppDescription')}
+            {t('about_new_welcomeSubtitle1')}
           </CardDescription>
         </CardHeader>
       </Card>
 
       <Card className="bg-card text-card-foreground">
-        <CardHeader>
-          <CardTitle className="text-xl text-important-text">{t('aboutAppExplanationTitle')}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 text-base text-foreground/90">
+        <CardContent className="space-y-4 text-base text-foreground/90 pt-6">
           <p>
-            {t('aboutAppExplanationP1')}
+            {t('about_new_introP1')}
           </p>
-          <h3 className="text-lg font-semibold text-primary pt-2">{t('aboutAppExplanationP2')}</h3>
+          
+          <h3 className="text-lg font-semibold text-primary pt-3">
+            {t('about_new_featuresTitle')}
+          </h3>
           <ul className="list-disc space-y-2 pl-5">
-            {features.map((feature) => (
-              <li key={feature.key}>{feature.text}</li>
+            {featuresList.map((feature) => (
+              <li key={feature.key}>{t(feature.textKey)}</li>
             ))}
           </ul>
+
+          <h3 className="text-lg font-semibold text-primary pt-3">
+            {t('about_new_tipsTitle')}
+          </h3>
+          <ul className="list-disc space-y-2 pl-5">
+            {tipsList.map((tip) => (
+              <li key={tip.key}>{t(tip.textKey)}</li>
+            ))}
+          </ul>
+
+          <p className="pt-3">
+            {t('about_new_growthMessage')}
+          </p>
+          <p className="pt-2">
+            {t('about_new_closingMessage')}
+          </p>
         </CardContent>
       </Card>
     </div>

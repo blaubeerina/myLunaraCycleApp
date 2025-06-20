@@ -71,7 +71,7 @@ export const translations: AllTranslations = {
     moonPhaseLabel: 'Moon phase',
     // Settings
     appMode: 'Application Mode',
-    language: 'Language', 
+    language: 'Language',
     // Affirmations
     generateAffirmation: 'Generate Affirmation',
     generating: 'Generating...',
@@ -85,8 +85,8 @@ export const translations: AllTranslations = {
     cyclePhaseFollicular: 'Follicular Phase',
     cyclePhaseOvulation: 'Ovulation',
     cyclePhaseLuteal: 'Luteal Phase',
-    cyclePhasePremenstrual: 'Premenstrual', 
-    cyclePhaseUnknown: 'Unknown Phase', 
+    cyclePhasePremenstrual: 'Premenstrual',
+    cyclePhaseUnknown: 'Unknown Phase',
     ovulationDayLabel: 'Ovulation Day!',
     fertileWindowLabel: 'Fertile Window',
     nextPeriodPredictionLabel: 'Next Period expected around',
@@ -113,22 +113,22 @@ export const translations: AllTranslations = {
     moodSelectorConfused: 'Confused',
     moodSelectorWorried: 'Worried',
     // Day Entry Dialog (for calendar/journal)
-    dayEntryTitle: 'Entry for {date}', 
+    dayEntryTitle: 'Entry for {date}',
     dayEntryMood: "Today's Mood",
     dayEntryLogBleeding: 'Log Bleeding',
     dayEntryBleedingIntensity: 'Bleeding Intensity',
     dayEntrySelectIntensity: 'Select intensity...',
-    dayEntryBleedingStrengthNone: 'None', 
+    dayEntryBleedingStrengthNone: 'None',
     dayEntryBleedingStrengthSpotting: 'Spotting',
     dayEntryBleedingStrengthLight: 'Light',
     dayEntryBleedingStrengthMedium: 'Medium',
     dayEntryBleedingStrengthHeavy: 'Heavy',
     dayEntrySymptoms: 'Symptoms',
-    dayEntryEnergyLevel: 'Energy Level', 
+    dayEntryEnergyLevel: 'Energy Level',
     dayEntryEnergyLow: 'Low',
     dayEntryEnergyMedium: 'Medium',
     dayEntryEnergyHigh: 'High',
-    dayEntryNotes: 'Notes', 
+    dayEntryNotes: 'Notes',
     writeYourThoughts: 'Write your thoughts, feelings, or observations...',
     dayEntryClose: 'Close',
     dayEntrySave: 'Save Entry',
@@ -159,7 +159,7 @@ export const translations: AllTranslations = {
     symptomSleepIssues: "Sleep Issues",
     symptomJointPain: "Joint Pain",
     symptomOther: "Other",
-    // About Page
+    // Old About Page (still here for reference, can be cleaned up)
     aboutAppTitle: 'About myLunaraCycle',
     aboutAppDescription: 'Discover the features of myLunaraCycle and how it can help you connect with your inner rhythms.',
     aboutAppExplanationTitle: 'What is myLunaraCycle?',
@@ -180,7 +180,25 @@ export const translations: AllTranslations = {
     calendarPhaseUnknown: "Unknown",
     calendarPredicted: "(Predicted)",
     // Demo Mode
-    demoModeNotice: "DEMO MODE: This is a simplified version for presentation purposes. Some functionalities are intentionally limited or disabled."
+    demoModeNotice: "DEMO MODE: This is a simplified version for presentation purposes. Some functionalities are intentionally limited or disabled.",
+    // New About Page Content
+    about_new_welcomeTitle: "🌙 Welcome to LunarCycle",
+    about_new_welcomeSubtitle1: "Your cycle. Your rhythm. In sync with the Moon.",
+    about_new_introP1: "LunarCycle is your personal space to connect with your body, your emotions, and the Moon’s rhythm. Whether you're here to track your menstrual cycle, understand your energy shifts, or explore how lunar phases affect your daily life – you're in the right place.",
+    about_new_featuresTitle: "Here’s what you can do:",
+    about_new_feature1: "Track your period and symptoms with just a few taps",
+    about_new_feature2: "See where you are in your cycle and how it aligns with the current Moon phase",
+    about_new_feature3: "Get gentle reminders for your next period, ovulation, or if your cycle is late",
+    about_new_feature4: "Reflect daily with emoji mood logs and short self-care prompts",
+    about_new_feature5: "Discover lunar-inspired insights tailored to your cycle and moon phase",
+    about_new_feature6: "Access a calendar view combining your cycle and the Moon at a glance",
+    about_new_tipsTitle: "A few tips to begin:",
+    about_new_tip1: "Start by logging your most recent period start date",
+    about_new_tip2: "Choose your language (English / Deutsch) in Settings",
+    about_new_tip3: "Allow notifications if you'd like cycle-based reminders",
+    about_new_tip4: "Check in daily — even just for a few seconds — to see what the Moon and your body are whispering",
+    about_new_growthMessage: "This app grows with you. 🌱 The more you log, the more personalized and insightful it becomes.",
+    about_new_closingMessage: "Take your time. Explore. And most importantly — trust your inner rhythm."
   },
   de: {
     appName: 'myLunaraCycle',
@@ -243,7 +261,7 @@ export const translations: AllTranslations = {
     moonPhaseLabel: 'Mondphase',
     // Settings
     appMode: 'Anwendungsmodus',
-    language: 'Sprache', 
+    language: 'Sprache',
     // Affirmations
     generateAffirmation: 'Affirmation generieren',
     generating: 'Generiere...',
@@ -331,7 +349,7 @@ export const translations: AllTranslations = {
     symptomSleepIssues: "Schlafstörungen",
     symptomJointPain: "Gelenkschmerzen",
     symptomOther: "Andere",
-    // About Page
+    // Old About Page
     aboutAppTitle: 'Über myLunaraCycle',
     aboutAppDescription: 'Entdecke die Funktionen von myLunaraCycle und wie es dir helfen kann, dich mit deinen inneren Rhythmen zu verbinden.',
     aboutAppExplanationTitle: 'Was ist myLunaraCycle?',
@@ -352,7 +370,25 @@ export const translations: AllTranslations = {
     calendarPhaseUnknown: "Unbekannt",
     calendarPredicted: "(Vorhergesagt)",
     // Demo Mode
-    demoModeNotice: "DEMO-MODUS: Dies ist eine vereinfachte Version für Präsentationszwecke. Einige Funktionen sind absichtlich eingeschränkt oder deaktiviert."
+    demoModeNotice: "DEMO-MODUS: Dies ist eine vereinfachte Version für Präsentationszwecke. Einige Funktionen sind absichtlich eingeschränkt oder deaktiviert.",
+    // New About Page Content
+    about_new_welcomeTitle: "🌙 Willkommen bei LunarCycle",
+    about_new_welcomeSubtitle1: "Dein Zyklus. Dein Rhythmus. Im Einklang mit dem Mond.",
+    about_new_introP1: "LunarCycle ist dein persönlicher Raum, um dich mit deinem Körper, deinen Emotionen und dem Rhythmus des Mondes zu verbinden. Egal, ob du hier bist, um deinen Menstruationszyklus zu verfolgen, deine Energieschwankungen zu verstehen oder zu erforschen, wie Mondphasen deinen Alltag beeinflussen – du bist hier genau richtig.",
+    about_new_featuresTitle: "Das kannst du tun:",
+    about_new_feature1: "Verfolge deine Periode und Symptome mit nur wenigen Klicks",
+    about_new_feature2: "Sieh, wo du dich in deinem Zyklus befindest und wie er mit der aktuellen Mondphase übereinstimmt",
+    about_new_feature3: "Erhalte sanfte Erinnerungen für deine nächste Periode, deinen Eisprung oder wenn dein Zyklus verspätet ist",
+    about_new_feature4: "Reflektiere täglich mit Emoji-Stimmungsprotokollen und kurzen Selbstpflege-Impulsen",
+    about_new_feature5: "Entdecke vom Mond inspirierte Einsichten, die auf deinen Zyklus und die Mondphase zugeschnitten sind",
+    about_new_feature6: "Greife auf eine Kalenderansicht zu, die deinen Zyklus und den Mond auf einen Blick kombiniert",
+    about_new_tipsTitle: "Ein paar Tipps für den Anfang:",
+    about_new_tip1: "Beginne damit, dein letztes Periodenstartdatum einzutragen",
+    about_new_tip2: "Wähle deine Sprache (Englisch / Deutsch) in den Einstellungen",
+    about_new_tip3: "Erlaube Benachrichtigungen, wenn du zyklusbasierte Erinnerungen möchtest",
+    about_new_tip4: "Schau täglich vorbei – auch nur für ein paar Sekunden – um zu sehen, was der Mond und dein Körper dir flüstern",
+    about_new_growthMessage: "Diese App wächst mit dir. 🌱 Je mehr du einträgst, desto persönlicher und aufschlussreicher wird sie.",
+    about_new_closingMessage: "Nimm dir Zeit. Entdecke. Und am wichtigsten – vertraue deinem inneren Rhythmus."
   },
 };
 
@@ -367,4 +403,3 @@ export function getTranslator(language: Language): (key: string, params?: Record
     return translation;
   };
 }
-
