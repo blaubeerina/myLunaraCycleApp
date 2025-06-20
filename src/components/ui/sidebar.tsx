@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -533,7 +534,8 @@ const sidebarMenuButtonVariants = cva(
   }
 )
 
-const SidebarMenuButton = React.forwardRef<
+// Internal implementation of SidebarMenuButton
+const SidebarMenuButtonImpl = React.forwardRef<
   HTMLButtonElement,
   React.ComponentProps<"button"> & {
     asChild?: boolean
@@ -549,6 +551,7 @@ const SidebarMenuButton = React.forwardRef<
       size = "default",
       tooltip,
       className,
+      children, // Explicitly include children here
       ...props
     },
     ref
@@ -556,7 +559,7 @@ const SidebarMenuButton = React.forwardRef<
     const Comp = asChild ? Slot : "button"
     const { isMobile, state } = useSidebar()
 
-    const button = (
+    const buttonContent = (
       <Comp
         ref={ref}
         data-sidebar="menu-button"
@@ -564,33 +567,43 @@ const SidebarMenuButton = React.forwardRef<
         data-active={isActive}
         className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
         {...props}
-      />
+      >
+        {children}
+      </Comp>
     )
 
     if (!tooltip) {
-      return button
+      return buttonContent
     }
 
+    let tooltipProps: React.ComponentProps<typeof TooltipContent>
     if (typeof tooltip === "string") {
-      tooltip = {
+      tooltipProps = {
         children: tooltip,
+        side: "right",
+        align: "center",
       }
+    } else {
+      tooltipProps = tooltip
     }
 
     return (
       <Tooltip>
-        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        <TooltipTrigger asChild>{buttonContent}</TooltipTrigger>
         <TooltipContent
-          side="right"
-          align="center"
           hidden={state !== "collapsed" || isMobile}
-          {...tooltip}
+          {...tooltipProps}
         />
       </Tooltip>
     )
   }
 )
-SidebarMenuButton.displayName = "SidebarMenuButton"
+SidebarMenuButtonImpl.displayName = "SidebarMenuButtonImpl"
+
+const SidebarMenuButton = React.memo(SidebarMenuButtonImpl)
+// Add displayName to the memoized component for better debugging
+;(SidebarMenuButton as React.FC<any>).displayName = "SidebarMenuButton"
+
 
 const SidebarMenuAction = React.forwardRef<
   HTMLButtonElement,

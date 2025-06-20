@@ -28,7 +28,7 @@ import {
   SidebarGroupLabel,
 } from '@/components/ui/sidebar'; 
 import { LogoIcon } from '@/components/icons/LogoIcon';
-import React, { useMemo } from 'react'; // Import useMemo
+import React, { useMemo, useCallback } from 'react'; // Import useMemo and useCallback
 
 interface NavItem {
   href: string;
@@ -98,9 +98,31 @@ export function MainSidebar() {
   const { userPreferences, setUserPreferences, t } = useAppContext();
   const pathname = usePathname();
 
-  const setAppMode = (mode: AppMode) => {
+  const setAppMode = useCallback((mode: AppMode) => {
     setUserPreferences((prev) => ({ ...prev, appMode: mode }));
-  };
+  }, [setUserPreferences]);
+
+
+  const cycleModeTooltip = useMemo(() => ({
+    children: t('cycleMode'),
+    side: 'right' as const,
+    align: 'center' as const,
+  }), [t]);
+
+  const pregnancyModeTooltip = useMemo(() => ({
+    children: t('pregnancyMode'),
+    side: 'right' as const,
+    align: 'center' as const,
+  }), [t]);
+
+  const handleSetAppModeCycle = useCallback(() => {
+    setAppMode('cycle');
+  }, [setAppMode]);
+
+  const handleSetAppModePregnancy = useCallback(() => {
+    setAppMode('pregnancy');
+  }, [setAppMode]);
+
 
   return (
     <Sidebar
@@ -134,9 +156,9 @@ export function MainSidebar() {
           <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden px-2 text-sidebar-foreground/70">{t('appMode')}</SidebarGroupLabel>
             <SidebarMenuItem>
                 <SidebarMenuButton
-                    onClick={() => setAppMode('cycle')}
+                    onClick={handleSetAppModeCycle}
                     isActive={userPreferences.appMode === 'cycle'}
-                    tooltip={{children: t('cycleMode'), side: 'right', align: 'center'}}
+                    tooltip={cycleModeTooltip}
                     className="justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground"
                 >
                     <Moon className="h-5 w-5" />
@@ -145,9 +167,9 @@ export function MainSidebar() {
             </SidebarMenuItem>
             <SidebarMenuItem>
                  <SidebarMenuButton
-                    onClick={() => setAppMode('pregnancy')}
+                    onClick={handleSetAppModePregnancy}
                     isActive={userPreferences.appMode === 'pregnancy'}
-                    tooltip={{children: t('pregnancyMode'), side: 'right', align: 'center'}}
+                    tooltip={pregnancyModeTooltip}
                     className="justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground"
                 >
                     <Baby className="h-5 w-5" />
