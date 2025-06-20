@@ -1,4 +1,5 @@
-'use server';
+// This file initializes the Google AI SDK and provides utility functions.
+// It's a server-side module, not a Server Action entry point itself.
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Initialisierung mit Umgebungsvariable
