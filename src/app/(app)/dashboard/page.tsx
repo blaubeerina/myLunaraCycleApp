@@ -9,10 +9,18 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
 import type { GeneratedImpulse, DailyEntryData } from '@/lib/types'; 
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, addDays } from 'date-fns';
 import { Loader2, Sparkles, Info, CalendarDays, BookHeart, Moon, Droplet, Leaf, Sun, Activity } from 'lucide-react';
 import { getMoonPhase, getMoonEmoji } from '@/lib/moon-utils';
-import { calculateFullCycleInfoForDate, type FullCycleInfo, type CyclePhaseName } from '@/lib/cycle-utils';
+import { 
+  calculateFullCycleInfoForDate, 
+  type FullCycleInfo, 
+  type CyclePhaseName,
+  DEFAULT_CYCLE_LENGTH,
+  DEFAULT_PERIOD_LENGTH,
+  getPredictedOvulationDate,
+  getPredictedFertileWindow
+} from '@/lib/cycle-utils';
 
 
 export default function DashboardPage() {
@@ -21,16 +29,24 @@ export default function DashboardPage() {
   const [latestImpulse, setLatestImpulse] = useState<GeneratedImpulse | null>(null);
   const [isLoadingImpulse, setIsLoadingImpulse] = useState(false); 
   
-  const [currentMoon, setCurrentMoon] = useState<{ name: ReturnType<typeof getMoonPhase> | null; emoji: string | null }>({ name: 'New Moon', emoji: '🌑' }); // Demo data
+  // Mock data for New Moon
+  const [currentMoon, setCurrentMoon] = useState<{ name: ReturnType<typeof getMoonPhase> | null; emoji: string | null }>({ name: 'New Moon', emoji: '🌑' }); 
+
+  // Mock data for Day 1 Menstruation
+  const today = new Date();
+  const mockOvulationDate = getPredictedOvulationDate(today); // Ovulation based on today as period start
+  const mockFertileWindow = getPredictedFertileWindow(mockOvulationDate);
+  const mockNextPeriodStart = addDays(today, DEFAULT_CYCLE_LENGTH);
+
   const [currentCycleDetails, setCurrentCycleDetails] = useState<FullCycleInfo | null>({
-    phase: 'Follicular', // Demo data
-    cycleDay: 10,
+    phase: 'Menstruation', 
+    cycleDay: 1,
     isFertile: false,
     isOvulationDay: false,
-    nextPeriodStartDate: '2025-07-15', // Demo data
-    estimatedOvulationDate: parseISO('2025-07-01'), // Demo data
-    estimatedFertileWindow: { start: parseISO('2025-06-28'), end: parseISO('2025-07-02') }, // Demo data
-    predictedNextPeriodStart: parseISO('2025-07-15') // Demo data
+    nextPeriodStartDate: format(mockNextPeriodStart, 'yyyy-MM-dd'), 
+    estimatedOvulationDate: mockOvulationDate, 
+    estimatedFertileWindow: mockFertileWindow, 
+    predictedNextPeriodStart: mockNextPeriodStart 
   });
   const [isLoadingDashboardData, setIsLoadingDashboardData] = useState(false); // Hardcoded to false for demo
 
@@ -39,22 +55,7 @@ export default function DashboardPage() {
   useEffect(() => {
     // In Demo Mode, we use hardcoded data, so no real fetching/calculation here.
     // The initial state values serve as the demo data.
-    // If you wanted to simulate a load:
-    // setIsLoadingDashboardData(true);
-    // const timer = setTimeout(() => {
-    //   const today = new Date();
-    //   const phaseName = getMoonPhase(today);
-    //   setCurrentMoon({ name: phaseName, emoji: getMoonEmoji(phaseName) });
-    //   if (userId && userPreferences.appMode === 'cycle') {
-    //     const cycleInfo = calculateFullCycleInfoForDate(today, appData.dailyEntries);
-    //     setCurrentCycleDetails(cycleInfo);
-    //   } else {
-    //     setCurrentCycleDetails(null);
-    //   }
-    //   setIsLoadingDashboardData(false);
-    // }, 500); // Simulate short load
-    // return () => clearTimeout(timer);
-  }, [userId, userPreferences.appMode, appData.dailyEntries]); // Dependencies kept for structure but effect body is demo-fied
+  }, [userId, userPreferences.appMode, appData.dailyEntries]);
 
 
   const getPhaseDisplay = (phase: CyclePhaseName | undefined) => {
@@ -86,7 +87,6 @@ export default function DashboardPage() {
               <CardTitle className="flex items-center gap-2 text-important-text"><CalendarDays className="h-6 w-6 text-primary"/>{t('calendar')}</CardTitle>
             </CardHeader>
             <CardContent>
-              {/* isLoadingDashboardData is false in demo mode, so the loading spinner won't show */}
               {/* Display mocked moon phase */}
               {currentMoon.name && (
                   <div className="flex items-center text-sm text-muted-foreground mb-1">
@@ -102,16 +102,6 @@ export default function DashboardPage() {
                       {currentCycleDetails.cycleDay && currentCycleDetails.cycleDay > 0 ? ` - ${t('dayAbbreviation', {defaultValue: 'D'})}${currentCycleDetails.cycleDay}` : ''}
                   </div>
               )}
-              {/* The "log period for cycle info" prompt is commented out for a cleaner mock-up display */}
-              {/*
-              {userPreferences.appMode === 'cycle' && (!currentCycleDetails || currentCycleDetails.phase === 'Unknown') && !isLoadingDashboardData && (
-                   <div className="flex items-center text-sm text-accent-foreground bg-accent/20 p-2 rounded-md mb-3">
-                      <Info className="mr-2 h-4 w-4 shrink-0" />
-                      <span>{t('logPeriodForCycleInfo', {defaultValue: 'Log period start in calendar to see cycle info.'})}</span>
-                  </div>
-              )}
-              */}
-              
               <Link href="/calendar" passHref className="mt-4 block">
                 <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary/10">{t('viewCalendar')}</Button>
               </Link>
@@ -166,5 +156,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-
