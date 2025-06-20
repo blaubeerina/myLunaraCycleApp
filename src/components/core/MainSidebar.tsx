@@ -13,7 +13,8 @@ import {
   BellRing, 
   Settings,
   Moon, 
-  Baby // Lucide icon for pregnancy
+  Baby, // Lucide icon for pregnancy
+  Info // Icon for the new About page
 } from 'lucide-react';
 import {
   Sidebar,
@@ -40,6 +41,7 @@ const navItems: NavItem[] = [
   { href: '/journal', labelKey: 'journal', icon: BookHeart },
   { href: '/reminders', labelKey: 'reminders', icon: BellRing },
   { href: '/settings', labelKey: 'settings', icon: Settings },
+  { href: '/about', labelKey: 'aboutApp', icon: Info }, // New menu item
 ];
 
 export function MainSidebar() {
@@ -70,7 +72,7 @@ export function MainSidebar() {
             <SidebarMenuItem key={item.href}>
               <Link href={item.href} passHref legacyBehavior>
                 <SidebarMenuButton
-                  isActive={pathname === item.href || (item.href === '/dashboard' && pathname.startsWith('/dashboard'))}
+                  isActive={pathname === item.href || (item.href === '/dashboard' && pathname.startsWith('/dashboard')) || (item.href === '/about' && pathname.startsWith('/about'))}
                   tooltip={{ children: t(item.labelKey), side: 'right', align: 'center' }}
                   className="justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground"
                 >
