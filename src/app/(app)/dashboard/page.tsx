@@ -34,9 +34,10 @@ export default function DashboardPage() {
 
   // Mock data for Day 1 Menstruation
   const today = new Date();
-  const mockOvulationDate = getPredictedOvulationDate(today); // Ovulation based on today as period start
-  const mockFertileWindow = getPredictedFertileWindow(mockOvulationDate);
   const mockNextPeriodStart = addDays(today, DEFAULT_CYCLE_LENGTH);
+  const mockOvulationDateBasedOnToday = addDays(today, (DEFAULT_CYCLE_LENGTH - DEFAULT_PERIOD_LENGTH - 14)); // Approx. ovulation
+  const mockFertileWindowBasedOnToday = getPredictedFertileWindow(mockOvulationDateBasedOnToday);
+
 
   const [currentCycleDetails, setCurrentCycleDetails] = useState<FullCycleInfo | null>({
     phase: 'Menstruation', 
@@ -44,8 +45,8 @@ export default function DashboardPage() {
     isFertile: false,
     isOvulationDay: false,
     nextPeriodStartDate: format(mockNextPeriodStart, 'yyyy-MM-dd'), 
-    estimatedOvulationDate: mockOvulationDate, 
-    estimatedFertileWindow: mockFertileWindow, 
+    estimatedOvulationDate: mockOvulationDateBasedOnToday, 
+    estimatedFertileWindow: mockFertileWindowBasedOnToday, 
     predictedNextPeriodStart: mockNextPeriodStart 
   });
   const [isLoadingDashboardData, setIsLoadingDashboardData] = useState(false); // Hardcoded to false for demo
@@ -113,7 +114,7 @@ export default function DashboardPage() {
               <CardTitle className="flex items-center gap-2 text-important-text"><BookHeart className="h-6 w-6 text-primary"/>{t('journal')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground mb-2">{t('journalCardDescription', {defaultValue: 'Record your daily mood and journal entries.'})}</p>
+              <p className="text-xs text-muted-foreground mb-1">19.06.2025</p>
               <p className="text-sm text-foreground italic bg-muted/30 p-3 rounded-md mb-4">
                 "{t('mockJournalEntrySnippet')}"
               </p>
