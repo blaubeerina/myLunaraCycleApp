@@ -1,23 +1,33 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, parseISO } from 'date-fns';
-import { de } from 'date-fns/locale'; // For German locale
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, parseISO, differenceInDays } from 'date-fns';
+import { de } from 'date-fns/locale';
 import { useAppContext } from '@/contexts/AppContext';
 import { useAuth } from '@/components/auth/AuthContext';
-import type { DailyEntryData, MoonPhaseName } from '@/lib/types';
+import type { DailyEntryData, MoonPhaseName, CalendarCellData, CyclePhaseName, BleedingIntensity } from '@/lib/types';
 import { getMoonPhase, getMoonEmoji } from '@/lib/moon-utils';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Loader2, Droplet } from 'lucide-react'; // Added Droplet
+import { ChevronLeft, ChevronRight, Loader2, Droplet, Sun, Leaf, Flower2, AlertTriangle } from 'lucide-react';
 import { DayEntryDialog } from '@/components/calendar/DayEntryDialog';
 import { cn } from '@/lib/utils';
+import { 
+  getMostRecentPeriodStart,
+  calculateCycleDayNumber,
+  determineCyclePhase,
+  DEFAULT_CYCLE_LENGTH,
+  DEFAULT_PERIOD_LENGTH,
+  getPredictedOvulationDate,
+  getPredictedFertileWindow,
+  getPredictedNextPeriodDates,
+  getBleedingBackgroundClass,
+  calculateFullCycleInfoForDate,
+} from '@/lib/cycle-utils';
 
-// Mock function to simulate fetching NASA moon data - replace with actual API call later
-// For now, this will use our local moon-utils.ts
+
 async function fetchMoonDataForMonth(date: Date): Promise<Record<string, MoonPhaseName>> {
   const monthStart = startOfMonth(date);
-  // Ensure grid covers all displayed days, starting from Monday
   const gridStart = startOfWeek(monthStart, { weekStartsOn: 1 }); 
   const gridEnd = endOfWeek(endOfMonth(date), { weekStartsOn: 1 });
   
@@ -25,7 +35,7 @@ async function fetchMoonDataForMonth(date: Date): Promise<Record<string, MoonPha
   let currentDay = gridStart;
   while (currentDay <= gridEnd) {
     const dateStr = format(currentDay, 'yyyy-MM-dd');
-    data[dateStr] = getMoonPhase(currentDay); // Using local calculation
+    data[dateStr] = getMoonPhase(currentDay);
     currentDay = addDays(currentDay, 1);
   }
   return data;
@@ -44,10 +54,9 @@ export default function CalendarPage() {
 
   useEffect(() => {
     if (userId) {
-        loadAppData(userId); // Load data when user ID is available
+        loadAppData(userId);
     }
   }, [userId, loadAppData]);
-
 
   const loadMoonDataForCurrentMonth = useCallback(async () => {
     setIsLoadingMoonData(true);
@@ -110,7 +119,7 @@ export default function CalendarPage() {
 
   const renderDaysOfWeek = () => {
     const daysHeader = [];
-    const weekStartsOn = 1; // Monday
+    const weekStartsOn = 1; 
     const firstDayOfWeek = startOfWeek(new Date(), { locale: userPreferences.language === 'de' ? de : undefined, weekStartsOn });
 
     for (let i = 0; i < 7; i++) {
@@ -123,120 +132,243 @@ export default function CalendarPage() {
     return <div className="grid grid-cols-7 sticky top-[calc(3.5rem+1px)] md:top-[calc(4rem+1px)] z-10 bg-card">{daysHeader}</div>;
   };
 
-  const renderCells = () => {
+  const calendarGridData = useMemo(() => {
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(monthStart);
     const weekStartsOn = 1; // Monday
     const startDate = startOfWeek(monthStart, { locale: userPreferences.language === 'de' ? de : undefined, weekStartsOn });
     const endDate = endOfWeek(monthEnd, { locale: userPreferences.language === 'de' ? de : undefined, weekStartsOn });
+    
+    const grid: CalendarCellData[] = [];
+    let dayPointer = startDate;
 
+    const lastPeriodStartEntry = userPreferences.appMode === 'cycle' ? getMostRecentPeriodStart(appData.dailyEntries) : null;
+    const lastPeriodStartDate = lastPeriodStartEntry ? parseISO(lastPeriodStartEntry.date) : null;
+
+    // Predict for the next 3 cycles
+    const futurePeriods = lastPeriodStartDate ? getPredictedNextPeriodDates(lastPeriodStartDate, 3) : [];
+    const futureOvulations: { date: Date; fertileWindow: { start: Date; end: Date } }[] = [];
+    if (lastPeriodStartDate) {
+        for (let i = 0; i < 3; i++) { // Predict for current and next 2 cycles
+            const cycleStartDate = addDays(lastPeriodStartDate, DEFAULT_CYCLE_LENGTH * i);
+            const ovDate = getPredictedOvulationDate(cycleStartDate);
+            futureOvulations.push({ date: ovDate, fertileWindow: getPredictedFertileWindow(ovDate) });
+        }
+    }
+
+    while(dayPointer <= endDate) {
+      const dateStr = format(dayPointer, 'yyyy-MM-dd');
+      const dailyEntry = appData?.dailyEntries?.[dateStr];
+      const cycleInfo = userPreferences.appMode === 'cycle' ? calculateFullCycleInfoForDate(dayPointer, appData.dailyEntries) : null;
+
+      let cellData: CalendarCellData = {
+        date: dateStr,
+        dayOfMonth: dayPointer.getDate(),
+        isCurrentMonth: isSameMonth(dayPointer, monthStart),
+        isToday: isSameDay(dayPointer, new Date()),
+        mood: dailyEntry?.mood,
+        notes: dailyEntry?.notes,
+        bleeding: dailyEntry?.bleeding,
+        isPeriodStart: dailyEntry?.isPeriodStart,
+        isPeriodEnd: dailyEntry?.isPeriodEnd,
+        moonPhaseName: monthMoonData[dateStr],
+        currentCyclePhase: cycleInfo?.phase || 'Unknown',
+        cycleDayNumber: cycleInfo?.cycleDay,
+        isFertilePredicted: false,
+        isOvulationPredicted: false,
+        isNextPeriodPredicted: false,
+      };
+
+      if (userPreferences.appMode === 'cycle') {
+        // Check against logged data first
+        if (dailyEntry?.isPeriodStart || (dailyEntry?.bleeding && dailyEntry.bleeding.intensity !== 'none')) {
+            cellData.currentCyclePhase = 'Menstruation';
+        } else if (cycleInfo) {
+            cellData.currentCyclePhase = cycleInfo.phase;
+            // If the day is beyond the last logged period and within predicted windows:
+            if (cycleInfo.estimatedFertileWindow && dayPointer >= cycleInfo.estimatedFertileWindow.start && dayPointer <= cycleInfo.estimatedFertileWindow.end) {
+                cellData.isFertilePredicted = true;
+                if (cycleInfo.estimatedOvulationDate && isSameDay(dayPointer, cycleInfo.estimatedOvulationDate)) {
+                    cellData.isOvulationPredicted = true;
+                    cellData.currentCyclePhase = 'Ovulation'; // Override if ovulation is predicted
+                } else if(cellData.currentCyclePhase !== 'Menstruation') {
+                     // Don't override if it's a logged menstruation day that happens to fall in predicted fertile window
+                    cellData.currentCyclePhase = 'Follicular'; // Default to Follicular if fertile but not ovulation
+                }
+            }
+        }
+
+        // Check against future predictions
+        futureOvulations.forEach(ov => {
+            if (isSameDay(dayPointer, ov.date)) {
+                cellData.isOvulationPredicted = true;
+                if (cellData.currentCyclePhase !== 'Menstruation') cellData.currentCyclePhase = 'Ovulation';
+            }
+            if (dayPointer >= ov.fertileWindow.start && dayPointer <= ov.fertileWindow.end) {
+                cellData.isFertilePredicted = true;
+                 if (cellData.currentCyclePhase !== 'Menstruation' && cellData.currentCyclePhase !== 'Ovulation') cellData.currentCyclePhase = 'Follicular';
+            }
+        });
+        futurePeriods.forEach(fp => {
+            if (isSameDay(dayPointer, fp)) {
+                cellData.isNextPeriodPredicted = true;
+                 if (cellData.currentCyclePhase !== 'Menstruation') cellData.currentCyclePhase = 'Menstruation'; // Predicted menstruation
+            }
+        });
+      }
+      grid.push(cellData);
+      dayPointer = addDays(dayPointer, 1);
+    }
+    return grid;
+  }, [currentMonth, appData.dailyEntries, monthMoonData, userPreferences.appMode, userPreferences.language]);
+
+
+  const renderCells = () => {
     const rows = [];
     let days = [];
-    let day = startDate;
+    
+    for (let i = 0; i < calendarGridData.length; i++) {
+      const cellInfo = calendarGridData[i];
+      const day = parseISO(cellInfo.date); // for date operations
 
-    while (day <= endDate) {
-      for (let i = 0; i < 7; i++) {
-        const dateStr = format(day, 'yyyy-MM-dd');
-        const dailyEntry = appData?.dailyEntries?.[dateStr];
-        const moonPhaseName = monthMoonData[dateStr];
-        const currentMoonEmoji = moonPhaseName ? getMoonEmoji(moonPhaseName) : '';
-        const isCurrentMonthDay = isSameMonth(day, monthStart);
-        const isToday = isSameDay(day, new Date());
+      let cellClasses = `min-h-[7rem] md:min-h-[8rem] p-1.5 flex flex-col 
+                         cursor-pointer transition-colors duration-150 ease-in-out
+                         border-r border-b border-border/40 relative group text-xs`;
+      
+      if ((i + 1) % 7 === 0) cellClasses = cn(cellClasses, 'border-r-0'); 
 
-        const hasBleeding = !!dailyEntry?.bleeding;
-        const isPeriodStartDay = !!dailyEntry?.isPeriodStart;
-        const isPeriodEndDay = !!dailyEntry?.isPeriodEnd;
+      let dayNumberStyle = "text-sm font-medium self-start text-foreground/90";
+      let moonIconStyle = "text-lg text-[hsl(var(--color-moon))] opacity-70 group-hover:opacity-90";
+      
+      cellClasses = cn(cellClasses, 'hover:bg-muted/20');
 
-        let cellClasses = `min-h-[6rem] md:min-h-[7rem] p-1.5 flex flex-col 
-                           cursor-pointer transition-colors duration-150 ease-in-out
-                           border-r border-b border-border/40 relative group`;
-        
-        if (i === 6) cellClasses = cn(cellClasses, 'border-r-0'); 
+      if (cellInfo.isToday) {
+        cellClasses = cn(cellClasses, 'border-2 border-primary shadow-lg'); 
+        dayNumberStyle = cn(dayNumberStyle, 'text-primary font-bold');
+      }
+      
+      if (!cellInfo.isCurrentMonth) {
+        cellClasses = cn(cellClasses, 'bg-muted/10'); 
+        dayNumberStyle = cn(dayNumberStyle, 'text-muted-foreground opacity-60'); 
+        moonIconStyle = cn(moonIconStyle, 'opacity-40');
+      } else {
+        cellClasses = cn(cellClasses, 'bg-card');
+      }
 
-        let dayNumberStyle = "text-sm font-medium self-start text-foreground/90";
-        let moonIconStyle = "text-lg text-[hsl(var(--color-moon))] opacity-70 group-hover:opacity-90";
-        
-        cellClasses = cn(cellClasses, 'hover:bg-muted/20');
+      let phaseIcon = null;
+      let phaseTooltip = "";
 
-        if (isToday) {
-          cellClasses = cn(cellClasses, 'border-2 border-primary'); 
-          dayNumberStyle = cn(dayNumberStyle, 'text-primary font-bold');
-        }
+      if (userPreferences.appMode === 'cycle' && cellInfo.isCurrentMonth) {
+        const isLoggedBleeding = cellInfo.bleeding && cellInfo.bleeding.intensity !== 'none';
         
-        if (!isCurrentMonthDay) {
-          cellClasses = cn(cellClasses, 'bg-muted/10'); 
-          dayNumberStyle = cn(dayNumberStyle, 'text-muted-foreground opacity-60'); 
-          moonIconStyle = cn(moonIconStyle, 'opacity-40');
-        } else {
-          cellClasses = cn(cellClasses, 'bg-card'); 
+        if (isLoggedBleeding) {
+            cellClasses = cn(cellClasses, getBleedingBackgroundClass(cellInfo.bleeding?.intensity));
+            phaseIcon = <Droplet className="h-4 w-4 text-destructive-foreground/80" />;
+            phaseTooltip = t('calendarPhaseMenstruation');
+        } else { // Not actively bleeding, check phases and predictions
+            switch (cellInfo.currentCyclePhase) {
+                case 'Follicular':
+                    cellClasses = cn(cellClasses, 'bg-green-500/10 dark:bg-green-800/20');
+                    phaseIcon = <Leaf className="h-3 w-3 text-green-600 dark:text-green-400" />;
+                    phaseTooltip = t('calendarPhaseFollicular');
+                    break;
+                case 'Ovulation':
+                    cellClasses = cn(cellClasses, 'bg-accent/30 dark:bg-accent/20'); // Using accent from theme
+                    phaseIcon = <Sun className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />;
+                    phaseTooltip = t('calendarPhaseOvulation');
+                    break;
+                case 'Luteal':
+                    cellClasses = cn(cellClasses, 'bg-purple-500/10 dark:bg-purple-800/20');
+                    // phaseIcon = <Moon className="h-3 w-3 text-purple-600 dark:text-purple-400" />; // Using Moon for moon phase
+                    phaseTooltip = t('calendarPhaseLuteal');
+                    break;
+            }
         }
-        
-        // Apply bleeding background first
-        if (hasBleeding && isCurrentMonthDay) {
-            cellClasses = cn(cellClasses, 'bg-destructive/30');
+
+        if (cellInfo.isFertilePredicted && !isLoggedBleeding && cellInfo.currentCyclePhase !== 'Ovulation') {
+             cellClasses = cn(cellClasses, 'bg-accent/20'); // Consistent with ovulation color but lighter
+             if (!phaseIcon) phaseIcon = <Flower2 className="h-3 w-3 text-yellow-700 dark:text-yellow-500 opacity-70" />;
+             phaseTooltip = phaseTooltip ? `${phaseTooltip} - ${t('calendarPhaseFertile')}` : t('calendarPhaseFertile');
         }
-        
-        // Apply period start/end borders (will overlay/combine with bleeding bg)
-        if (isPeriodStartDay && isCurrentMonthDay) {
-          cellClasses = cn(cellClasses, 'border-l-4 border-l-primary'); 
+        if (cellInfo.isOvulationPredicted && cellInfo.currentCyclePhase === 'Ovulation') { // Ensure it's marked as ovulation
+             if(!isLoggedBleeding) cellClasses = cn(cellClasses, 'bg-accent/40'); // Stronger for predicted ovulation
+             phaseIcon = <Sun className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />; // Sun icon for ovulation
+             phaseTooltip = `${t('calendarPhaseOvulation')} ${t('calendarPredicted')}`;
         }
-        if (isPeriodEndDay && isCurrentMonthDay) {
-          cellClasses = cn(cellClasses, 'border-r-4 border-r-accent');
+         if (cellInfo.isNextPeriodPredicted && !isLoggedBleeding) {
+            cellClasses = cn(cellClasses, 'border-dashed border-destructive/70');
+            if (!phaseIcon) phaseIcon = <AlertTriangle className="h-3 w-3 text-destructive opacity-70" />;
+            phaseTooltip = phaseTooltip ? `${phaseTooltip} - ${t('cyclePhaseMenstruation')} ${t('calendarPredicted')}` : `${t('cyclePhaseMenstruation')} ${t('calendarPredicted')}`;
         }
-        
-        days.push(
-          <div
-            key={day.toISOString()}
-            className={cellClasses}
-            onClick={() => handleDayClick(day)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleDayClick(day)}
-            aria-label={`Date ${format(day, 'PPP', { locale: userPreferences.language === 'de' ? de : undefined })}${hasBleeding ? `, ${t('bleedingLogged')}` : ''}${currentMoonEmoji ? `, ${t('moonPhaseLabel')}: ${moonPhaseName}` : ''}${isPeriodStartDay ? ', Period Start' : ''}${isPeriodEndDay ? ', Period End' : ''}`}
-          >
-            <div className="flex justify-between items-start w-full">
-                <span className={dayNumberStyle}>
-                  {format(day, 'd')}
+      }
+      
+      // Period start/end markers
+      if (cellInfo.isPeriodStart && cellInfo.isCurrentMonth) {
+        cellClasses = cn(cellClasses, 'border-l-4 border-l-primary'); 
+      }
+      if (cellInfo.isPeriodEnd && cellInfo.isCurrentMonth) {
+        cellClasses = cn(cellClasses, 'border-r-4 border-r-accent');
+      }
+      
+      days.push(
+        <div
+          key={cellInfo.date}
+          className={cellClasses}
+          onClick={() => handleDayClick(day)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleDayClick(day)}
+          aria-label={`Date ${format(day, 'PPP', { locale: userPreferences.language === 'de' ? de : undefined })}${phaseTooltip ? ', ' + phaseTooltip : ''}${cellInfo.moonPhaseName ? `, ${t('moonPhaseLabel')}: ${cellInfo.moonPhaseName}` : ''}`}
+          title={phaseTooltip || format(day, 'PPP', { locale: userPreferences.language === 'de' ? de : undefined })}
+        >
+          <div className="flex justify-between items-start w-full">
+              <span className={dayNumberStyle}>
+                {cellInfo.dayOfMonth}
+              </span>
+              {cellInfo.isCurrentMonth && cellInfo.moonPhaseName && (
+                <span className={moonIconStyle} title={t(`moonPhase${cellInfo.moonPhaseName.replace(/\s/g, '')}` as any, {defaultValue: cellInfo.moonPhaseName})}>
+                  {isLoadingMoonData ? <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" /> : getMoonEmoji(cellInfo.moonPhaseName)}
                 </span>
-                {isCurrentMonthDay && currentMoonEmoji && (
-                  <span className={moonIconStyle} title={moonPhaseName}>
-                    {isLoadingMoonData ? <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" /> : currentMoonEmoji}
-                  </span>
-                )}
-            </div>
-            
-            {isCurrentMonthDay && hasBleeding && (
-                <div className="absolute bottom-1.5 right-1.5 flex items-center" title={t('bleedingLogged')}>
-                    <Droplet className="h-4 w-4 text-destructive" />
-                </div>
+              )}
+          </div>
+          
+          <div className="mt-auto flex flex-col items-start w-full space-y-0.5">
+            {phaseIcon && <div className="self-start">{phaseIcon}</div>}
+            {cellInfo.isCurrentMonth && cellInfo.mood && (
+               <div className="text-lg" title={cellInfo.mood}>
+                  {cellInfo.mood}
+               </div>
             )}
-            {isCurrentMonthDay && dailyEntry?.mood && (
-                 <div className="absolute bottom-1.5 left-1.5 text-sm" title={dailyEntry.mood}>
-                    {dailyEntry.mood}
-                 </div>
-            )}
-
-            {isCurrentMonthDay && dailyEntry?.notes && (
-              <p className="text-xs text-muted-foreground mt-auto truncate w-full">
-                {dailyEntry.notes.substring(0,15)}{dailyEntry.notes.length > 15 ? '...' : ''}
+            {cellInfo.isCurrentMonth && cellInfo.notes && (
+              <p className="text-xs text-muted-foreground truncate w-full">
+                {cellInfo.notes.substring(0,15)}{cellInfo.notes.length > 15 ? '...' : ''}
               </p>
             )}
+            {userPreferences.appMode === 'cycle' && cellInfo.isCurrentMonth && cellInfo.cycleDayNumber && cellInfo.cycleDayNumber > 0 && (
+                 <span className="text-[10px] text-muted-foreground/80">D{cellInfo.cycleDayNumber}</span>
+            )}
           </div>
-        );
-        day = addDays(day, 1);
-      }
-      rows.push(
-        <div className="grid grid-cols-7" key={`week-${format(day, 'yyyy-MM-dd')}`}>
-          {days}
         </div>
       );
-      days = [];
+      if ((i + 1) % 7 === 0) {
+        rows.push(
+          <div className="grid grid-cols-7" key={`week-${cellInfo.date}`}>
+            {days}
+          </div>
+        );
+        days = [];
+      }
     }
     return <div className="border-l border-border/40 bg-background flex-grow">{rows}</div>;
   };
 
   return (
     <div className="w-full h-full flex flex-col bg-card shadow-sm rounded-lg overflow-hidden">
+      {userPreferences.appMode === 'cycle' && !getMostRecentPeriodStart(appData.dailyEntries) && (
+          <div className="p-3 text-sm bg-accent/20 text-accent-foreground border-b border-border text-center">
+              {t('calendarPhaseUnknown')}: Please log your period start date in the calendar to enable cycle phase tracking and predictions.
+          </div>
+      )}
       {renderHeader()}
       {renderDaysOfWeek()}
       <div className="flex-grow overflow-y-auto">
@@ -259,4 +391,3 @@ export default function CalendarPage() {
     </div>
   );
 }
-
