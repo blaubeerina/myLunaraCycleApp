@@ -117,14 +117,6 @@ export default function DashboardPage() {
               <p className="text-sm text-foreground italic bg-muted/30 p-3 rounded-md mb-4">
                 "{t('mockJournalEntrySnippet')}"
               </p>
-               <Image 
-                src="https://placehold.co/600x400.png" 
-                alt="Journal placeholder" 
-                width={600} 
-                height={400} 
-                className="rounded-md aspect-video object-cover"
-                data-ai-hint="journal diary"
-              />
               <Link href="/journal" passHref className="mt-4 block">
                 <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary/10">{t('openJournal')}</Button>
               </Link>
