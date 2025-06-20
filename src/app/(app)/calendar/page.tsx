@@ -110,7 +110,7 @@ export default function CalendarPage() {
     while (day <= endDate) {
       for (let i = 0; i < 7; i++) {
         const dateStr = format(day, 'yyyy-MM-dd');
-        const dailyEntry = appData.dailyEntries[dateStr]; // Get entry from AppContext
+        const dailyEntry = appData?.dailyEntries?.[dateStr]; // Get entry from AppContext safely
         const moonPhaseName = monthMoonData[dateStr];
         const currentMoonEmoji = moonPhaseName ? getMoonEmoji(moonPhaseName) : '';
         const isCurrentMonthDay = isSameMonth(day, monthStart);
