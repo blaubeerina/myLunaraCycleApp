@@ -12,7 +12,7 @@ import { generateText } from '@/ai/server-ai';
 import { z } from 'zod';
 
 // Define the input schema for the affirmation generation
-export const GenerateAffirmationInputSchema = z.object({
+const GenerateAffirmationInputSchema = z.object({
   mood: z.string().optional().describe('The user\'s current mood (e.g., emoji or text like "happy", "stressed").'),
   journalEntry: z.string().optional().describe('A snippet of the user\'s recent journal entry for context.'),
   currentCyclePhase: z.string().optional().describe('The user\'s current menstrual cycle phase (e.g., "Follicular", "Luteal").'),
@@ -22,7 +22,7 @@ export const GenerateAffirmationInputSchema = z.object({
 export type GenerateAffirmationInput = z.infer<typeof GenerateAffirmationInputSchema>;
 
 // Define the output schema for the affirmation
-export const GenerateAffirmationOutputSchema = z.object({
+const GenerateAffirmationOutputSchema = z.object({
   affirmation: z.string().describe('The generated daily affirmation text.'),
 });
 export type GenerateAffirmationOutput = z.infer<typeof GenerateAffirmationOutputSchema>;
@@ -92,3 +92,4 @@ export async function generateAffirmation(input: GenerateAffirmationInput): Prom
   }
   */
 }
+
