@@ -62,6 +62,8 @@ export function DayEntryDialog({
     initialData?.bleeding?.intensity && initialData.bleeding.intensity !== 'none' ? initialData.bleeding.intensity : 'light'
   );
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>(initialData?.bleeding?.symptoms || []);
+  const [isPeriodStart, setIsPeriodStart] = useState<boolean>(initialData?.isPeriodStart || false);
+  const [isPeriodEnd, setIsPeriodEnd] = useState<boolean>(initialData?.isPeriodEnd || false);
 
   useEffect(() => {
     if (isOpen) {
@@ -72,6 +74,8 @@ export function DayEntryDialog({
       setLogBleeding(hasInitialBleeding);
       setIntensity(initialBleedingData?.intensity && initialBleedingData.intensity !== 'none' ? initialBleedingData.intensity : 'light');
       setSelectedSymptoms(initialBleedingData?.symptoms || []);
+      setIsPeriodStart(initialData?.isPeriodStart || false);
+      setIsPeriodEnd(initialData?.isPeriodEnd || false);
     }
   }, [isOpen, initialData]);
 
@@ -94,6 +98,8 @@ export function DayEntryDialog({
           }
         : undefined, // Set bleeding to undefined if not logged or not in cycle mode
       moonPhaseName: currentMoonPhase, // Store the moon phase name passed in
+      isPeriodStart: appMode === 'cycle' ? isPeriodStart : undefined,
+      isPeriodEnd: appMode === 'cycle' ? isPeriodEnd : undefined,
       // affirmationGenerated will be handled elsewhere if needed for this entry
     };
     onSaveEntry(entryData);
@@ -126,7 +132,34 @@ export function DayEntryDialog({
 
           {appMode === 'cycle' && (
             <>
+              <div className="flex items-center space-x-2 pt-3 border-t border-border mt-3">
+                <Switch
+                  id="isPeriodStart"
+                  checked={isPeriodStart}
+                  onCheckedChange={(checked) => {
+                    setIsPeriodStart(checked);
+                    if (checked) {
+                      setLogBleeding(true);
+                      if (!intensity || intensity === 'none') {
+                         setIntensity('light');
+                      }
+                    }
+                  }}
+                  aria-label={t('dayEntryMarkPeriodStart')}
+                />
+                <Label htmlFor="isPeriodStart" className="font-medium">{t('dayEntryMarkPeriodStart')}</Label>
+              </div>
               <div className="flex items-center space-x-2 pt-2">
+                <Switch
+                  id="isPeriodEnd"
+                  checked={isPeriodEnd}
+                  onCheckedChange={setIsPeriodEnd}
+                  aria-label={t('dayEntryMarkPeriodEnd')}
+                />
+                <Label htmlFor="isPeriodEnd" className="font-medium">{t('dayEntryMarkPeriodEnd')}</Label>
+              </div>
+
+              <div className="flex items-center space-x-2 pt-3 border-t border-border mt-3">
                 <Switch
                   id="log-bleeding"
                   checked={logBleeding}
@@ -208,3 +241,4 @@ export function DayEntryDialog({
     </Dialog>
   );
 }
+

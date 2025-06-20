@@ -143,7 +143,9 @@ export default function CalendarPage() {
         const isCurrentMonthDay = isSameMonth(day, monthStart);
         const isToday = isSameDay(day, new Date());
 
-        const hasBleeding = !!dailyEntry?.bleeding; // Simplified: if bleeding object exists, it's logged
+        const hasBleeding = !!dailyEntry?.bleeding;
+        const isPeriodStartDay = !!dailyEntry?.isPeriodStart;
+        const isPeriodEndDay = !!dailyEntry?.isPeriodEnd;
 
         let cellClasses = `min-h-[6rem] md:min-h-[7rem] p-1.5 flex flex-col 
                            cursor-pointer transition-colors duration-150 ease-in-out
@@ -169,8 +171,17 @@ export default function CalendarPage() {
           cellClasses = cn(cellClasses, 'bg-card'); 
         }
         
+        // Apply bleeding background first
         if (hasBleeding && isCurrentMonthDay) {
-            cellClasses = cn(cellClasses, 'bg-destructive/30'); // Increased opacity
+            cellClasses = cn(cellClasses, 'bg-destructive/30');
+        }
+        
+        // Apply period start/end borders (will overlay/combine with bleeding bg)
+        if (isPeriodStartDay && isCurrentMonthDay) {
+          cellClasses = cn(cellClasses, 'border-l-4 border-l-primary'); 
+        }
+        if (isPeriodEndDay && isCurrentMonthDay) {
+          cellClasses = cn(cellClasses, 'border-r-4 border-r-accent');
         }
         
         days.push(
@@ -181,7 +192,7 @@ export default function CalendarPage() {
             role="button"
             tabIndex={0}
             onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleDayClick(day)}
-            aria-label={`Date ${format(day, 'PPP', { locale: userPreferences.language === 'de' ? de : undefined })}${hasBleeding ? `, ${t('bleedingLogged')}` : ''}${currentMoonEmoji ? `, ${t('moonPhaseLabel')}: ${moonPhaseName}` : ''}`}
+            aria-label={`Date ${format(day, 'PPP', { locale: userPreferences.language === 'de' ? de : undefined })}${hasBleeding ? `, ${t('bleedingLogged')}` : ''}${currentMoonEmoji ? `, ${t('moonPhaseLabel')}: ${moonPhaseName}` : ''}${isPeriodStartDay ? ', Period Start' : ''}${isPeriodEndDay ? ', Period End' : ''}`}
           >
             <div className="flex justify-between items-start w-full">
                 <span className={dayNumberStyle}>

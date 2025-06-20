@@ -122,6 +122,8 @@ export const translations: AllTranslations = {
     writeYourThoughts: 'Write your thoughts, feelings, or observations...',
     dayEntryClose: 'Close',
     dayEntrySave: 'Save Entry',
+    dayEntryMarkPeriodStart: 'Mark as Period Start',
+    dayEntryMarkPeriodEnd: 'Mark as Period End',
     // Moon Phases (for tooltips/display)
     moonPhaseNewMoon: "New Moon",
     moonPhaseWaxingCrescent: "Waxing Crescent",
@@ -272,6 +274,8 @@ export const translations: AllTranslations = {
     writeYourThoughts: 'Schreibe deine Gedanken, Gefühle oder Beobachtungen...',
     dayEntryClose: 'Schließen',
     dayEntrySave: 'Eintrag speichern',
+    dayEntryMarkPeriodStart: 'Als Periodenbeginn markieren',
+    dayEntryMarkPeriodEnd: 'Als Periodenende markieren',
     // Moon Phases
     moonPhaseNewMoon: "Neumond",
     moonPhaseWaxingCrescent: "Zunehmende Mondsichel",
@@ -323,3 +327,4 @@ export function getTranslator(language: Language): (key: string, params?: Record
     return translation;
   };
 }
+

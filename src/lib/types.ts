@@ -33,8 +33,9 @@ export interface DailyEntryData {
   moonPhaseName?: MoonPhaseName; // Store the calculated/fetched moon phase name
 
   affirmationGenerated?: string; // Store the AI affirmation for this day
-  // Removed: isPeriodStart, isPeriodEnd, old bleedingStrength, old root symptoms, energyLevel
-  // Pregnancy specific fields can be added later if appMode is 'pregnancy'
+  
+  isPeriodStart?: boolean; // Flag for marking the start of a period
+  isPeriodEnd?: boolean;   // Flag for marking the end of a period
 }
 
 
@@ -184,3 +185,4 @@ export interface Theme {
   };
   previewColors: string[];
 }
+
