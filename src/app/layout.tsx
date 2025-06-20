@@ -5,7 +5,6 @@ import './globals.css';
 import { AppProvider } from '@/contexts/AppContext'; // Updated to AppProvider
 import { AuthContextProvider } from '@/components/auth/AuthContext'; // Import AuthContextProvider from components
 import { Toaster } from "@/components/ui/toaster"; 
-import PaymentNotice from '@/components/core/PaymentNotice'; // Import the new PaymentNotice component
 
 const inter = Inter({
   variable: '--font-inter', // CSS variable for the font
@@ -30,7 +29,6 @@ export default function RootLayout({
             {children}
           </AuthContextProvider>
           <Toaster />
-          <PaymentNotice /> {/* Add the PaymentNotice component here */}
         </AppProvider>
       </body>
     </html>

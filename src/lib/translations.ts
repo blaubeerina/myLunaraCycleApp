@@ -178,20 +178,6 @@ export const translations: AllTranslations = {
     calendarPhaseFertile: "Fertile Window",
     calendarPhaseUnknown: "Unknown",
     calendarPredicted: "(Predicted)",
-    // Payment Notice
-    paymentNoticeTitle: "Unlock Full Access", // Old key
-    paymentNoticePriceInfo: "One-time payment of {price} for:", // Old key
-    paymentNoticeFeature1: "Unlimited entries",
-    paymentNoticeFeature2: "Moon phase analysis", // Old key
-    paymentNoticeFeature3: "Premium support",
-    paymentNoticeButtonDemo: "Buy Now (Demo)", // Old key
-    paymentDemoAlert: "This is a demo – payment not implemented.", // Old key
-
-    paymentNoticeTitleUpdated: "Unlock Full Access",
-    paymentNoticePriceInfoUpdated: "One-time payment of {price} for:",
-    paymentNoticeFeature2Updated: "Personal Moon Analysis",
-    paymentNoticeButtonUpdated: "Unlock Now",
-    paymentNoticeAlertUpdated: "In the full version, the payment process would start now.",
   },
   de: {
     appName: 'myLunaraCycle',
@@ -361,20 +347,6 @@ export const translations: AllTranslations = {
     calendarPhaseFertile: "Fruchtbares Fenster",
     calendarPhaseUnknown: "Unbekannt",
     calendarPredicted: "(Vorhergesagt)",
-    // Payment Notice
-    paymentNoticeTitle: "Vollzugang freischalten", // Old key
-    paymentNoticePriceInfo: "Einmalige Zahlung von {price} für:", // Old key
-    paymentNoticeFeature1: "Unbegrenzte Einträge",
-    paymentNoticeFeature2: "Mondphasen-Analysen", // Old key
-    paymentNoticeFeature3: "Premium-Support",
-    paymentNoticeButtonDemo: "Jetzt kaufen (Demo)", // Old key
-    paymentDemoAlert: "Dies ist eine Demo – Zahlung nicht implementiert.", // Old key
-    
-    paymentNoticeTitleUpdated: "Vollzugang freischalten",
-    paymentNoticePriceInfoUpdated: "Einmalig {price} für:",
-    paymentNoticeFeature2Updated: "Persönliche Mondanalysen",
-    paymentNoticeButtonUpdated: "Jetzt freischalten",
-    paymentNoticeAlertUpdated: "In der Vollversion würde jetzt der Bezahlvorgang starten.",
   },
 };
 
