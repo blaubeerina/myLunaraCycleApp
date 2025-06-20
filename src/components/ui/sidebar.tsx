@@ -551,7 +551,7 @@ const SidebarMenuButtonImpl = React.forwardRef<
       size = "default",
       tooltip,
       className,
-      children, // Explicitly include children here
+      children, 
       ...props
     },
     ref
@@ -572,30 +572,30 @@ const SidebarMenuButtonImpl = React.forwardRef<
       </Comp>
     )
 
-    if (!tooltip) {
-      return buttonContent
-    }
-
-    let tooltipProps: React.ComponentProps<typeof TooltipContent>
-    if (typeof tooltip === "string") {
-      tooltipProps = {
-        children: tooltip,
-        side: "right",
-        align: "center",
+    // Conditionally render Tooltip:
+    // Only if a tooltip is provided, sidebar is collapsed, and not on mobile
+    if (tooltip && state === "collapsed" && !isMobile) {
+      let tooltipContentProps: React.ComponentProps<typeof TooltipContent>
+      if (typeof tooltip === "string") {
+        tooltipContentProps = {
+          children: tooltip,
+          side: "right",
+          align: "center",
+        }
+      } else {
+        tooltipContentProps = tooltip
       }
-    } else {
-      tooltipProps = tooltip
+
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>{buttonContent}</TooltipTrigger>
+          <TooltipContent {...tooltipContentProps} />
+        </Tooltip>
+      )
     }
 
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>{buttonContent}</TooltipTrigger>
-        <TooltipContent
-          hidden={state !== "collapsed" || isMobile}
-          {...tooltipProps}
-        />
-      </Tooltip>
-    )
+    // Otherwise, just render the button content
+    return buttonContent
   }
 )
 SidebarMenuButtonImpl.displayName = "SidebarMenuButtonImpl"
