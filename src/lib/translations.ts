@@ -178,6 +178,14 @@ export const translations: AllTranslations = {
     calendarPhaseFertile: "Fertile Window",
     calendarPhaseUnknown: "Unknown",
     calendarPredicted: "(Predicted)",
+    // Payment Notice
+    paymentNoticeTitle: "Unlock Full Access",
+    paymentNoticePriceInfo: "One-time payment of {price} for:",
+    paymentNoticeFeature1: "Unlimited entries",
+    paymentNoticeFeature2: "Moon phase analysis",
+    paymentNoticeFeature3: "Premium support",
+    paymentNoticeButtonDemo: "Buy Now (Demo)",
+    paymentDemoAlert: "This is a demo – payment not implemented.",
   },
   de: {
     appName: 'myLunaraCycle',
@@ -347,6 +355,14 @@ export const translations: AllTranslations = {
     calendarPhaseFertile: "Fruchtbares Fenster",
     calendarPhaseUnknown: "Unbekannt",
     calendarPredicted: "(Vorhergesagt)",
+    // Payment Notice
+    paymentNoticeTitle: "Vollzugang freischalten",
+    paymentNoticePriceInfo: "Einmalige Zahlung von {price} für:",
+    paymentNoticeFeature1: "Unbegrenzte Einträge",
+    paymentNoticeFeature2: "Mondphasen-Analysen",
+    paymentNoticeFeature3: "Premium-Support",
+    paymentNoticeButtonDemo: "Jetzt kaufen (Demo)",
+    paymentDemoAlert: "Dies ist eine Demo – Zahlung nicht implementiert.",
   },
 };
 
