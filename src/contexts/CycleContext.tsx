@@ -2,148 +2,179 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import type { LocalStorageData, PeriodLogEntry, MoonPhaseName } from '@/lib/types'; 
-import { calculatePeriodDuration } from '@/lib/cycle-utils';
-import { getMoonPhase, getMoonEmoji } from '@/lib/moon-utils';
-import { format, parseISO, isValid } from 'date-fns';
+import type { Language, AppMode, UserPreferences, Theme, DailyEntryData, CycleInfo, Reminder } from '@/lib/types';
+import { translations, getTranslator } from '@/lib/translations';
+import { themes as appThemes, applyThemeToDocument, DEFAULT_THEME_ID } from '@/lib/themes';
 
-const LOCAL_STORAGE_KEY_CYCLE = 'minimalCycleTrackerData_v1';
-const LOCAL_STORAGE_KEY_LOGS = 'lunarRhythmsPeriodLogs_v1';
-
-interface CycleContextType {
-  lastPeriodDate: string | null;
-  lastPeriodEndDate: string | null;
-  lastPeriodDuration: number | null;
-  periodLogs: Record<string, PeriodLogEntry>;
-  setPeriodDates: (startDate: string | null, endDate?: string | null) => void;
-  isLoading: boolean;
-  clearPeriodData: () => void;
-  addPeriodLog: (log: PeriodLogEntry) => void;
-  getPeriodLog: (date: string) => PeriodLogEntry | undefined;
-  hasSufficientDataForDisplay: boolean;
+// Define specific data structures related to cycle and app data that AppContext will manage
+// This is a simplified version, expand as needed
+interface AppDataType {
+  dailyEntries: Record<string, DailyEntryData>; // Date string 'YYYY-MM-DD' as key
+  cycleInfo?: CycleInfo; // Current calculated cycle info
+  reminders: Reminder[];
 }
 
-const CycleContext = createContext<CycleContextType | undefined>(undefined);
+const INITIAL_APP_DATA: AppDataType = {
+  dailyEntries: {},
+  reminders: [],
+};
 
-export const CycleProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [lastPeriodDate, setLastPeriodDateState] = useState<string | null>(null);
-  const [lastPeriodEndDate, setLastPeriodEndDateState] = useState<string | null>(null);
-  const [lastPeriodDuration, setLastPeriodDurationState] = useState<number | null>(null);
-  const [periodLogs, setPeriodLogsState] = useState<Record<string, PeriodLogEntry>>({});
-  const [isLoading, setIsLoading] = useState(true);
+const APP_DATA_STORAGE_KEY_PREFIX = 'myLunaraCycle_appData_';
 
-  const hasSufficientDataForDisplay = !!lastPeriodDate; 
+
+interface AppContextType {
+  userPreferences: UserPreferences;
+  setUserPreferences: React.Dispatch<React.SetStateAction<UserPreferences>>;
+  t: (key: string, params?: Record<string, string | number>) => string;
+  activeTheme: string;
+  setActiveTheme: (themeId: string) => void;
+  availableThemes: Theme[];
+  
+  // App specific data and actions
+  appData: AppDataType;
+  loadAppData: (userId: string) => Promise<void>;
+  saveDailyEntry: (userId: string, entry: DailyEntryData) => Promise<void>;
+  getDailyEntry: (userId: string, date: string) => DailyEntryData | undefined;
+  // Add more actions like addReminder, updateReminder, calculateCycleInfo etc.
+}
+
+const AppContext = createContext<AppContextType | undefined>(undefined);
+
+const USER_PREFERENCES_STORAGE_KEY = 'myLunaraCycle_userPreferences_v2'; // Incremented version
+
+export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [userPreferences, setUserPreferences] = useState<UserPreferences>({
+    language: 'en',
+    appMode: 'cycle',
+    theme: DEFAULT_THEME_ID, 
+  });
+  const [activeTheme, setActiveThemeState] = useState<string>(DEFAULT_THEME_ID);
+  const [isPreferencesLoaded, setIsPreferencesLoaded] = useState(false);
+  const [appData, setAppData] = useState<AppDataType>(INITIAL_APP_DATA);
+  const [isAppDataLoaded, setIsAppDataLoaded] = useState(false);
+
+
+  // Effect for loading and saving user preferences
+  useEffect(() => {
+    const storedPrefs = localStorage.getItem(USER_PREFERENCES_STORAGE_KEY);
+    if (storedPrefs) {
+      try {
+        const parsedPrefs = JSON.parse(storedPrefs) as Partial<UserPreferences>;
+        setUserPreferences(prev => ({
+          ...prev,
+          ...parsedPrefs,
+          language: parsedPrefs.language || 'en',
+          appMode: parsedPrefs.appMode || 'cycle',
+          theme: parsedPrefs.theme || DEFAULT_THEME_ID,
+        }));
+        setActiveThemeState(parsedPrefs.theme || DEFAULT_THEME_ID);
+      } catch (e) { console.error("Failed to parse user preferences", e); }
+    }
+    setIsPreferencesLoaded(true);
+  }, []);
 
   useEffect(() => {
-    try {
-      const storedCycleData = localStorage.getItem(LOCAL_STORAGE_KEY_CYCLE);
-      if (storedCycleData) {
-        const parsedData: LocalStorageData = JSON.parse(storedCycleData);
-        if (parsedData.lastPeriodDate && /^\d{4}-\d{2}-\d{2}$/.test(parsedData.lastPeriodDate)) {
-          setLastPeriodDateState(parsedData.lastPeriodDate);
-        }
-        if (parsedData.lastPeriodEndDate && /^\d{4}-\d{2}-\d{2}$/.test(parsedData.lastPeriodEndDate)) {
-          setLastPeriodEndDateState(parsedData.lastPeriodEndDate);
-        }
-        if (parsedData.lastPeriodDate && parsedData.lastPeriodEndDate) {
-           setLastPeriodDurationState(calculatePeriodDuration(parsedData.lastPeriodDate, parsedData.lastPeriodEndDate));
-        } else {
-            setLastPeriodDurationState(null);
-        }
-      }
-
-      const storedLogsData = localStorage.getItem(LOCAL_STORAGE_KEY_LOGS);
-      if (storedLogsData) {
-        const parsedLogs: Record<string, PeriodLogEntry> = JSON.parse(storedLogsData);
-        setPeriodLogsState(parsedLogs || {});
-      }
-
-    } catch (error) {
-      console.error("Failed to load data from localStorage", error);
+    if (isPreferencesLoaded) {
+      localStorage.setItem(USER_PREFERENCES_STORAGE_KEY, JSON.stringify(userPreferences));
     }
-    setIsLoading(false);
+  }, [userPreferences, isPreferencesLoaded]);
+
+  useEffect(() => {
+    if (isPreferencesLoaded) { // Apply theme only after preferences (which include theme) are loaded
+      applyThemeToDocument(activeTheme);
+      // Update userPreferences if theme is changed externally, though setActiveTheme below handles internal changes
+       if (userPreferences.theme !== activeTheme) {
+         setUserPreferences(prev => ({...prev, theme: activeTheme}));
+       }
+    }
+  }, [activeTheme, isPreferencesLoaded, userPreferences.theme]);
+
+
+  const setActiveTheme = (themeId: string) => {
+    const themeExists = appThemes.some(theme => theme.id === themeId);
+    const newThemeId = themeExists ? themeId : DEFAULT_THEME_ID;
+    setActiveThemeState(newThemeId);
+    setUserPreferences(prev => ({...prev, theme: newThemeId})); // Ensure preference is also updated
+    if (!themeExists) {
+      console.warn(`Theme with id "${themeId}" not found. Falling back to default.`);
+    }
+  };
+  
+  const t = useCallback(
+    (key: string, params?: Record<string, string | number>) => {
+      return getTranslator(userPreferences.language)(key, params);
+    },
+    [userPreferences.language]
+  );
+
+  // --- App Data Management ---
+  const getAppDataStorageKey = (userId: string) => `${APP_DATA_STORAGE_KEY_PREFIX}${userId}`;
+
+  const loadAppData = useCallback(async (userId: string) => {
+    setIsAppDataLoaded(false);
+    try {
+      const storedData = localStorage.getItem(getAppDataStorageKey(userId));
+      if (storedData) {
+        setAppData(JSON.parse(storedData));
+      } else {
+        setAppData(INITIAL_APP_DATA); // Initialize if nothing stored
+      }
+    } catch (error) {
+      console.error("Failed to load app data:", error);
+      setAppData(INITIAL_APP_DATA);
+    } finally {
+      setIsAppDataLoaded(true);
+    }
   }, []);
 
-  const setPeriodDates = useCallback((startDate: string | null, endDate?: string | null) => {
-    let newStartDate = startDate;
-    let newEndDate = endDate !== undefined ? endDate : lastPeriodEndDate;
-    let newDuration: number | null = null;
-
-    if (newStartDate === null) {
-        newEndDate = null;
-        newDuration = null;
-    } else if (newStartDate && newEndDate && isValid(parseISO(newStartDate)) && isValid(parseISO(newEndDate))) {
-      newDuration = calculatePeriodDuration(newStartDate, newEndDate);
-    }
-
-
+  const saveAppData = useCallback(async (userId: string, dataToSave: AppDataType) => {
     try {
-      const dataToStore: Pick<LocalStorageData, 'lastPeriodDate' | 'lastPeriodEndDate' | 'lastPeriodDuration'> = {
-        lastPeriodDate: newStartDate,
-        lastPeriodEndDate: newEndDate,
-        lastPeriodDuration: newDuration,
-      };
-      localStorage.setItem(LOCAL_STORAGE_KEY_CYCLE, JSON.stringify(dataToStore));
-      setLastPeriodDateState(newStartDate);
-      setLastPeriodEndDateState(newEndDate);
-      setLastPeriodDurationState(newDuration);
+      localStorage.setItem(getAppDataStorageKey(userId), JSON.stringify(dataToSave));
+      setAppData(dataToSave); // Update context state
     } catch (error) {
-      console.error("Failed to save cycle data to localStorage", error);
+      console.error("Failed to save app data:", error);
     }
-  }, [lastPeriodEndDate]);
+  }, []);
 
-  const clearPeriodData = useCallback(() => {
-    setPeriodDates(null, null);
-  }, [setPeriodDates]);
-
-  const addPeriodLog = useCallback((log: PeriodLogEntry) => {
-    const logDate = parseISO(log.date);
-    const moonPhaseName = getMoonPhase(logDate);
-    const moonEmojiChar = getMoonEmoji(moonPhaseName);
-
-    const logWithMoonPhase: PeriodLogEntry = {
-      ...log,
-      moonPhase: moonPhaseName,
-      moonEmoji: moonEmojiChar,
-    };
-
-    setPeriodLogsState(prevLogs => {
-      const newLogs = { ...prevLogs, [log.date]: logWithMoonPhase };
-      try {
-        localStorage.setItem(LOCAL_STORAGE_KEY_LOGS, JSON.stringify(newLogs));
-      } catch (error) {
-        console.error("Failed to save period logs to localStorage", error);
-      }
-      return newLogs;
+  const saveDailyEntry = useCallback(async (userId: string, entry: DailyEntryData) => {
+    setAppData(prevData => {
+      const newEntries = { ...prevData.dailyEntries, [entry.date]: entry };
+      const newData = { ...prevData, dailyEntries: newEntries };
+      saveAppData(userId, newData); // Persist to localStorage
+      return newData; // Update state
     });
-  }, []);
+  }, [saveAppData]);
 
-  const getPeriodLog = useCallback((date: string): PeriodLogEntry | undefined => {
-    return periodLogs[date];
-  }, [periodLogs]);
+  const getDailyEntry = useCallback((userId: string, date: string): DailyEntryData | undefined => {
+    // Ensure appData is loaded, though direct access here might not reflect immediate state from async load.
+    // This function would typically be called after loadAppData.
+    return appData.dailyEntries[date];
+  }, [appData.dailyEntries]);
+  
+
+  if (!isPreferencesLoaded) { // Wait for preferences to load to prevent FOUC
+    return null; 
+  }
 
   return (
-    <CycleContext.Provider value={{
-      lastPeriodDate,
-      lastPeriodEndDate,
-      lastPeriodDuration,
-      periodLogs,
-      setPeriodDates,
-      isLoading,
-      clearPeriodData,
-      addPeriodLog,
-      getPeriodLog,
-      hasSufficientDataForDisplay
+    <AppContext.Provider value={{ 
+      userPreferences, setUserPreferences, 
+      t, 
+      activeTheme, setActiveTheme, availableThemes: appThemes,
+      appData, loadAppData, saveDailyEntry, getDailyEntry,
     }}>
       {children}
-    </CycleContext.Provider>
+    </AppContext.Provider>
   );
 };
 
-export const useCycleContext = (): CycleContextType => {
-  const context = useContext(CycleContext);
+export const useAppContext = (): AppContextType => {
+  const context = useContext(AppContext);
   if (context === undefined) {
-    throw new Error('useCycleContext must be used within a CycleProvider');
+    throw new Error('useAppContext must be used within an AppProvider');
   }
   return context;
 };
+
+// The old CycleContext.tsx content is removed as its functionality is merged into this AppContext.
+// Ensure all imports of useCycleContext are updated to useAppContext and adapt to new structure.

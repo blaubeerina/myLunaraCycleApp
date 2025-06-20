@@ -1,16 +1,17 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import type { JournalEntry } from '@/lib/types';
+import { useState, useEffect, useCallback } from 'react';
+import type { DailyEntryData, MoodEmoji } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'; // Added CardContent
-import { JournalEntryList } from '@/components/journal/JournalEntryList';
-import { EditJournalEntryDialog } from '@/components/journal/EditJournalEntryDialog';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { PlusCircle, Edit3, Trash2, Loader2, Sparkles } from 'lucide-react';
 import { useAppContext } from '@/contexts/AppContext';
 import { useAuth } from '@/components/auth/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { DayEntryDialog } from '@/components/calendar/DayEntryDialog'; // Reusing for journal entry
+import { AffirmationGenerator } from '@/components/journal/AffirmationGenerator'; // For AI affirmation
+import { format, parseISO } from 'date-fns';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,111 +23,84 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-
-// Mock Firestore interaction (replace with actual Firebase setup)
-const MOCK_DB_LATENCY = 300;
-
-async function fetchJournalEntries(userId: string): Promise<JournalEntry[]> {
-  await new Promise(resolve => setTimeout(resolve, MOCK_DB_LATENCY));
-  const stored = localStorage.getItem(`journalEntries_${userId}`);
-  const entries: JournalEntry[] = stored ? JSON.parse(stored) : [];
-  // Ensure date objects are correctly parsed if stored as strings
-  return entries.map(e => ({
-    ...e,
-    date: typeof e.date === 'string' ? e.date : new Date(e.date).toISOString().split('T')[0],
-    lastUpdated: e.lastUpdated ? new Date(e.lastUpdated) : new Date(),
-  })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-}
-
-async function saveJournalEntry(userId: string, entry: JournalEntry, isNew: boolean): Promise<void> {
-  await new Promise(resolve => setTimeout(resolve, MOCK_DB_LATENCY));
-  let entries = await fetchJournalEntries(userId);
-  if (isNew) {
-    const newEntryWithId = { ...entry, id: Date.now().toString(), userId };
-    entries = [newEntryWithId, ...entries];
-  } else {
-    entries = entries.map(e => e.id === entry.id ? { ...entry, userId } : e);
-  }
-  localStorage.setItem(`journalEntries_${userId}`, JSON.stringify(entries));
-}
-
-async function deleteJournalEntryFromDb(userId: string, entryId: string): Promise<void> {
-  await new Promise(resolve => setTimeout(resolve, MOCK_DB_LATENCY));
-  let entries = await fetchJournalEntries(userId);
-  entries = entries.filter(e => e.id !== entryId);
-  localStorage.setItem(`journalEntries_${userId}`, JSON.stringify(entries));
-}
-
+const JOURNAL_STORAGE_KEY_PREFIX = 'myLunaraCycle_dailyEntries_';
 
 export default function JournalPage() {
-  const { t } = useAppContext();
+  const { t, userPreferences } = useAppContext();
   const { user } = useAuth();
-  const [entries, setEntries] = useState<JournalEntry[]>([]);
+  const [entries, setEntries] = useState<DailyEntryData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [currentEditingEntry, setCurrentEditingEntry] = useState<JournalEntry | null>(null);
-  const [entryToDelete, setEntryToDelete] = useState<JournalEntry | null>(null);
-
+  const [isEntryModalOpen, setIsEntryModalOpen] = useState(false);
+  const [currentEditingDate, setCurrentEditingDate] = useState<Date | null>(null);
+  const [entryToDelete, setEntryToDelete] = useState<DailyEntryData | null>(null);
+  const [currentAffirmation, setCurrentAffirmation] = useState<string | null>(null);
 
   const userId = user?.id || 'mockUserId'; // Fallback for mock
 
-  const loadEntries = async () => {
-    if (!userId) return;
+  const getStorageKey = useCallback(() => `${JOURNAL_STORAGE_KEY_PREFIX}${userId}`, [userId]);
+
+  const loadEntries = useCallback(async () => {
     setIsLoading(true);
     try {
-      const fetchedEntries = await fetchJournalEntries(userId);
-      setEntries(fetchedEntries);
+      const storedData = localStorage.getItem(getStorageKey());
+      const allEntriesObject: Record<string, DailyEntryData> = storedData ? JSON.parse(storedData) : {};
+      const entriesArray = Object.values(allEntriesObject).sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
+      setEntries(entriesArray);
     } catch (error) {
       console.error("Error fetching entries:", error);
-      toast({ title: "Error loading entries", variant: "destructive" });
+      toast({ title: t('entrySavedError'), variant: "destructive" }); // Using a generic error message
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [getStorageKey, t]);
 
   useEffect(() => {
-    loadEntries();
-  }, [userId]);
+    if (userId) {
+      loadEntries();
+    }
+  }, [userId, loadEntries]);
 
-  const handleOpenEditModal = (entry: JournalEntry | null) => {
-    setCurrentEditingEntry(entry);
-    setIsEditModalOpen(true);
+  const handleOpenEntryModal = (date?: Date | string) => {
+    setCurrentEditingDate(date ? (typeof date === 'string' ? parseISO(date) : date) : new Date());
+    setIsEntryModalOpen(true);
   };
 
-  const handleCloseEditModal = () => {
-    setIsEditModalOpen(false);
-    setCurrentEditingEntry(null);
+  const handleCloseEntryModal = () => {
+    setIsEntryModalOpen(false);
+    setCurrentEditingDate(null);
   };
 
-  const handleSaveEntry = async (data: JournalEntry, isNew: boolean) => {
-    const entryDataToSave = {
-      ...data,
-      userId: userId, // Ensure userId is set
-      lastUpdated: new Date(), // Firestore serverTimestamp() would be used in real app
-    };
-
+  const handleSaveEntry = async (entryData: DailyEntryData) => {
     try {
-      await saveJournalEntry(userId, entryDataToSave, isNew);
+      const storedData = localStorage.getItem(getStorageKey());
+      const allEntriesObject: Record<string, DailyEntryData> = storedData ? JSON.parse(storedData) : {};
+      allEntriesObject[entryData.date] = entryData;
+      localStorage.setItem(getStorageKey(), JSON.stringify(allEntriesObject));
+      
       toast({ title: t('entrySavedSuccess') });
-      loadEntries(); // Re-fetch entries to update the list
-      handleCloseEditModal();
+      loadEntries(); 
+      handleCloseEntryModal();
     } catch (error) {
       console.error("Failed to save entry:", error);
       toast({ title: t('entrySavedError'), variant: 'destructive' });
     }
   };
 
-  const handleDeleteConfirmation = (entry: JournalEntry) => {
+  const handleDeleteConfirmation = (entry: DailyEntryData) => {
     setEntryToDelete(entry);
   };
 
   const handleDeleteEntry = async () => {
     if (!entryToDelete) return;
     try {
-      await deleteJournalEntryFromDb(userId, entryToDelete.id);
+      const storedData = localStorage.getItem(getStorageKey());
+      const allEntriesObject: Record<string, DailyEntryData> = storedData ? JSON.parse(storedData) : {};
+      delete allEntriesObject[entryToDelete.date];
+      localStorage.setItem(getStorageKey(), JSON.stringify(allEntriesObject));
+
       toast({ title: t('entryDeletedSuccess') });
-      loadEntries(); // Re-fetch entries
-      setEntryToDelete(null); // Close dialog
+      loadEntries(); 
+      setEntryToDelete(null); 
     } catch (error) {
       console.error("Failed to delete entry:", error);
       toast({ title: t('entryDeletedError'), variant: 'destructive' });
@@ -134,51 +108,127 @@ export default function JournalPage() {
     }
   };
 
+  const getInitialDataForModal = (): Partial<DailyEntryData> | undefined => {
+    if (!currentEditingDate) return undefined;
+    const dateStr = format(currentEditingDate, 'yyyy-MM-dd');
+    return entries.find(e => e.date === dateStr);
+  };
+  
+  const handleAffirmationGenerated = (affirmation: string) => {
+    setCurrentAffirmation(affirmation);
+    // Optionally save to today's journal entry if one exists or create one
+    // For simplicity, just displaying it for now.
+  };
 
   return (
     <div className="space-y-6">
-      <Card className="shadow-lg">
+      <Card className="shadow-lg bg-card text-card-foreground">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-3xl font-bold">{t('journalEntriesTitle')}</CardTitle>
-            <CardDescription>{t('journalEntriesDescription')}</CardDescription>
+            <CardTitle className="text-3xl font-bold text-primary">{t('journalEntriesTitle')}</CardTitle>
+            <CardDescription className="text-muted-foreground">{t('journalEntriesDescription')}</CardDescription>
           </div>
-          <Button variant="default" onClick={() => handleOpenEditModal(null)}>
+          <Button variant="default" onClick={() => handleOpenEntryModal()} className="bg-primary text-primary-foreground hover:bg-primary/90">
             <PlusCircle className="mr-2 h-5 w-5" />
             {t('addNewEntry')}
           </Button>
         </CardHeader>
         <CardContent>
-          <JournalEntryList
-            entries={entries}
-            onEditEntry={handleOpenEditModal}
-            onDeleteEntry={handleDeleteConfirmation}
-            isLoading={isLoading}
-          />
+          {isLoading ? (
+            <div className="flex items-center justify-center py-10">
+              <Loader2 className="mr-2 h-6 w-6 animate-spin text-primary" />
+              <span className="text-muted-foreground">{t('loadingEntries')}</span>
+            </div>
+          ) : entries.length > 0 ? (
+            <div className="space-y-4">
+              {entries.map(entry => (
+                <Card key={entry.date} className="bg-card/80 p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-semibold text-important-text">
+                        {format(parseISO(entry.date), 'PPP', { locale: userPreferences.language === 'de' ? require('date-fns/locale/de').default : require('date-fns/locale/en-US').default })}
+                      </h3>
+                      {entry.mood && <p className="text-2xl ">{entry.mood}</p>}
+                    </div>
+                    <div className="flex space-x-1">
+                       <Button variant="ghost" size="icon" onClick={() => handleOpenEntryModal(entry.date)} className="text-primary hover:text-primary/80">
+                        <Edit3 className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDeleteConfirmation(entry)} className="text-destructive hover:text-destructive/80">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  {entry.journalText && <p className="mt-2 text-sm text-card-foreground whitespace-pre-wrap">{entry.journalText}</p>}
+                  {/* Display other info like symptoms, energy if available */}
+                  {entry.symptoms && entry.symptoms.length > 0 && (
+                     <p className="text-xs text-muted-foreground mt-1">Symptoms: {entry.symptoms.join(', ')}</p>
+                  )}
+                  {entry.bleedingStrength && entry.bleedingStrength !== "none" && (
+                     <p className="text-xs text-muted-foreground mt-1">Bleeding: {t(`dayEntryBleedingStrength${entry.bleedingStrength.charAt(0).toUpperCase() + entry.bleedingStrength.slice(1)}` as any)}</p>
+                  )}
+                  {entry.affirmationGenerated && (
+                    <p className="text-xs italic text-primary mt-1">Affirmation: "{entry.affirmationGenerated}"</p>
+                  )}
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center py-10 text-muted-foreground">{t('noEntriesFound')}</p>
+          )}
         </CardContent>
       </Card>
 
-      {isEditModalOpen && (
-        <EditJournalEntryDialog
-          isOpen={isEditModalOpen}
-          onClose={handleCloseEditModal}
-          entry={currentEditingEntry}
-          onSave={handleSaveEntry}
+      {/* Affirmation Generator Section */}
+      <Card id="affirmation" className="shadow-lg bg-card text-card-foreground">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-primary">
+            <Sparkles className="h-6 w-6" /> {t('affirmationForToday')}
+          </CardTitle>
+          <CardDescription className="text-muted-foreground">
+            Let AI craft a motivational quote based on your latest journal entry or mood.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AffirmationGenerator
+            mood={entries[0]?.mood || ''} // Pass latest mood
+            journalText={entries[0]?.journalText || ''} // Pass latest journal text
+            onAffirmationGenerated={handleAffirmationGenerated}
+          />
+          {currentAffirmation && (
+            <div className="mt-4 p-3 border border-primary/30 rounded-md bg-primary/5">
+              <p className="text-primary italic">"{currentAffirmation}"</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+
+      {isEntryModalOpen && currentEditingDate && (
+        <DayEntryDialog
+          isOpen={isEntryModalOpen}
+          onClose={handleCloseEntryModal}
+          selectedDate={currentEditingDate}
+          initialData={getInitialDataForModal()}
+          onSaveEntry={handleSaveEntry}
+          language={userPreferences.language}
+          t={t}
+          appMode={userPreferences.appMode}
         />
       )}
 
       {entryToDelete && (
          <AlertDialog open={!!entryToDelete} onOpenChange={(open) => !open && setEntryToDelete(null)}>
-          <AlertDialogContent>
+          <AlertDialogContent className="bg-background text-foreground">
             <AlertDialogHeader>
-              <AlertDialogTitle>{t('confirmDeleteEntryTitle')}</AlertDialogTitle>
-              <AlertDialogDescription>
+              <AlertDialogTitle className="text-primary">{t('confirmDeleteEntryTitle')}</AlertDialogTitle>
+              <AlertDialogDescription className="text-muted-foreground">
                 {t('confirmDeleteEntryDescription')}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setEntryToDelete(null)}>{t('cancel')}</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteEntry} className="bg-destructive hover:bg-destructive/90">
+              <AlertDialogCancel onClick={() => setEntryToDelete(null)} className="hover:bg-muted/50">{t('cancel')}</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteEntry} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
                 {t('deleteEntry')}
               </AlertDialogAction>
             </AlertDialogFooter>

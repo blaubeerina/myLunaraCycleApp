@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -6,7 +7,7 @@ import { LanguageSwitcher } from './LanguageSwitcher';
 import { useAppContext } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/components/auth/AuthContext';
-import { LogOut, UserCircle } from 'lucide-react';
+import { LogOut, UserCircle, Menu } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,13 +17,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 
-interface HeaderProps {
-  onToggleSidebar?: () => void; // For mobile sidebar toggle
-}
-
-export function Header({ onToggleSidebar }: HeaderProps) {
+export function Header() {
   const { t } = useAppContext();
   const { user, logout, isLoading } = useAuth();
 
@@ -31,15 +29,12 @@ export function Header({ onToggleSidebar }: HeaderProps) {
 
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-4 md:px-6">
         <div className="flex items-center gap-2">
-          {onToggleSidebar && (
-             <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="md:hidden">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-              <span className="sr-only">Toggle Sidebar</span>
-            </Button>
-          )}
+          <div className="md:hidden">
+            <SidebarTrigger />
+          </div>
           <Link href="/dashboard" className="flex items-center gap-2">
             <LogoIcon className="h-7 w-7 text-primary" />
             <span className="text-xl font-bold text-foreground">{t('appName')}</span>
@@ -60,16 +55,16 @@ export function Header({ onToggleSidebar }: HeaderProps) {
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                    <p className="text-sm font-medium leading-none">{user.displayName || t('User')}</p>
                     <p className="text-xs leading-none text-muted-foreground">
                       {user.email}
                     </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => alert('Profile page not implemented.')}>
+                <DropdownMenuItem onClick={() => alert(t('profilePageNotImplemented'))}>
                   <UserCircle className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
+                  <span>{t('profile') || 'Profile'}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={logout}>
                   <LogOut className="mr-2 h-4 w-4" />

@@ -5,111 +5,124 @@
 
 @layer base {
   :root {
-    /* Dawn Grey Palette */
-    --background: 220 33% 95%; /* #E5E9F0 Dawn Grey */
-    --foreground: 220 13% 35%; /* #4C566A Slate Grey */
-    
-    --card: 220 25% 93%; /* #E0E4EB Slightly off Dawn Grey for cards */
-    --card-foreground: 220 13% 35%; /* #4C566A */
-    
-    --popover: 220 33% 97%; /* Lighter grey for popovers */
-    --popover-foreground: 220 13% 35%;
-    
-    /* Primary: Using Pale Sunrise for highlights as per current day spec */
-    --primary: 220 29% 88%; /* #D8DEE9 Pale Sunrise */
-    --primary-foreground: 220 13% 25%; /* Darker Slate for text on Pale Sunrise */
+    /* myLunaraCycle Palette */
+    /* Background: Mood cards/starfield (#191D2B) */
+    --background: 223 30% 13%; /* #191D2B */
+    /* Foreground: Dark indigo (#483D8B) - adjusted for better contrast on dark bg, or use a lighter shade */
+    --foreground: 248 30% 80%; /* Lighter version of Dark Indigo for text */
 
-    /* Accent: Soft Lilac for moon icons and other accents */
-    --accent: 320 30% 70%; /* #B48EAD Soft Lilac */
-    --accent-foreground: 220 33% 98%; /* Very light for text on Lilac */
+    /* Cards: Modal backgrounds (#2D3250) */
+    --card: 227 30% 24%; /* #2D3250 */
+    --card-foreground: 248 30% 80%; /* Consistent with main foreground */
     
-    /* Secondary can be a variation or another subtle color */
-    --secondary: 220 15% 60%; /* #818C99 A medium grey for secondary elements */
-    --secondary-foreground: 220 33% 98%; 
+    --popover: 227 30% 20%; /* Slightly darker than card for popovers */
+    --popover-foreground: 248 30% 80%;
+    
+    /* Primary: Soft purple (#D0B8E8) */
+    --primary: 270 44% 82%; /* #D0B8E8 */
+    --primary-foreground: 223 30% 10%; /* Dark text for contrast on soft purple */
 
-    /* Muted: For less prominent elements */
-    --muted: 220 20% 85%; /* #D1D5DB */
-    --muted-foreground: 220 10% 50%; /* #717985 */
+    /* Secondary: Light lilac (#F4F0F9) - for accents or calendar areas if needed, adjusted for dark theme */
+    --secondary: 267 50% 30%; /* Darker lilac for dark theme */
+    --secondary-foreground: 267 50% 90%; 
+
+    /* Accent: Ovulation/warm light (#FFF2B2) */
+    --accent: 53 100% 85%; /* #FFF2B2 */
+    --accent-foreground: 223 30% 10%; /* Dark text for contrast on warm light */
     
-    --destructive: 0 79% 57%; /* #E53E3E Soft Crimson (kept for bleeding days) */
-    --destructive-foreground: 0 0% 98%; /* White/very light for text on crimson */
+    /* Muted: Neutral UI elements (#DADADA), adjusted for dark theme */
+    --muted: 0 0% 30%; /* #4D4D4D */
+    --muted-foreground: 0 0% 60%; /* #999999 */
     
-    --border: 220 10% 80%;   /* #C4C9D4 Subtle border for light theme */
-    --input: 220 20% 98%;    /* #F8F9FA Very light input background */
-    --ring: 220 29% 88%;     /* Pale Sunrise for focus rings */
+    /* Destructive: Bleeding days/energy peaks (#E88DA1) */
+    --destructive: 340 66% 70%; /* #E88DA1 */
+    --destructive-foreground: 0 0% 98%; /* White/very light for text */
+    
+    --border: 227 30% 30%;   /* Border based on card/modal colors */
+    --input: 227 30% 18%;    /* Darker input background */
+    --ring: 270 44% 82%;     /* Soft purple for focus rings */
 
     --radius: 0.5rem; 
     --radius-sm: 0.25rem; 
     
-    /* Specific Calendar Colors from prompt */
-    --calendar-current-day-bg-raw: 220 29% 88%; /* #D8DEE9 Pale Sunrise (raw for opacity) */
-    --calendar-other-month-bg: 220 33% 97%; /* #ECEFF4 Light Grey (for bg of other month days) */
-    --calendar-other-month-fg: 225 10% 65%; /* #9EA8B8 (derived from #A3A8B8 for text) */
-    --color-moon: 320 30% 70%; /* #B48EAD Soft Lilac (for moon icons) */
+    /* Specific Calendar & App Colors from prompt */
+    --calendar-area-bg: 267 50% 96%; /* #F4F0F9 (Light Lilac) - this will be for the calendar component's specific background, if different from card */
+    --important-text: 248 43% 39%; /* #483D8B (Dark Indigo) - for titles etc., ensure good contrast */
+    --pregnancy-growth: 128 41% 85%; /* #C6E8CA */
+
+    /* Overriding Dawn Grey Palette with myLunaraCycle specifics */
+    --calendar-current-day-bg-raw: 53 100% 85%; /* Ovulation color for current day if special */
+    --calendar-other-month-bg: 223 30% 10%; /* Darker for other month days */
+    --calendar-other-month-fg: 0 0% 50%; 
+    --color-moon: 0 0% 75%; /* Silver for moon icons */
     
-    --calendar-normal-text: 220 13% 35%; /* Slate Grey for normal day text */
-    --calendar-default-cell-bg: 220 33% 95%; /* #E5E9F0 Dawn Grey (same as page bg) */
+    --calendar-normal-text: 248 30% 80%; 
+    --calendar-default-cell-bg: 223 30% 15%; /* Slightly lighter than main bg */
     
-    --calendar-bleeding-bg-raw: 0 79% 57%; /* #E53E3E Soft Crimson for bleeding bg */
-    --calendar-bleeding-text: 0 0% 98%; /* Text on bleeding bg */
-    --calendar-bleeding-indicator: 0 79% 57%; /* Color for the dot */
+    --calendar-bleeding-bg-raw: 340 66% 70%; /* #E88DA1 Soft Crimson for bleeding bg */
+    --calendar-bleeding-text: 0 0% 98%; 
+    --calendar-bleeding-indicator: 340 66% 70%; 
     
-    --calendar-today-text: 220 13% 35%; /* Slate Grey for current day text, bg is primary */
+    --calendar-today-text: 223 30% 10%; 
 
 
-    /* Sidebar specific variables, adapt to light theme */
-    --sidebar-background: 220 25% 93%; /* #E0E4EB */
-    --sidebar-foreground: 220 13% 35%;
-    --sidebar-primary: 220 29% 88%; /* Pale Sunrise */
-    --sidebar-primary-foreground: 220 13% 25%;
-    --sidebar-accent: 320 30% 70%; /* Soft Lilac */
-    --sidebar-accent-foreground: 220 33% 98%;
-    --sidebar-border: 220 10% 80%;
-    --sidebar-ring: 220 29% 88%;
+    /* Sidebar specific variables - adapt to dark theme */
+    --sidebar-background: 227 30% 18%; /* Darker than card */
+    --sidebar-foreground: 248 30% 80%;
+    --sidebar-primary: 270 44% 82%; 
+    --sidebar-primary-foreground: 223 30% 10%;
+    --sidebar-accent: 53 100% 85%; 
+    --sidebar-accent-foreground: 223 30% 10%;
+    --sidebar-border: 227 30% 25%;
+    --sidebar-ring: 270 44% 82%;
   }
 
-  /* Remove .dark specific overrides if the app is now always light themed */
-  /* or update .dark to reflect a true dark variant of the Dawn Grey palette */
+  /* Remove .dark specific overrides if the app is now always dark themed */
+  /* For myLunaraCycle, we are designing for a specific dark aesthetic */
   .dark {
-    --background: 220 33% 95%;
-    --foreground: 220 13% 35%;
-    --card: 220 25% 93%;
-    --card-foreground: 220 13% 35%;
-    --popover: 220 33% 97%;
-    --popover-foreground: 220 13% 35%;
-    --primary: 220 29% 88%;
-    --primary-foreground: 220 13% 25%;
-    --accent: 320 30% 70%;
-    --accent-foreground: 220 33% 98%;
-    --secondary: 220 15% 60%;
-    --secondary-foreground: 220 33% 98%;
-    --muted: 220 20% 85%;
-    --muted-foreground: 220 10% 50%;
-    --destructive: 0 79% 57%;
+    /* These should be identical to :root if always dark */
+    --background: 223 30% 13%;
+    --foreground: 248 30% 80%;
+    --card: 227 30% 24%;
+    --card-foreground: 248 30% 80%;
+    --popover: 227 30% 20%;
+    --popover-foreground: 248 30% 80%;
+    --primary: 270 44% 82%;
+    --primary-foreground: 223 30% 10%;
+    --secondary: 267 50% 30%;
+    --secondary-foreground: 267 50% 90%;
+    --accent: 53 100% 85%;
+    --accent-foreground: 223 30% 10%;
+    --muted: 0 0% 30%;
+    --muted-foreground: 0 0% 60%;
+    --destructive: 340 66% 70%;
     --destructive-foreground: 0 0% 98%;
-    --border: 220 10% 80%;
-    --input: 220 20% 98%;
-    --ring: 220 29% 88%;
+    --border: 227 30% 30%;
+    --input: 227 30% 18%;
+    --ring: 270 44% 82%;
 
-    --calendar-current-day-bg-raw: 220 29% 88%;
-    --calendar-other-month-bg: 220 33% 97%;
-    --calendar-other-month-fg: 225 10% 65%;
-    --color-moon: 320 30% 70%;
-    --calendar-normal-text: 220 13% 35%;
-    --calendar-default-cell-bg: 220 33% 95%;
-    --calendar-bleeding-bg-raw: 0 79% 57%;
+    --calendar-area-bg: 267 50% 96%;
+    --important-text: 248 43% 39%;
+    --pregnancy-growth: 128 41% 85%;
+    --calendar-current-day-bg-raw: 53 100% 85%;
+    --calendar-other-month-bg: 223 30% 10%;
+    --calendar-other-month-fg: 0 0% 50%;
+    --color-moon: 0 0% 75%;
+    --calendar-normal-text: 248 30% 80%;
+    --calendar-default-cell-bg: 223 30% 15%;
+    --calendar-bleeding-bg-raw: 340 66% 70%;
     --calendar-bleeding-text: 0 0% 98%;
-    --calendar-bleeding-indicator: 0 79% 57%;
-    --calendar-today-text: 220 13% 35%;
+    --calendar-bleeding-indicator: 340 66% 70%;
+    --calendar-today-text: 223 30% 10%;
 
-    --sidebar-background: 220 25% 93%;
-    --sidebar-foreground: 220 13% 35%;
-    --sidebar-primary: 220 29% 88%;
-    --sidebar-primary-foreground: 220 13% 25%;
-    --sidebar-accent: 320 30% 70%;
-    --sidebar-accent-foreground: 220 33% 98%;
-    --sidebar-border: 220 10% 80%;
-    --sidebar-ring: 220 29% 88%;
+    --sidebar-background: 227 30% 18%;
+    --sidebar-foreground: 248 30% 80%;
+    --sidebar-primary: 270 44% 82%;
+    --sidebar-primary-foreground: 223 30% 10%;
+    --sidebar-accent: 53 100% 85%;
+    --sidebar-accent-foreground: 223 30% 10%;
+    --sidebar-border: 227 30% 25%;
+    --sidebar-ring: 270 44% 82%;
   }
 }
 
@@ -119,7 +132,8 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-geist-sans), sans-serif; 
+    /* Using a common sans-serif font, can be replaced with a specific one like Inter or a custom font */
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -139,11 +153,17 @@
 
   @keyframes pulse-ovulation {
     0%, 100% {
-      /* Use a color suitable for the new theme if this animation is kept */
       box-shadow: 0 0 0 0 hsla(var(--accent), 0.7); 
     }
     50% {
       box-shadow: 0 0 0 8px hsla(var(--accent), 0);
     }
+  }
+
+  /* Soft transitions */
+  .transition-soft {
+    transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
   }
 }

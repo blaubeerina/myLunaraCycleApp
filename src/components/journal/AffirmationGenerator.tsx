@@ -4,24 +4,29 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-// Textarea and Label are not directly used here anymore since mood/journalText are props
 import { Loader2, Sparkles } from 'lucide-react';
 import { generateAffirmation, type GenerateAffirmationInput } from '@/ai/flows/generate-affirmation';
 import { useAppContext } from '@/contexts/AppContext';
 import { toast } from '@/hooks/use-toast';
+import { Label } from '@/components/ui/label'; // Added import
 
 interface AffirmationGeneratorProps {
-  mood: string; // This could be an emoji or a string like 'happy'
+  mood: string; 
   journalText: string;
   onAffirmationGenerated: (affirmation: string) => void;
+  // Add cyclePhase and moonPhase if available from context/props
+  // currentCyclePhase?: string; 
+  // currentMoonPhase?: string;
 }
 
-// This component is kept for potential re-integration.
-// The new editable journal system doesn't directly use this.
-// It was part of the old journal page.
-
-export function AffirmationGenerator({ mood, journalText, onAffirmationGenerated }: AffirmationGeneratorProps) {
-  const { t } = useAppContext();
+export function AffirmationGenerator({ 
+  mood, 
+  journalText, 
+  onAffirmationGenerated,
+  // currentCyclePhase,
+  // currentMoonPhase 
+}: AffirmationGeneratorProps) {
+  const { t, userPreferences } = useAppContext();
   const [isLoading, setIsLoading] = useState(false);
   const [affirmation, setAffirmation] = useState<string | null>(null);
 
@@ -38,8 +43,11 @@ export function AffirmationGenerator({ mood, journalText, onAffirmationGenerated
     setAffirmation(null);
     try {
       const input: GenerateAffirmationInput = {
-        mood: mood || "neutral", 
-        journalEntry: journalText || "No journal entry today.",
+        mood: mood || undefined, 
+        journalEntry: journalText || undefined,
+        // currentCyclePhase: currentCyclePhase || undefined,
+        // currentMoonPhase: currentMoonPhase || undefined,
+        language: userPreferences.language,
       };
       const result = await generateAffirmation(input);
       if (result.affirmation) {
@@ -59,28 +67,32 @@ export function AffirmationGenerator({ mood, journalText, onAffirmationGenerated
         description: "Could not generate an affirmation at this time. Please try again.",
         variant: "destructive",
       });
+       // Set a fallback affirmation on error
+      const fallbackAffirmation = userPreferences.language === 'de' ? "Jeder Tag ist ein Geschenk." : "Every day is a gift.";
+      setAffirmation(fallbackAffirmation);
+      onAffirmationGenerated(fallbackAffirmation);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Card className="shadow-md bg-primary/5">
+    <Card className="shadow-md bg-card/70 text-card-foreground">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-primary">
           <Sparkles className="text-primary h-6 w-6" />
           {t('generateAffirmation')}
         </CardTitle>
-        <CardDescription>Let AI craft a motivational quote based on your current state.</CardDescription>
+        <CardDescription className="text-muted-foreground">Let AI craft a motivational quote based on your current state.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Button onClick={handleGenerateAffirmation} disabled={isLoading} className="w-full">
+        <Button onClick={handleGenerateAffirmation} disabled={isLoading} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
           {isLoading ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
             <Sparkles className="mr-2 h-4 w-4" />
           )}
-          {isLoading ? (t('generating') || 'Generating...') : t('generateAffirmation')}
+          {isLoading ? t('generating') : t('generateNewAffirmation')}
         </Button>
         {affirmation && (
           <div className="mt-4 p-4 border border-primary/50 rounded-md bg-background shadow">
@@ -92,6 +104,3 @@ export function AffirmationGenerator({ mood, journalText, onAffirmationGenerated
     </Card>
   );
 }
-
-// Need to import Label if we re-enable the display part
-import { Label } from '@/components/ui/label';
