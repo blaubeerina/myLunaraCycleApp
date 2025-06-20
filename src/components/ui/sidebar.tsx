@@ -93,8 +93,8 @@ const SidebarProvider = React.forwardRef<
     // Helper to toggle the sidebar.
     const toggleSidebar = React.useCallback(() => {
       return isMobile
-        ? setOpenMobile((open) => !open)
-        : setOpen((open) => !open)
+        ? setOpenMobile((openMobileValue) => !openMobileValue)
+        : setOpen((openValue) => !openValue)
     }, [isMobile, setOpen, setOpenMobile])
 
     // Adds a keyboard shortcut to toggle the sidebar.
@@ -600,9 +600,8 @@ const SidebarMenuButtonImpl = React.forwardRef<
 )
 SidebarMenuButtonImpl.displayName = "SidebarMenuButtonImpl"
 
-const SidebarMenuButton = React.memo(SidebarMenuButtonImpl)
-// Add displayName to the memoized component for better debugging
-;(SidebarMenuButton as React.FC<any>).displayName = "SidebarMenuButton"
+// Exporting the non-memoized version directly.
+export const SidebarMenuButton = SidebarMenuButtonImpl;
 
 
 const SidebarMenuAction = React.forwardRef<
@@ -762,7 +761,7 @@ export {
   SidebarMenu,
   SidebarMenuAction,
   SidebarMenuBadge,
-  SidebarMenuButton,
+  // SidebarMenuButton, // Exporting SidebarMenuButtonImpl directly as SidebarMenuButton
   SidebarMenuItem,
   SidebarMenuSkeleton,
   SidebarMenuSub,
@@ -774,3 +773,4 @@ export {
   SidebarTrigger,
   useSidebar,
 }
+
