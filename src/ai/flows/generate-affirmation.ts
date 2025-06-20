@@ -8,7 +8,7 @@
  * - GenerateAffirmationOutput - The return type for the generateAffirmation function.
  */
 
-import { generateText } from '@/ai/genkit'; // Using the re-export from genkit.ts
+import { generateText } from '@/ai/server-ai'; // Updated import
 import { z } from 'zod';
 
 // Define the input schema for the affirmation generation
@@ -66,15 +66,10 @@ export async function generateAffirmation(input: GenerateAffirmationInput): Prom
   `;
 
   try {
-    // Note: Specific configurations like maxOutputTokens or fine-grained safetySettings
-    // that were previously in the Genkit prompt config are now either part of the
-    // model's initialization in src/lib/google-ai.ts or would need to be
-    // passed to a modified generateText function if per-call overrides are needed.
-    // The current `generateText` uses the model's pre-set configuration.
     const affirmationText = await generateText(promptContent);
 
-    if (!affirmationText || affirmationText.trim() === "") {
-      // Fallback affirmation if generation returns empty or only whitespace
+    if (!affirmationText || affirmationText.trim() === "" || affirmationText === "AI text generation is currently unavailable." || affirmationText === "An error occurred while generating the affirmation.") {
+      // Fallback affirmation if generation returns empty, error placeholder, or only whitespace
       const fallbackAffirmation = input.language === 'de' ? "Jeder Tag birgt neue Chancen und Möglichkeiten." : "Every day holds new opportunities and chances.";
       return { affirmation: fallbackAffirmation };
     }

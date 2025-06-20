@@ -21,8 +21,8 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     serverComponentsExternalPackages: [
-      '@genkit-ai/core',
-      '@google/generative-ai'
+      '@genkit-ai/core', // Keep for potential Genkit flow/tool usage later
+      '@google/generative-ai' // For direct Google AI SDK usage
     ],
   },
 };
