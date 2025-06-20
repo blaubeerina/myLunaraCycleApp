@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
-import type { GeneratedImpulse, DailyEntryData } from '@/lib/types'; // Removed CycleInfo as FullCycleInfo is more comprehensive
+import type { GeneratedImpulse, DailyEntryData } from '@/lib/types'; 
 import { format, parseISO } from 'date-fns';
 import { Loader2, Sparkles, Info, CalendarDays, BookHeart, Moon, Droplet, Leaf, Sun, Activity } from 'lucide-react';
 import { getMoonPhase, getMoonEmoji } from '@/lib/moon-utils';
@@ -21,38 +21,40 @@ export default function DashboardPage() {
   const [latestImpulse, setLatestImpulse] = useState<GeneratedImpulse | null>(null);
   const [isLoadingImpulse, setIsLoadingImpulse] = useState(false); 
   
-  const [currentMoon, setCurrentMoon] = useState<{ name: ReturnType<typeof getMoonPhase> | null; emoji: string | null }>({ name: null, emoji: null });
-  const [currentCycleDetails, setCurrentCycleDetails] = useState<FullCycleInfo | null>(null);
-  const [isLoadingDashboardData, setIsLoadingDashboardData] = useState(true);
+  const [currentMoon, setCurrentMoon] = useState<{ name: ReturnType<typeof getMoonPhase> | null; emoji: string | null }>({ name: 'New Moon', emoji: '🌑' }); // Demo data
+  const [currentCycleDetails, setCurrentCycleDetails] = useState<FullCycleInfo | null>({
+    phase: 'Follicular', // Demo data
+    cycleDay: 10,
+    isFertile: false,
+    isOvulationDay: false,
+    nextPeriodStartDate: '2025-07-15', // Demo data
+    estimatedOvulationDate: parseISO('2025-07-01'), // Demo data
+    estimatedFertileWindow: { start: parseISO('2025-06-28'), end: parseISO('2025-07-02') }, // Demo data
+    predictedNextPeriodStart: parseISO('2025-07-15') // Demo data
+  });
+  const [isLoadingDashboardData, setIsLoadingDashboardData] = useState(false); // Hardcoded to false for demo
 
   const userId = user?.id;
 
   useEffect(() => {
-    const today = new Date();
-    const phaseName = getMoonPhase(today);
-    setCurrentMoon({ name: phaseName, emoji: getMoonEmoji(phaseName) });
-
-    if (userId) {
-      setIsLoadingDashboardData(true);
-      loadAppData(userId).then(() => {
-        // This block runs after appData is loaded from context
-        if (userPreferences.appMode === 'cycle') {
-          const cycleInfo = calculateFullCycleInfoForDate(today, appData.dailyEntries);
-          setCurrentCycleDetails(cycleInfo);
-        } else {
-          setCurrentCycleDetails(null);
-        }
-        setIsLoadingDashboardData(false);
-      }).catch(() => {
-        setIsLoadingDashboardData(false); 
-      });
-    } else {
-      setCurrentCycleDetails(null);
-      setIsLoadingDashboardData(false); 
-    }
-  // Trigger recalc if user, mode, or the core dailyEntries data changes.
-  // Explicitly depending on appData.dailyEntries ensures re-calculation when entries are updated.
-  }, [userId, loadAppData, userPreferences.appMode, appData.dailyEntries]);
+    // In Demo Mode, we use hardcoded data, so no real fetching/calculation here.
+    // The initial state values serve as the demo data.
+    // If you wanted to simulate a load:
+    // setIsLoadingDashboardData(true);
+    // const timer = setTimeout(() => {
+    //   const today = new Date();
+    //   const phaseName = getMoonPhase(today);
+    //   setCurrentMoon({ name: phaseName, emoji: getMoonEmoji(phaseName) });
+    //   if (userId && userPreferences.appMode === 'cycle') {
+    //     const cycleInfo = calculateFullCycleInfoForDate(today, appData.dailyEntries);
+    //     setCurrentCycleDetails(cycleInfo);
+    //   } else {
+    //     setCurrentCycleDetails(null);
+    //   }
+    //   setIsLoadingDashboardData(false);
+    // }, 500); // Simulate short load
+    // return () => clearTimeout(timer);
+  }, [userId, userPreferences.appMode, appData.dailyEntries]); // Dependencies kept for structure but effect body is demo-fied
 
 
   const getPhaseDisplay = (phase: CyclePhaseName | undefined) => {

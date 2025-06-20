@@ -8,7 +8,7 @@
  * - GenerateAffirmationOutput - The return type for the generateAffirmation function.
  */
 
-import { generateText } from '@/ai/server-ai'; // Updated import
+import { generateText } from '@/ai/server-ai'; 
 import { z } from 'zod';
 
 // Define the input schema for the affirmation generation
@@ -30,7 +30,19 @@ export type GenerateAffirmationOutput = z.infer<typeof GenerateAffirmationOutput
 
 // Wrapper function to be called by the frontend
 export async function generateAffirmation(input: GenerateAffirmationInput): Promise<GenerateAffirmationOutput> {
-  // Construct the prompt string manually
+  // DEMO MODE: Return a hardcoded affirmation
+  console.log("DEMO MODE: Affirmation generation skipped, returning static affirmation.");
+  const demoAffirmation = input.language === 'de' 
+    ? "Dies ist eine Demo-Affirmation: Du bist wunderbar so wie du bist." 
+    : "This is a demo affirmation: You are wonderful just as you are.";
+  
+  // Simulate a slight delay as if an API call was made
+  await new Promise(resolve => setTimeout(resolve, 300));
+
+  return { affirmation: demoAffirmation };
+
+  // Original AI call logic (commented out for demo mode):
+  /*
   let promptContent = `
     You are a compassionate and wise AI assistant for the myLunaraCycle app. 
     Your task is to generate a short, uplifting, and relevant daily affirmation for the user.
@@ -69,15 +81,14 @@ export async function generateAffirmation(input: GenerateAffirmationInput): Prom
     const affirmationText = await generateText(promptContent);
 
     if (!affirmationText || affirmationText.trim() === "" || affirmationText === "AI text generation is currently unavailable." || affirmationText === "An error occurred while generating the affirmation.") {
-      // Fallback affirmation if generation returns empty, error placeholder, or only whitespace
       const fallbackAffirmation = input.language === 'de' ? "Jeder Tag birgt neue Chancen und Möglichkeiten." : "Every day holds new opportunities and chances.";
       return { affirmation: fallbackAffirmation };
     }
     return { affirmation: affirmationText };
   } catch (error) {
     console.error('Error generating affirmation in flow:', error);
-    // Fallback affirmation if generation fails
     const fallbackAffirmation = input.language === 'de' ? "Ich bin stark und jeder Tag bringt neue Kraft." : "I am strong, and every day brings new strength.";
     return { affirmation: fallbackAffirmation };
   }
+  */
 }

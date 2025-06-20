@@ -549,7 +549,7 @@ const SidebarMenuButtonImpl = React.forwardRef<
       isActive = false,
       variant = "default",
       size = "default",
-      tooltip,
+      tooltip, // Tooltip prop is now effectively ignored for demo
       className,
       children, 
       ...props
@@ -557,8 +557,9 @@ const SidebarMenuButtonImpl = React.forwardRef<
     ref
   ) => {
     const Comp = asChild ? Slot : "button"
-    const { isMobile, state } = useSidebar()
+    // const { isMobile, state } = useSidebar() // No longer needed for tooltip logic
 
+    // Simplified button content rendering for demo mode - Tooltip is disabled
     const buttonContent = (
       <Comp
         ref={ref}
@@ -571,31 +572,8 @@ const SidebarMenuButtonImpl = React.forwardRef<
         {children}
       </Comp>
     )
-
-    // Conditionally render Tooltip:
-    // Only if a tooltip is provided, sidebar is collapsed, and not on mobile
-    if (tooltip && state === "collapsed" && !isMobile) {
-      let tooltipContentProps: React.ComponentProps<typeof TooltipContent>
-      if (typeof tooltip === "string") {
-        tooltipContentProps = {
-          children: tooltip,
-          side: "right",
-          align: "center",
-        }
-      } else {
-        tooltipContentProps = tooltip
-      }
-
-      return (
-        <Tooltip>
-          <TooltipTrigger asChild>{buttonContent}</TooltipTrigger>
-          <TooltipContent {...tooltipContentProps} />
-        </Tooltip>
-      )
-    }
-
-    // Otherwise, just render the button content
-    return buttonContent
+    
+    return buttonContent;
   }
 )
 SidebarMenuButtonImpl.displayName = "SidebarMenuButtonImpl"
@@ -761,7 +739,6 @@ export {
   SidebarMenu,
   SidebarMenuAction,
   SidebarMenuBadge,
-  // SidebarMenuButton, // Exporting SidebarMenuButtonImpl directly as SidebarMenuButton
   SidebarMenuItem,
   SidebarMenuSkeleton,
   SidebarMenuSub,
@@ -773,4 +750,3 @@ export {
   SidebarTrigger,
   useSidebar,
 }
-

@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAppContext } from './AppContext'; // Import AppContext to load app data on login
+// import { useAppContext } from './AppContext'; // Import AppContext to load app data on login
 
 interface User {
   id: string;
@@ -22,65 +22,63 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const DEMO_USER: User = {
+  id: 'demo-user-123',
+  email: 'demo@example.com',
+  displayName: 'Demo User',
+  photoURL: `https://placehold.co/100x100.png?text=D`
+};
+
 export const AuthContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(DEMO_USER); // Default to Demo User
+  const [isLoading, setIsLoading] = useState(false); // Assume loaded for demo
   const router = useRouter();
-  // AppContext might not be available here if AuthContextProvider is wrapping AppProvider
-  // const { loadAppData } = useAppContext(); // This will cause issues if AppProvider is child
 
   useEffect(() => {
-    const mockUser = localStorage.getItem('myLunaraCycle-user');
-    if (mockUser) {
-      const parsedUser = JSON.parse(mockUser);
-      setUser(parsedUser);
-      // loadAppData is called in DashboardPage or AppLayout after user is confirmed
-    }
+    // In Demo Mode, we bypass localStorage check and immediately set the demo user.
+    setUser(DEMO_USER);
     setIsLoading(false);
+    // Optionally, you could check if a real user was previously logged in and clear that
+    // localStorage.removeItem('myLunaraCycle-user'); 
   }, []);
 
   const handleLoginSuccess = async (userData: User) => {
     setUser(userData);
-    localStorage.setItem('myLunaraCycle-user', JSON.stringify(userData));
-    // loadAppData(userData.id); // Call this after user is set and AppContext is available
+    // localStorage.setItem('myLunaraCycle-user', JSON.stringify(userData)); // No localStorage for demo user
     router.push('/dashboard');
   };
 
   const login = async (email?: string, password?: string) => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const mockUserData: User = { 
-      id: email || 'user@example.com', // Use email as ID for simplicity in mock
-      email: email || 'user@example.com', 
-      displayName: 'Lunar User',
-      photoURL: `https://placehold.co/100x100.png?text=${(email || 'U')[0].toUpperCase()}`
-    };
-    await handleLoginSuccess(mockUserData);
+    console.log("DEMO MODE: Login attempt with", email);
+    // Simulate a very short delay
+    await new Promise(resolve => setTimeout(resolve, 100));
+    await handleLoginSuccess(DEMO_USER); // Always log in as demo user
     setIsLoading(false);
   };
 
   const signInWithGoogle = async () => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const mockGoogleUserData: User = {
-      id: 'google-user-123',
-      email: 'googleuser@example.com',
-      displayName: 'Google User',
+    console.log("DEMO MODE: Google Sign-In attempt");
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const mockGoogleDemoUser: User = {
+      id: 'google-demo-456',
+      email: 'googledemo@example.com',
+      displayName: 'Google Demo User',
       photoURL: 'https://placehold.co/100x100.png?text=G'
     };
-    await handleLoginSuccess(mockGoogleUserData);
+    await handleLoginSuccess(mockGoogleDemoUser); // Log in as Google demo user
     setIsLoading(false);
   };
 
   const logout = async () => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setUser(null);
-    localStorage.removeItem('myLunaraCycle-user');
-    // Also clear app-specific data for this user if desired
-    // localStorage.removeItem(`myLunaraCycle_appData_${user?.id}`); // Be careful with user being null here
+    console.log("DEMO MODE: Logout attempt");
+    await new Promise(resolve => setTimeout(resolve, 100));
+    setUser(null); // Effectively logs out the demo user for the session
+    // localStorage.removeItem('myLunaraCycle-user');
     setIsLoading(false);
-    router.push('/login');
+    router.push('/login'); // Redirect to login, where they'd "log in" as demo user again
   };
 
   return (

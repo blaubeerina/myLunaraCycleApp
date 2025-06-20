@@ -178,6 +178,8 @@ export const translations: AllTranslations = {
     calendarPhaseFertile: "Fertile Window",
     calendarPhaseUnknown: "Unknown",
     calendarPredicted: "(Predicted)",
+    // Demo Mode
+    demoModeNotice: "DEMO MODE: This is a simplified version for presentation purposes. Some functionalities are intentionally limited or disabled."
   },
   de: {
     appName: 'myLunaraCycle',
@@ -347,6 +349,8 @@ export const translations: AllTranslations = {
     calendarPhaseFertile: "Fruchtbares Fenster",
     calendarPhaseUnknown: "Unbekannt",
     calendarPredicted: "(Vorhergesagt)",
+    // Demo Mode
+    demoModeNotice: "DEMO-MODUS: Dies ist eine vereinfachte Version für Präsentationszwecke. Einige Funktionen sind absichtlich eingeschränkt oder deaktiviert."
   },
 };
 

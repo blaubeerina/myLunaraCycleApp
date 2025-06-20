@@ -37,14 +37,10 @@
     --sidebar-border: 234 30% 30%;
     --sidebar-ring: 190 36% 52%;
 
-    /* Additional specific colors based on prompt, if needed globally */
-    /* --calendar-hover-bg: 220 14% 96%; /* #F3F4F6 for light mode */
-    /* --calendar-today-border: 190 36% 52%; /* #5C9EAD */
-    --color-moon: 0 0% 75%; /* Silver for moon icons, consistent across themes */
+    --color-moon: 0 0% 75%; 
   }
 
   .dark {
-    /* These will be set by themes.ts for the dark theme */
     --background: 234 38% 16%;
     --foreground: 36 43% 94%;
     --card: 234 38% 20%;
@@ -73,11 +69,9 @@
     --sidebar-accent-foreground: 234 38% 16%;
     --sidebar-border: 234 30% 30%;
     --sidebar-ring: 190 36% 52%;
-    /* --calendar-hover-bg: 234 30% 25%; /* Darker hover for dark mode */
   }
 
   .light {
-    /* These will be set by themes.ts for the light theme */
     --background: 0 0% 100%;
     --foreground: 0 0% 20%;
     --card: 0 0% 100%;
@@ -126,6 +120,10 @@
   .rounded-1px { 
     border-radius: 1px;
   }
+  /* Add padding to body to prevent content from being obscured by the demo banner */
+  body {
+    padding-bottom: 2.5rem; /* Adjust based on banner height */
+  }
 }
 
 @layer utilities {
@@ -147,4 +145,12 @@
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 300ms;
   }
+}
+
+/* Demo Mode Banner Specific Styles */
+.demo-mode-banner {
+  /* Using destructive theme colors for visibility */
+  background-color: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+  font-weight: 500;
 }
