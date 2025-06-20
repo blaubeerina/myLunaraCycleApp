@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google'; // Using Inter as a clean sans-serif font
 import './globals.css';
 import { AppProvider } from '@/contexts/AppContext'; // Updated to AppProvider
-import { AuthContextProvider } from '@/components/auth/AuthContext'; // Import AuthContextProvider
+import { AuthContextProvider } from '@/components/auth/AuthContext'; // Import AuthContextProvider from components
 import { Toaster } from "@/components/ui/toaster"; 
 
 const inter = Inter({
@@ -25,7 +25,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased bg-background text-foreground`}>
         <AppProvider> {/* Use AppProvider */}
-          <AuthContextProvider> {/* Wrap children with AuthContextProvider */}
+          <AuthContextProvider> {/* Ensure this is from the same file as useAuth's context */}
             {children}
           </AuthContextProvider>
           <Toaster />
