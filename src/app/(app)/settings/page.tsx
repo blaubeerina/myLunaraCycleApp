@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import type { Language, AppMode } from '@/lib/types';
 import { useAuth } from '@/components/auth/AuthContext';
-import { themes } from '@/lib/themes'; 
+// themes are now imported from AppContext
 import { CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -25,7 +25,7 @@ export default function SettingsPage() {
   };
 
   const handleThemeChange = (themeId: string) => {
-    setActiveTheme(themeId);
+    setActiveTheme(themeId); // This now updates context which handles saving and applying
   };
 
   return (
@@ -92,18 +92,18 @@ export default function SettingsPage() {
               variant={activeTheme === theme.id ? "secondary" : "outline"}
               className={cn(
                 "w-full justify-start h-auto py-3 text-left border-border hover:bg-accent/10",
-                activeTheme === theme.id ? "bg-primary/20 border-primary" : "bg-input"
+                activeTheme === theme.id ? "bg-primary/20 border-primary text-primary" : "bg-input text-card-foreground"
               )}
               onClick={() => handleThemeChange(theme.id)}
             >
               <div className="flex items-center w-full">
                 <div className="flex-grow">
-                  <p className="font-semibold text-card-foreground">{theme.name}</p>
+                  <p className="font-semibold">{theme.name}</p>
                   <div className="flex space-x-1 mt-1.5">
                     {theme.previewColors.map((color, index) => (
                       <div
                         key={index}
-                        className="h-5 w-5 rounded-sm border border-border"
+                        className="h-5 w-5 rounded-sm border border-border/50"
                         style={{ backgroundColor: color }}
                         aria-label={`${theme.name} color swatch ${index + 1}`}
                       />

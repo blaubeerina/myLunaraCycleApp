@@ -15,4 +15,3 @@ export const ai = genkit({
 // You can also define models to be used globally or by specific flows
 // geminiPro from @google-ai/genkit is a string model ID e.g. "gemini-pro"
 export const defaultModel = geminiPro;
-

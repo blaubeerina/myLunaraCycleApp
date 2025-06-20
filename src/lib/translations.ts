@@ -32,7 +32,9 @@ export const translations: AllTranslations = {
     journal: 'Journal',
     reminders: 'Reminders',
     settings: 'Settings',
-    // Journal
+    previousMonth: 'Previous Month, {month}',
+    nextMonth: 'Next Month, {month}',
+    // Journal & Calendar Entry
     journalEntriesTitle: 'My Journal',
     journalEntriesDescription: 'Reflect and record your journey.',
     addNewEntry: 'New Entry',
@@ -60,10 +62,13 @@ export const translations: AllTranslations = {
     howAreYouFeeling: 'How are you feeling today?',
     loadingEntries: 'Loading entries...',
     noEntriesFound: 'No journal entries yet. Start by adding one!',
-    // Calendar
+    // Calendar specific
     viewCalendar: 'View Calendar',
+    bleedingLogged: 'Bleeding logged',
+    moonPhaseLabel: 'Moon phase',
     // Settings
     appMode: 'Application Mode',
+    language: 'Language', // Added for settings page
     // Affirmations
     generateAffirmation: 'Generate Affirmation',
     generating: 'Generating...',
@@ -96,25 +101,51 @@ export const translations: AllTranslations = {
     moodSelectorExcited: 'Excited',
     moodSelectorConfused: 'Confused',
     moodSelectorWorried: 'Worried',
-    // Day Entry Dialog (for journal)
-    dayEntryTitle: 'Log for {date}',
-    dayEntryMood: 'Today\'s Mood',
-    dayEntryBleeding: 'Log Bleeding',
-    dayEntryBleedingStrength: 'Bleeding Strength',
-    dayEntryBleedingStrengthNone: 'None',
+    // Day Entry Dialog (for calendar/journal)
+    dayEntryTitle: 'Entry for {date}', // Changed "Log for" to "Entry for"
+    dayEntryMood: "Today's Mood",
+    dayEntryLogBleeding: 'Log Bleeding',
+    dayEntryBleedingIntensity: 'Bleeding Intensity',
+    dayEntrySelectIntensity: 'Select intensity...',
+    dayEntryBleedingStrengthNone: 'None', // Though 'none' is handled by switch, good to have translation
     dayEntryBleedingStrengthSpotting: 'Spotting',
     dayEntryBleedingStrengthLight: 'Light',
     dayEntryBleedingStrengthMedium: 'Medium',
     dayEntryBleedingStrengthHeavy: 'Heavy',
-    dayEntryEnergyLevel: 'Energy Level',
+    dayEntrySymptoms: 'Symptoms',
+    dayEntryEnergyLevel: 'Energy Level', // Kept if re-added, not in current DayEntryDialog from prompt
     dayEntryEnergyLow: 'Low',
     dayEntryEnergyMedium: 'Medium',
     dayEntryEnergyHigh: 'High',
-    dayEntryNotes: 'Journal Entry',
+    dayEntryNotes: 'Notes', // Changed from Journal Entry to just Notes
     writeYourThoughts: 'Write your thoughts, feelings, or observations...',
     dayEntryClose: 'Close',
     dayEntrySave: 'Save Entry',
-    
+    // Moon Phases (for tooltips/display)
+    moonPhaseNewMoon: "New Moon",
+    moonPhaseWaxingCrescent: "Waxing Crescent",
+    moonPhaseFirstQuarter: "First Quarter",
+    moonPhaseWaxingGibbous: "Waxing Gibbous",
+    moonPhaseFullMoon: "Full Moon",
+    moonPhaseWaningGibbous: "Waning Gibbous",
+    moonPhaseLastQuarter: "Last Quarter",
+    moonPhaseWaningCrescent: "Waning Crescent",
+    // Symptoms for checkboxes
+    symptomCramps: "Cramps",
+    symptomHeadache: "Headache",
+    symptomFatigue: "Fatigue",
+    symptomBloating: "Bloating",
+    symptomMoodSwings: "Mood Swings",
+    symptomTenderBreasts: "Tender Breasts",
+    symptomAcne: "Acne",
+    symptomNausea: "Nausea",
+    symptomBackache: "Backache",
+    symptomFoodCravings: "Food Cravings",
+    symptomIrritability: "Irritability",
+    symptomSkinChanges: "Skin Changes",
+    symptomSleepIssues: "Sleep Issues",
+    symptomJointPain: "Joint Pain",
+    symptomOther: "Other",
   },
   de: {
     appName: 'myLunaraCycle',
@@ -138,7 +169,9 @@ export const translations: AllTranslations = {
     journal: 'Tagebuch',
     reminders: 'Erinnerungen',
     settings: 'Einstellungen',
-    // Journal
+    previousMonth: 'Vorheriger Monat, {month}',
+    nextMonth: 'Nächster Monat, {month}',
+    // Journal & Calendar Entry
     journalEntriesTitle: 'Mein Tagebuch',
     journalEntriesDescription: 'Reflektiere und halte deine Reise fest.',
     addNewEntry: 'Neuer Eintrag',
@@ -166,10 +199,13 @@ export const translations: AllTranslations = {
     howAreYouFeeling: 'Wie fühlst du dich heute?',
     loadingEntries: 'Lade Einträge...',
     noEntriesFound: 'Noch keine Tagebucheinträge. Starte mit einem neuen Eintrag!',
-    // Calendar
+    // Calendar specific
     viewCalendar: 'Kalender ansehen',
+    bleedingLogged: 'Blutung protokolliert',
+    moonPhaseLabel: 'Mondphase',
     // Settings
     appMode: 'Anwendungsmodus',
+    language: 'Sprache', // Added for settings page
     // Affirmations
     generateAffirmation: 'Affirmation generieren',
     generating: 'Generiere...',
@@ -194,7 +230,7 @@ export const translations: AllTranslations = {
     // Reminders
     remindersDescription: 'Konfiguriere personalisierte Erinnerungen.',
     // Mood Selector (for journal entries)
-    moodSelectorHappy: 'Fröhlich',
+    moodSelectorHappy: 'Glücklich',
     moodSelectorSad: 'Traurig',
     moodSelectorAngry: 'Wütend',
     moodSelectorCalm: 'Ruhig',
@@ -202,24 +238,51 @@ export const translations: AllTranslations = {
     moodSelectorExcited: 'Aufgeregt',
     moodSelectorConfused: 'Verwirrt',
     moodSelectorWorried: 'Besorgt',
-    // Day Entry Dialog (for journal)
+    // Day Entry Dialog (for calendar/journal)
     dayEntryTitle: 'Eintrag für {date}',
     dayEntryMood: 'Heutige Stimmung',
-    dayEntryBleeding: 'Blutung eintragen',
-    dayEntryBleedingStrength: 'Blutungsstärke',
+    dayEntryLogBleeding: 'Blutung eintragen',
+    dayEntryBleedingIntensity: 'Blutungsstärke',
+    dayEntrySelectIntensity: 'Stärke auswählen...',
     dayEntryBleedingStrengthNone: 'Keine',
     dayEntryBleedingStrengthSpotting: 'Schmierblutung',
     dayEntryBleedingStrengthLight: 'Leicht',
     dayEntryBleedingStrengthMedium: 'Mittel',
     dayEntryBleedingStrengthHeavy: 'Stark',
+    dayEntrySymptoms: 'Symptome',
     dayEntryEnergyLevel: 'Energielevel',
     dayEntryEnergyLow: 'Niedrig',
     dayEntryEnergyMedium: 'Mittel',
     dayEntryEnergyHigh: 'Hoch',
-    dayEntryNotes: 'Tagebucheintrag',
+    dayEntryNotes: 'Notizen',
     writeYourThoughts: 'Schreibe deine Gedanken, Gefühle oder Beobachtungen...',
     dayEntryClose: 'Schließen',
     dayEntrySave: 'Eintrag speichern',
+    // Moon Phases
+    moonPhaseNewMoon: "Neumond",
+    moonPhaseWaxingCrescent: "Zunehmende Mondsichel",
+    moonPhaseFirstQuarter: "Erstes Viertel",
+    moonPhaseWaxingGibbous: "Zunehmender Halbmond",
+    moonPhaseFullMoon: "Vollmond",
+    moonPhaseWaningGibbous: "Abnehmender Halbmond",
+    moonPhaseLastQuarter: "Letztes Viertel",
+    moonPhaseWaningCrescent: "Abnehmende Mondsichel",
+    // Symptoms for checkboxes
+    symptomCramps: "Krämpfe",
+    symptomHeadache: "Kopfschmerzen",
+    symptomFatigue: "Müdigkeit",
+    symptomBloating: "Blähungen",
+    symptomMoodSwings: "Stimmungsschwankungen",
+    symptomTenderBreasts: "Empfindliche Brüste",
+    symptomAcne: "Akne",
+    symptomNausea: "Übelkeit",
+    symptomBackache: "Rückenschmerzen",
+    symptomFoodCravings: "Heißhunger",
+    symptomIrritability: "Reizbarkeit",
+    symptomSkinChanges: "Hautveränderungen",
+    symptomSleepIssues: "Schlafstörungen",
+    symptomJointPain: "Gelenkschmerzen",
+    symptomOther: "Andere",
   },
 };
 

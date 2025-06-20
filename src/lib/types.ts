@@ -1,45 +1,41 @@
 
 export type Language = 'en' | 'de';
-export type AppMode = 'cycle' | 'pregnancy'; // Zyklusmodus vs Schwangerschaftsmodus
+export type AppMode = 'cycle' | 'pregnancy';
 
 export interface UserPreferences {
   language: Language;
   appMode: AppMode;
-  // username?: string; // Optional, if needed later
-  // reminderSettings?: ReminderSetting[]; // For detailed reminder config
+  theme: string; // Theme ID
 }
 
-// For Mood & Journal Feature
-export type MoodEmoji = '😊' | '😢' | '😠' | '😌' | '😴' | '🤩' | '😕' | '😟' | string; // Allow custom emojis if needed
+export type MoodEmoji = string; // Allow any emoji string
 
-export interface JournalEntry {
-  id: string; // Unique ID, can be date string or UUID
-  date: string; // YYYY-MM-DD
-  mood: MoodEmoji;
-  text: string; // Password-protected journal entry text
-  // lastUpdated: string; // ISO date string
+// As per new prompt for calendar entry
+export type BleedingIntensity = 'light' | 'medium' | 'heavy' | 'spotting';
+
+// Symptoms will be free-form strings in the new bleeding object,
+// but we can keep SYMPTOMS_LIST for providing suggestions in UI.
+export const SYMPTOMS_LIST = ['cramps', 'headache', 'fatigue', 'bloating', 'moodSwings', 'tenderBreasts', 'acne', 'nausea', 'backache', 'foodCravings', 'irritability', 'skinChanges', 'sleepIssues', 'jointPain', 'other'] as const;
+export type SymptomKey = typeof SYMPTOMS_LIST[number]; // For UI suggestions
+
+// Combined Daily Entry for simpler storage, matching prompt's CalendarEntry
+export interface DailyEntryData {
+  date: string; // YYYY-MM-DD, primary key for daily data
+  mood?: MoodEmoji; // Emoji string
+  notes?: string;   // Free text for reflections, replaces journalText/customNotes
+
+  bleeding?: {
+    intensity: BleedingIntensity; // 'light', 'medium', 'heavy', 'spotting'
+    symptoms?: string[];          // Array of symptom strings, e.g., ["cramps", "headache"]
+  };
+  // moonPhaseName is part of CycleDayInfo for display, might not be stored directly in entry if fetched live
+  // For now, we can add it if we decide to store it with the entry after fetching.
+  moonPhaseName?: MoonPhaseName; // Store the calculated/fetched moon phase name
+
+  affirmationGenerated?: string; // Store the AI affirmation for this day
+  // Removed: isPeriodStart, isPeriodEnd, old bleedingStrength, old root symptoms, energyLevel
+  // Pregnancy specific fields can be added later if appMode is 'pregnancy'
 }
-
-// For Dynamic Calendar View
-export interface CycleDayInfo {
-  date: string; // YYYY-MM-DD
-  isCurrentMonth: boolean;
-  isToday: boolean;
-  dayOfMonth: number;
-  cycleDay?: number; // Day in cycle (e.g., Day 5)
-  isOvulation?: boolean;
-  isPeriodDay?: boolean;
-  bleedingStrength?: BleedingStrength;
-  pregnancyWeek?: number; // Week of pregnancy
-  trimester?: 1 | 2 | 3;
-  moonPhase?: MoonPhaseName; // From NASA data or calculation
-  // symptomsLogged?: Symptom[];
-}
-
-export type BleedingStrength = 'none' | 'light' | 'medium' | 'heavy' | 'spotting';
-
-export const SYMPTOMS_LIST = ['cramps', 'headache', 'fatigue', 'bloating', 'moodSwings', 'tenderBreasts', 'acne', 'nausea', 'backache', 'foodCravings'] as const;
-export type Symptom = typeof SYMPTOMS_LIST[number];
 
 
 export type MoonPhaseName =
@@ -52,64 +48,55 @@ export type MoonPhaseName =
   | 'Last Quarter'
   | 'Waning Crescent';
 
-// For Reminder System
 export interface Reminder {
   id: string;
   isEnabled: boolean;
   type: 'period_due' | 'ovulation_approaching' | 'fertility_window_opens' | 'fertility_window_closes' | 'pregnancy_support' | 'custom';
-  message: string; // Custom message or template key
-  daysBefore?: number; // For reminders like "period due in X days"
-  time?: string; // HH:MM for specific time
-  // for pregnancy support, could be tied to week
-  pregnancyWeekTarget?: number; 
+  message: string;
+  daysBefore?: number;
+  time?: string;
+  pregnancyWeekTarget?: number;
 }
 
-
-// AI Affirmation
 export interface Affirmation {
   text: string;
-  source?: string; // e.g., 'AI-generated', 'User-defined'
+  source?: string;
 }
 
-// Combined Daily Entry for simpler storage, can be used by Calendar & Journal
-export interface DailyEntryData {
-  date: string; // YYYY-MM-DD, primary key for daily data
-  mood?: MoodEmoji;
-  journalText?: string; // Main journal entry
-  
-  // Cycle Specific
-  isPeriodStart?: boolean;
-  isPeriodEnd?: boolean;
-  bleedingStrength?: BleedingStrength;
-  symptoms?: Symptom[]; // Array of symptom keys
-  energyLevel?: 'low' | 'medium' | 'high'; // Example, can be more granular
-
-  // Pregnancy Specific
-  pregnancyWeek?: number;
-  // Could add fields like baby_size_fruit, pregnancy_symptoms, etc.
-
-  // Shared
-  customNotes?: string; // General notes for the day
-  affirmationGenerated?: string; // Store the AI affirmation for this day
+// For Dynamic Calendar View (derived data, not stored directly like this)
+export interface CycleDayInfo {
+  date: string; // YYYY-MM-DD
+  isCurrentMonth: boolean;
+  isToday: boolean;
+  dayOfMonth: number;
+  cycleDay?: number;
+  // isOvulation?: boolean; // Predictions are for future
+  // isPeriodDay?: boolean; // Derived from DailyEntryData.bleeding
+  // bleedingStrength?: BleedingStrength; // Derived
+  // pregnancyWeek?: number;
+  // trimester?: 1 | 2 | 3;
+  moonPhase?: MoonPhaseName;
+  dailyEntry?: DailyEntryData; // The actual logged data for this day
 }
-
 
 // Types from existing Lunar Rhythms app that might be adapted or removed
+// Kept for reference during transition, can be cleaned up later
 export interface LocalStorageData {
   lastPeriodDate: string | null;
   lastPeriodEndDate: string | null;
   lastPeriodDuration: number | null;
-  periodLogs?: Record<string, PeriodLogEntry>; // Date string 'YYYY-MM-DD' as key
-  dailyWisdom_v1?: DailyWisdom; 
+  periodLogs?: Record<string, PeriodLogEntryOld>;
+  dailyWisdom_v1?: DailyWisdom;
 }
 
 export interface TarotCard {
   id: string;
   title: string;
-  image: string; 
+  image: string;
   meaning: string;
 }
 
+// This one is used by the old CycleCalendar, may need to be updated or removed
 export interface DailyCalendarInfo {
   date: Date;
   dayOfMonth: number;
@@ -118,11 +105,9 @@ export interface DailyCalendarInfo {
   cycleDay: number | null;
   moonPhase: MoonPhaseName;
   moonEmoji: string;
-  periodLog?: PeriodLogEntry; 
+  periodLog?: PeriodLogEntryOld; // Old type
   isBleedingDay?: boolean;
-  // isFertileDay?: boolean; 
-  // isOvulationDay?: boolean;
-  tarotCard: TarotCard; 
+  tarotCard: TarotCard;
   affirmation?: WisdomAffirmation;
 }
 
@@ -134,52 +119,49 @@ export interface WisdomAffirmation {
 export interface DailyWisdom {
   tarot: {
     cardId: string | null;
-    drawDate: string | null; 
-    recentIds: string[];    
+    drawDate: string | null;
+    recentIds: string[];
   };
   affirmation: {
     text: string | null;
     author?: string | null;
-    displayDate: string | null; 
+    displayDate: string | null;
     previousText?: string | null;
   };
 }
 
-export interface PeriodLogEntry {
+// Old PeriodLogEntry - will be replaced by new structure in DailyEntryData
+export type OldBleedingStrength = 'none' | 'light' | 'medium' | 'heavy' | 'spotting';
+export interface PeriodLogEntryOld {
   date: string; // YYYY-MM-DD
-  intensity: BleedingStrength; // Updated to use BleedingStrength
-  symptoms: Symptom[]; // Updated to use Symptom[]
+  intensity: OldBleedingStrength;
+  symptoms: SymptomKey[]; // Old type with enum keys
   notes?: string;
   moonPhase?: MoonPhaseName;
   moonEmoji?: string;
 }
 
+export type FirebaseTimestamp = Date;
 
-// Firebase specific types, useful for planning
-export type FirebaseTimestamp = Date; // | firebase.firestore.Timestamp;
-
-
-// For generate-cycle-impulse AI flow
 export interface CycleInfo {
   phase: 'Menstruation' | 'Follicular' | 'Ovulation' | 'Luteal' | 'Premenstrual' | 'Unknown';
   cycleDay: number;
   isFertile: boolean;
   isOvulationDay: boolean;
-  nextPeriodStartDate: string | null; // YYYY-MM-DD
+  nextPeriodStartDate: string | null;
 }
 
 export interface GeneratedImpulse {
-  date: string; // YYYY-MM-DD of the entry this impulse is for
+  date: string;
   text: string;
   cyclePhase: CycleInfo['phase'];
-  moonPhase: string; // e.g., "Full Moon"
+  moonPhase: string;
 }
 
-// For the settings page theme selection
 export interface Theme {
   id: string;
   name: string;
-  colors: { // HSL string format for CSS variables
+  colors: {
     background: string;
     foreground: string;
     card: string;
@@ -200,5 +182,5 @@ export interface Theme {
     input: string;
     ring: string;
   };
-  previewColors: string[]; // Array of hex/hsl colors for theme preview in settings
+  previewColors: string[];
 }

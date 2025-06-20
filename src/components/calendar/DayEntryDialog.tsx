@@ -1,7 +1,8 @@
 
 'use client';
 
-import type { DailyEntryData, Language, BleedingStrength, AppMode } from '@/lib/types';
+import type { DailyEntryData, Language, BleedingIntensity, AppMode, MoodEmoji, MoonPhaseName, SymptomKey } from '@/lib/types';
+import { SYMPTOMS_LIST } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,10 +15,13 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useState, useEffect } from 'react';
-import { MoodSelector } from './MoodSelector'; 
+import { MoodSelector } from './MoodSelector';
+import { getMoonEmoji } from '@/lib/moon-utils'; // To display moon emoji
 
 interface DayEntryDialogProps {
   isOpen: boolean;
@@ -27,16 +31,18 @@ interface DayEntryDialogProps {
   onSaveEntry: (entry: DailyEntryData) => void;
   language: Language;
   t: (key: string, params?: Record<string, string | number>) => string;
-  appMode: AppMode; 
+  appMode: AppMode;
+  currentMoonPhase?: MoonPhaseName;
 }
 
-const moods = [
-  { emoji: '😊', label: 'Happy' }, { emoji: '😢', label: 'Sad' }, { emoji: '😠', label: 'Angry' },
-  { emoji: '😌', label: 'Calm' }, { emoji: '😴', label: 'Tired' }, { emoji: '🤩', label: 'Excited' },
-  { emoji: '😕', label: 'Confused' }, { emoji: '😟', label: 'Worried'}
+const moodOptions: { emoji: MoodEmoji; labelKey: string }[] = [
+  { emoji: '😊', labelKey: 'moodSelectorHappy' }, { emoji: '😢', labelKey: 'moodSelectorSad' },
+  { emoji: '😠', labelKey: 'moodSelectorAngry' }, { emoji: '😌', labelKey: 'moodSelectorCalm' },
+  { emoji: '😴', labelKey: 'moodSelectorTired' }, { emoji: '🤩', labelKey: 'moodSelectorExcited' },
+  { emoji: '😕', labelKey: 'moodSelectorConfused' }, { emoji: '😟', labelKey: 'moodSelectorWorried'}
 ];
 
-const validBleedingStrengths: BleedingStrength[] = ['light', 'medium', 'heavy'];
+const bleedingIntensityOptions: (BleedingIntensity | 'spotting')[] = ['spotting', 'light', 'medium', 'heavy'];
 
 export function DayEntryDialog({
   isOpen,
@@ -47,168 +53,154 @@ export function DayEntryDialog({
   language,
   t,
   appMode,
+  currentMoonPhase,
 }: DayEntryDialogProps) {
-  const [mood, setMood] = useState<string>('');
-  const [isBleeding, setIsBleeding] = useState<boolean>(false);
-  const [bleedingStrength, setBleedingStrength] = useState<BleedingStrength>('none');
-  const [energyLevel, setEnergyLevel] = useState<'low' | 'medium' | 'high'>('medium');
-  const [notes, setNotes] = useState<string>('');
+  const [mood, setMood] = useState<MoodEmoji>(initialData?.mood || '');
+  const [notes, setNotes] = useState<string>(initialData?.notes || '');
+  const [logBleeding, setLogBleeding] = useState<boolean>(!!initialData?.bleeding && initialData.bleeding.intensity !== 'none');
+  const [intensity, setIntensity] = useState<BleedingIntensity | 'spotting'>(
+    initialData?.bleeding?.intensity && initialData.bleeding.intensity !== 'none' ? initialData.bleeding.intensity : 'light'
+  );
+  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>(initialData?.bleeding?.symptoms || []);
 
   useEffect(() => {
     if (isOpen) {
       setMood(initialData?.mood || '');
-      setEnergyLevel(initialData?.energyLevel || 'medium');
       setNotes(initialData?.notes || '');
-
-      const initialIsBleeding = appMode === 'cycle' ? (initialData?.isBleeding || false) : false;
-      setIsBleeding(initialIsBleeding);
-
-      if (appMode === 'cycle' && initialIsBleeding) {
-        const initialStrength = initialData?.bleedingStrength;
-        if (initialStrength && validBleedingStrengths.includes(initialStrength)) {
-          setBleedingStrength(initialStrength);
-        } else {
-          setBleedingStrength('light'); // Default to 'light' if bleeding but strength is none or invalid
-        }
-      } else {
-        setBleedingStrength('none');
-      }
+      const initialBleedingData = initialData?.bleeding;
+      const hasInitialBleeding = !!initialBleedingData && initialBleedingData.intensity !== 'none';
+      setLogBleeding(hasInitialBleeding);
+      setIntensity(initialBleedingData?.intensity && initialBleedingData.intensity !== 'none' ? initialBleedingData.intensity : 'light');
+      setSelectedSymptoms(initialBleedingData?.symptoms || []);
     }
-  }, [isOpen, initialData, appMode]);
+  }, [isOpen, initialData]);
 
-
-  useEffect(() => {
-    if (!isOpen) return; 
-
-    if (appMode === 'cycle') {
-      if (isBleeding) {
-        if (bleedingStrength === 'none') {
-          setBleedingStrength('light');
-        }
-      } else {
-        setBleedingStrength('none');
-      }
-    } else { 
-      // Ensure bleeding is off and strength is none if not in cycle mode
-      if (isBleeding) setIsBleeding(false); // Force off if it was somehow set
-      setBleedingStrength('none');
-    }
-  }, [isBleeding, appMode, isOpen]); // bleedingStrength removed from deps intentionally here as per prior logic
-
+  const handleSymptomChange = (symptomKey: SymptomKey, checked: boolean) => {
+    const symptomLabel = t(`symptom${symptomKey.charAt(0).toUpperCase() + symptomKey.slice(1)}` as any) || symptomKey;
+    setSelectedSymptoms(prev =>
+      checked ? [...prev, symptomLabel] : prev.filter(s => s !== symptomLabel)
+    );
+  };
 
   const handleSave = () => {
-    const finalIsBleeding = appMode === 'cycle' ? isBleeding : false;
-    const finalBleedingStrength = appMode === 'cycle' && finalIsBleeding ? bleedingStrength : 'none';
-
     const entryData: DailyEntryData = {
-      date: selectedDate.toISOString().split('T')[0], 
-      mood,
-      isBleeding: finalIsBleeding,
-      bleedingStrength: finalBleedingStrength,
-      energyLevel,
-      notes,
+      date: selectedDate.toISOString().split('T')[0],
+      mood: mood || undefined, // Ensure empty string becomes undefined
+      notes: notes || undefined,
+      bleeding: logBleeding && appMode === 'cycle'
+        ? {
+            intensity: intensity,
+            symptoms: selectedSymptoms.length > 0 ? selectedSymptoms : undefined,
+          }
+        : undefined, // Set bleeding to undefined if not logged or not in cycle mode
+      moonPhaseName: currentMoonPhase, // Store the moon phase name passed in
+      // affirmationGenerated will be handled elsewhere if needed for this entry
     };
     onSaveEntry(entryData);
   };
 
-  const formattedDate = selectedDate.toLocaleDateString(language, {
+  const formattedDate = selectedDate.toLocaleDateString(language === 'de' ? 'de-DE' : 'en-US', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
+  
+  const moonDisplay = currentMoonPhase ? `${getMoonEmoji(currentMoonPhase)} ${t(`moonPhase${currentMoonPhase.replace(/\s/g, '')}` as any, {defaultValue: currentMoonPhase})}` : '';
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[480px] bg-background">
+      <DialogContent className="sm:max-w-md bg-card text-card-foreground">
         <DialogHeader>
           <DialogTitle>{t('dayEntryTitle', { date: formattedDate })}</DialogTitle>
-          <DialogDescription>
-            {t('howAreYouFeeling')}
-          </DialogDescription>
+          {moonDisplay && <DialogDescription className="text-sm text-accent">{moonDisplay}</DialogDescription>}
         </DialogHeader>
-        <div className="grid gap-6 py-4">
-          <div className="grid gap-2">
+        <ScrollArea className="max-h-[60vh] pr-3">
+        <div className="grid gap-4 py-4">
+          <div>
             <Label htmlFor="mood-selector">{t('dayEntryMood')}</Label>
-            <MoodSelector 
-              moods={moods} 
-              selectedMood={mood} 
-              onMoodSelect={setMood} 
+            <MoodSelector
+              moods={moodOptions.map(m => ({...m, label: t(m.labelKey)}))}
+              selectedMood={mood}
+              onMoodSelect={setMood}
               t={t}
             />
           </div>
 
           {appMode === 'cycle' && (
             <>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 pt-2">
                 <Switch
-                  id="bleeding"
-                  checked={isBleeding}
-                  onCheckedChange={setIsBleeding}
-                  aria-label={t('dayEntryBleeding')}
+                  id="log-bleeding"
+                  checked={logBleeding}
+                  onCheckedChange={setLogBleeding}
+                  aria-label={t('dayEntryLogBleeding')}
                 />
-                <Label htmlFor="bleeding">{t('dayEntryBleeding')}</Label>
+                <Label htmlFor="log-bleeding">{t('dayEntryLogBleeding')}</Label>
               </div>
 
-              {isBleeding && ( // Only show strength options if bleeding is active and in cycle mode
-                <div className="grid gap-2">
-                  <Label>{t('dayEntryBleedingStrength')}</Label>
-                  <RadioGroup
-                    value={bleedingStrength}
-                    onValueChange={(value: string) => setBleedingStrength(value as BleedingStrength)}
-                    className="flex space-x-2 sm:space-x-4"
-                  >
-                    {validBleedingStrengths.map((strength) => (
-                       <div key={strength} className="flex items-center space-x-2">
-                        <RadioGroupItem value={strength} id={`strength-${strength}`} />
-                        <Label htmlFor={`strength-${strength}`} className="font-normal">
-                          {t(`dayEntryBleedingStrength${strength.charAt(0).toUpperCase() + strength.slice(1)}` as any)}
-                        </Label>
+              {logBleeding && (
+                <>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="bleeding-intensity">{t('dayEntryBleedingIntensity')}</Label>
+                    <Select value={intensity} onValueChange={(value) => setIntensity(value as BleedingIntensity | 'spotting')}>
+                      <SelectTrigger id="bleeding-intensity" className="w-full bg-input">
+                        <SelectValue placeholder={t('dayEntrySelectIntensity')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {bleedingIntensityOptions.map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {t(`dayEntryBleedingStrength${option.charAt(0).toUpperCase() + option.slice(1)}` as any, {defaultValue: option})}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid gap-1.5">
+                    <Label>{t('dayEntrySymptoms')}</Label>
+                    <ScrollArea className="h-32 rounded-md border border-input p-3 bg-input/50">
+                      <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                        {SYMPTOMS_LIST.map((symptomKey) => {
+                          const symptomLabel = t(`symptom${symptomKey.charAt(0).toUpperCase() + symptomKey.slice(1)}` as any, {defaultValue: symptomKey});
+                          return (
+                            <div key={symptomKey} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`symptom-${symptomKey}`}
+                                checked={selectedSymptoms.includes(symptomLabel)}
+                                onCheckedChange={(checked) => handleSymptomChange(symptomKey, !!checked)}
+                              />
+                              <Label htmlFor={`symptom-${symptomKey}`} className="font-normal text-sm">
+                                {symptomLabel}
+                              </Label>
+                            </div>
+                          );
+                         })}
                       </div>
-                    ))}
-                  </RadioGroup>
-                </div>
+                    </ScrollArea>
+                  </div>
+                </>
               )}
             </>
           )}
 
-          <div className="grid gap-2">
-            <Label>{t('dayEntryEnergyLevel')}</Label>
-            <RadioGroup
-              value={energyLevel}
-              onValueChange={(value: string) => setEnergyLevel(value as 'low' | 'medium' | 'high')}
-              className="flex space-x-4"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="low" id="energy-low" />
-                <Label htmlFor="energy-low" className="font-normal">{t('dayEntryEnergyLow')}</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="medium" id="energy-medium" />
-                <Label htmlFor="energy-medium" className="font-normal">{t('dayEntryEnergyMedium')}</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="high" id="energy-high" />
-                <Label htmlFor="energy-high" className="font-normal">{t('dayEntryEnergyHigh')}</Label>
-              </div>
-            </RadioGroup>
-          </div>
-          <div className="grid gap-2">
+          <div className="grid gap-1.5">
             <Label htmlFor="notes">{t('dayEntryNotes')}</Label>
             <Textarea
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder={t('writeYourThoughts')}
-              rows={3}
+              rows={4}
               className="bg-input"
             />
           </div>
         </div>
+        </ScrollArea>
         <DialogFooter>
           <DialogClose asChild>
             <Button type="button" variant="outline" onClick={onClose}>
-              {t('dayEntryClose')}
+              {t('cancel')}
             </Button>
           </DialogClose>
-          <Button type="button" onClick={handleSave}>
+          <Button type="button" onClick={handleSave} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             {t('dayEntrySave')}
           </Button>
         </DialogFooter>
@@ -216,4 +208,3 @@ export function DayEntryDialog({
     </Dialog>
   );
 }
-

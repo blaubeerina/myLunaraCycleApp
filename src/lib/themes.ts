@@ -45,99 +45,97 @@ function formatHSL(parts: { h: string, s: string, l: string } | null): string {
   return `${parts.h} ${parts.s} ${parts.l}`;
 }
 
-// Define the default theme based on your globals.css :root
-export const DEFAULT_THEME_ID = 'myLunaraCycleDark';
+export const DEFAULT_THEME_ID = 'myLunaraCycleDark'; // Default theme remains dark
 
 export const themes: Theme[] = [
   {
-    id: DEFAULT_THEME_ID,
-    name: 'My Lunara Cycle Dark (Default)',
-    colors: { // HSL values from your globals.css
-      background: '223 30% 13%',
-      foreground: '248 30% 80%',
-      card: '227 30% 24%',
-      cardForeground: '248 30% 80%',
-      popover: '227 30% 20%',
-      popoverForeground: '248 30% 80%',
-      primary: '270 44% 82%',
-      primaryForeground: '223 30% 10%',
-      secondary: '267 50% 30%',
-      secondaryForeground: '267 50% 90%',
-      muted: '0 0% 30%',
-      mutedForeground: '0 0% 60%',
-      accent: '53 100% 85%',
-      accentForeground: '223 30% 10%',
-      destructive: '340 66% 70%',
-      destructiveForeground: '0 0% 98%',
-      border: '227 30% 30%',
-      input: '227 30% 18%',
-      ring: '270 44% 82%',
-    },
-    previewColors: ['#D0B8E8', '#F4F0F9', '#483D8B', '#191D2B', '#FFF2B2'], // Soft Purple, Light Lilac, Dark Indigo, Starfield, Ovulation
-  },
-  // Example of an alternative theme (Dawn Grey Light - if you want to add it back)
-  {
-    id: 'dawnGreyLight',
-    name: 'Dawn Grey Light',
+    id: 'myLunaraCycleLight',
+    name: 'My LunaraCycle Light',
     colors: {
-      background: formatHSL(hexToHSLParts('#E5E9F0')), // Dawn Grey
-      foreground: formatHSL(hexToHSLParts('#4C566A')), // Slate Grey
-      card: formatHSL(hexToHSLParts('#E0E4EB')),
-      cardForeground: formatHSL(hexToHSLParts('#4C566A')),
-      popover: formatHSL(hexToHSLParts('#E5E9F0')),
-      popoverForeground: formatHSL(hexToHSLParts('#4C566A')),
-      primary: formatHSL(hexToHSLParts('#D0B8E8')), // Soft Purple as primary
-      primaryForeground: formatHSL(hexToHSLParts('#483D8B')), // Dark Indigo text
-      secondary: formatHSL(hexToHSLParts('#F4F0F9')), // Light Lilac
-      secondaryForeground: formatHSL(hexToHSLParts('#483D8B')),
-      muted: formatHSL(hexToHSLParts('#DADADA')),
-      mutedForeground: formatHSL(hexToHSLParts('#717985')),
-      accent: formatHSL(hexToHSLParts('#FFF2B2')), // Ovulation
-      accentForeground: formatHSL(hexToHSLParts('#483D8B')),
-      destructive: formatHSL(hexToHSLParts('#E88DA1')), // Bleeding
-      destructiveForeground: formatHSL(hexToHSLParts('#FFFFFF')),
-      border: formatHSL(hexToHSLParts('#D1D5DB')),
+      background: formatHSL(hexToHSLParts('#FFFFFF')), // White
+      foreground: formatHSL(hexToHSLParts('#333333')), // Dark Gray
+      card: formatHSL(hexToHSLParts('#FFFFFF')),       // White
+      cardForeground: formatHSL(hexToHSLParts('#333333')),
+      popover: formatHSL(hexToHSLParts('#FFFFFF')),
+      popoverForeground: formatHSL(hexToHSLParts('#333333')),
+      primary: formatHSL(hexToHSLParts('#5C9EAD')),    // Turquoise
+      primaryForeground: formatHSL(hexToHSLParts('#FFFFFF')), // White text on Turquoise
+      secondary: formatHSL(hexToHSLParts('#F3F4F6')),  // Light Gray for secondary elements
+      secondaryForeground: formatHSL(hexToHSLParts('#333333')),
+      muted: formatHSL(hexToHSLParts('#E5E7EB')),      // Slightly darker gray for muted
+      mutedForeground: formatHSL(hexToHSLParts('#6B7280')),
+      accent: formatHSL(hexToHSLParts('#FFF2B2')),     // Existing Accent (Ovulation yellow)
+      accentForeground: formatHSL(hexToHSLParts('#4C566A')), // Dark text on accent
+      destructive: formatHSL(hexToHSLParts('#E8B4BC')),// Soft Crimson for bleeding
+      destructiveForeground: formatHSL(hexToHSLParts('#FFFFFF')), // White text
+      border: formatHSL(hexToHSLParts('#D1D5DB')),     // Standard border
       input: formatHSL(hexToHSLParts('#FFFFFF')),
-      ring: formatHSL(hexToHSLParts('#D0B8E8')),
+      ring: formatHSL(hexToHSLParts('#5C9EAD')),       // Turquoise for rings
     },
-    previewColors: ['#D0B8E8', '#E5E9F0', '#4C566A', '#F4F0F9', '#FFF2B2'],
-  }
+    // Preview colors: Turquoise, Soft Crimson, Ovulation Yellow, White, Dark Gray
+    previewColors: ['#5C9EAD', '#E8B4BC', '#FFF2B2', '#FFFFFF', '#333333'],
+  },
+  {
+    id: 'myLunaraCycleDark', // Keep this ID as default
+    name: 'My LunaraCycle Dark (Default)',
+    colors: {
+      background: formatHSL(hexToHSLParts('#1A1D3A')), // Dark Blue/Purple
+      foreground: formatHSL(hexToHSLParts('#F5F0E8')), // Light Beige
+      card: formatHSL(hexToHSLParts('#24284A')),       // Slightly lighter than background
+      cardForeground: formatHSL(hexToHSLParts('#F5F0E8')),
+      popover: formatHSL(hexToHSLParts('#202340')),
+      popoverForeground: formatHSL(hexToHSLParts('#F5F0E8')),
+      primary: formatHSL(hexToHSLParts('#5C9EAD')),    // Turquoise
+      primaryForeground: formatHSL(hexToHSLParts('#F5F0E8')), // Light text on Turquoise
+      secondary: formatHSL(hexToHSLParts('#303562')),  // Darker shade for secondary
+      secondaryForeground: formatHSL(hexToHSLParts('#F5F0E8')),
+      muted: formatHSL(hexToHSLParts('#404575')),      // Muted variant
+      mutedForeground: formatHSL(hexToHSLParts('#A0A5C5')),
+      accent: formatHSL(hexToHSLParts('#FFF2B2')),     // Existing Accent (Ovulation yellow)
+      accentForeground: formatHSL(hexToHSLParts('#1A1D3A')), // Dark text on accent
+      destructive: formatHSL(hexToHSLParts('#E8B4BC')),// Soft Crimson for bleeding
+      destructiveForeground: formatHSL(hexToHSLParts('#1A1D3A')), // Dark text
+      border: formatHSL(hexToHSLParts('#3A3F6A')),     // Border color
+      input: formatHSL(hexToHSLParts('#202340')),       // Input background
+      ring: formatHSL(hexToHSLParts('#5C9EAD')),       // Turquoise for rings
+    },
+     // Preview colors: Turquoise, Soft Crimson, Ovulation Yellow, Dark Blue/Purple, Light Beige
+    previewColors: ['#5C9EAD', '#E8B4BC', '#FFF2B2', '#1A1D3A', '#F5F0E8'],
+  },
 ];
 
 export function applyThemeToDocument(themeId: string): void {
-  const theme = themes.find(t => t.id === themeId) || themes.find(t => t.id === DEFAULT_THEME_ID);
-  if (theme && document.documentElement) {
+  const themeToApply = themes.find(t => t.id === themeId) || themes.find(t => t.id === DEFAULT_THEME_ID);
+
+  if (themeToApply && document.documentElement) {
     const root = document.documentElement;
-    Object.entries(theme.colors).forEach(([key, value]) => {
-      // Convert camelCase to kebab-case for CSS variables
+
+    Object.entries(themeToApply.colors).forEach(([key, value]) => {
       const cssVarName = `--${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
       root.style.setProperty(cssVarName, value);
     });
-
-    // For sidebar variables, which have a 'sidebar-' prefix in CSS but not in the theme object
-    Object.entries(theme.colors).forEach(([key, value]) => {
-       if (['background', 'foreground', 'primary', 'primaryForeground', 'accent', 'accentForeground', 'border', 'ring'].includes(key)) {
-         const sidebarVarName = `--sidebar-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
-         // Logic to derive sidebar colors if they are not explicitly defined in theme.colors.sidebar
-         // For simplicity, we use main theme colors, but you could have specific sidebar colors in the theme object.
-         // Example: root.style.setProperty(sidebarVarName, theme.colors.sidebar?.[key] || value);
-         // For now, let's assume sidebar variables in globals.css will pick up the main theme colors or we set them specifically.
-         // If your theme object has a "sidebar" sub-object for colors, use that.
-         // Based on your globals.css, sidebar colors are explicitly defined, so we should set them if the theme object has them.
-         // Current theme object structure doesn't have a nested `sidebar` object, it's flat.
-         // The current globals.css has variables like --sidebar-background. We should map to those if the theme object intended.
-         // For now, we set the main theme vars. If `globals.css` uses these for sidebar too, it works.
-         // Otherwise, theme object needs a `sidebar` field or globals.css needs to reference main vars for sidebar.
-       }
-    });
+    
+    // Special handling for sidebar to match main theme's primary/accent etc.
+    // These map to --sidebar-background, --sidebar-primary etc. in globals.css
+    // For simplicity, we make sidebar colors closely related to the main theme.
+    // You might want more distinct sidebar colors in a more complex theme object.
+    root.style.setProperty('--sidebar-background', themeToApply.colors.card); // Example: card color for sidebar bg
+    root.style.setProperty('--sidebar-foreground', themeToApply.colors.cardForeground);
+    root.style.setProperty('--sidebar-primary', themeToApply.colors.primary);
+    root.style.setProperty('--sidebar-primary-foreground', themeToApply.colors.primaryForeground);
+    root.style.setProperty('--sidebar-accent', themeToApply.colors.accent);
+    root.style.setProperty('--sidebar-accent-foreground', themeToApply.colors.accentForeground);
+    root.style.setProperty('--sidebar-border', themeToApply.colors.border);
+    root.style.setProperty('--sidebar-ring', themeToApply.colors.ring);
 
 
-    // Add/remove .dark class if your themes are distinctly light/dark
-    // For myLunaraCycle, it's primarily dark, but if you add light themes:
-    if (theme.id.toLowerCase().includes('light')) {
+    // Add/remove .dark class based on theme.id (convention: if 'light' is not in id, it's dark)
+    if (themeToApply.id.toLowerCase().includes('light')) {
         root.classList.remove('dark');
+        root.classList.add('light'); // Explicitly add light class if desired
     } else {
-        root.classList.add('dark'); // Assuming dark themes should have .dark class
+        root.classList.add('dark');
+        root.classList.remove('light');
     }
   }
 }

@@ -5,124 +5,107 @@
 
 @layer base {
   :root {
-    /* myLunaraCycle Palette */
-    /* Background: Mood cards/starfield (#191D2B) */
-    --background: 223 30% 13%; /* #191D2B */
-    /* Foreground: Dark indigo (#483D8B) - adjusted for better contrast on dark bg, or use a lighter shade */
-    --foreground: 248 30% 80%; /* Lighter version of Dark Indigo for text */
+    /* Default to myLunaraCycleDark - these will be overridden by JS */
+    --background: 234 38% 16%;
+    --foreground: 36 43% 94%;
+    --card: 234 38% 20%;
+    --card-foreground: 36 43% 94%;
+    --popover: 234 38% 18%;
+    --popover-foreground: 36 43% 94%;
+    --primary: 190 36% 52%;
+    --primary-foreground: 36 43% 94%;
+    --secondary: 234 30% 28%;
+    --secondary-foreground: 36 43% 94%;
+    --muted: 234 25% 35%;
+    --muted-foreground: 234 15% 65%;
+    --accent: 53 100% 85%;
+    --accent-foreground: 234 38% 16%;
+    --destructive: 351 51% 81%;
+    --destructive-foreground: 234 38% 16%;
+    --border: 234 30% 30%;
+    --input: 234 38% 18%;
+    --ring: 190 36% 52%;
+    --radius: 0.5rem;
 
-    /* Cards: Modal backgrounds (#2D3250) */
-    --card: 227 30% 24%; /* #2D3250 */
-    --card-foreground: 248 30% 80%; /* Consistent with main foreground */
-    
-    --popover: 227 30% 20%; /* Slightly darker than card for popovers */
-    --popover-foreground: 248 30% 80%;
-    
-    /* Primary: Soft purple (#D0B8E8) */
-    --primary: 270 44% 82%; /* #D0B8E8 */
-    --primary-foreground: 223 30% 10%; /* Dark text for contrast on soft purple */
+    /* Sidebar specific variables - these will also be dynamically set by themes.ts */
+    --sidebar-background: 234 38% 20%;
+    --sidebar-foreground: 36 43% 94%;
+    --sidebar-primary: 190 36% 52%;
+    --sidebar-primary-foreground: 36 43% 94%;
+    --sidebar-accent: 53 100% 85%;
+    --sidebar-accent-foreground: 234 38% 16%;
+    --sidebar-border: 234 30% 30%;
+    --sidebar-ring: 190 36% 52%;
 
-    /* Secondary: Light lilac (#F4F0F9) - for accents or calendar areas if needed, adjusted for dark theme */
-    --secondary: 267 50% 30%; /* Darker lilac for dark theme */
-    --secondary-foreground: 267 50% 90%; 
-
-    /* Accent: Ovulation/warm light (#FFF2B2) */
-    --accent: 53 100% 85%; /* #FFF2B2 */
-    --accent-foreground: 223 30% 10%; /* Dark text for contrast on warm light */
-    
-    /* Muted: Neutral UI elements (#DADADA), adjusted for dark theme */
-    --muted: 0 0% 30%; /* #4D4D4D */
-    --muted-foreground: 0 0% 60%; /* #999999 */
-    
-    /* Destructive: Bleeding days/energy peaks (#E88DA1) */
-    --destructive: 340 66% 70%; /* #E88DA1 */
-    --destructive-foreground: 0 0% 98%; /* White/very light for text */
-    
-    --border: 227 30% 30%;   /* Border based on card/modal colors */
-    --input: 227 30% 18%;    /* Darker input background */
-    --ring: 270 44% 82%;     /* Soft purple for focus rings */
-
-    --radius: 0.5rem; 
-    --radius-sm: 0.25rem; 
-    
-    /* Specific Calendar & App Colors from prompt */
-    --calendar-area-bg: 267 50% 96%; /* #F4F0F9 (Light Lilac) - this will be for the calendar component's specific background, if different from card */
-    --important-text: 248 43% 39%; /* #483D8B (Dark Indigo) - for titles etc., ensure good contrast */
-    --pregnancy-growth: 128 41% 85%; /* #C6E8CA */
-
-    /* Overriding Dawn Grey Palette with myLunaraCycle specifics */
-    --calendar-current-day-bg-raw: 53 100% 85%; /* Ovulation color for current day if special */
-    --calendar-other-month-bg: 223 30% 10%; /* Darker for other month days */
-    --calendar-other-month-fg: 0 0% 50%; 
-    --color-moon: 0 0% 75%; /* Silver for moon icons */
-    
-    --calendar-normal-text: 248 30% 80%; 
-    --calendar-default-cell-bg: 223 30% 15%; /* Slightly lighter than main bg */
-    
-    --calendar-bleeding-bg-raw: 340 66% 70%; /* #E88DA1 Soft Crimson for bleeding bg */
-    --calendar-bleeding-text: 0 0% 98%; 
-    --calendar-bleeding-indicator: 340 66% 70%; 
-    
-    --calendar-today-text: 223 30% 10%; 
-
-
-    /* Sidebar specific variables - adapt to dark theme */
-    --sidebar-background: 227 30% 18%; /* Darker than card */
-    --sidebar-foreground: 248 30% 80%;
-    --sidebar-primary: 270 44% 82%; 
-    --sidebar-primary-foreground: 223 30% 10%;
-    --sidebar-accent: 53 100% 85%; 
-    --sidebar-accent-foreground: 223 30% 10%;
-    --sidebar-border: 227 30% 25%;
-    --sidebar-ring: 270 44% 82%;
+    /* Additional specific colors based on prompt, if needed globally */
+    /* --calendar-hover-bg: 220 14% 96%; /* #F3F4F6 for light mode */
+    /* --calendar-today-border: 190 36% 52%; /* #5C9EAD */
+    --color-moon: 0 0% 75%; /* Silver for moon icons, consistent across themes */
   }
 
-  /* Remove .dark specific overrides if the app is now always dark themed */
-  /* For myLunaraCycle, we are designing for a specific dark aesthetic */
   .dark {
-    /* These should be identical to :root if always dark */
-    --background: 223 30% 13%;
-    --foreground: 248 30% 80%;
-    --card: 227 30% 24%;
-    --card-foreground: 248 30% 80%;
-    --popover: 227 30% 20%;
-    --popover-foreground: 248 30% 80%;
-    --primary: 270 44% 82%;
-    --primary-foreground: 223 30% 10%;
-    --secondary: 267 50% 30%;
-    --secondary-foreground: 267 50% 90%;
+    /* These will be set by themes.ts for the dark theme */
+    --background: 234 38% 16%;
+    --foreground: 36 43% 94%;
+    --card: 234 38% 20%;
+    --card-foreground: 36 43% 94%;
+    --popover: 234 38% 18%;
+    --popover-foreground: 36 43% 94%;
+    --primary: 190 36% 52%;
+    --primary-foreground: 36 43% 94%;
+    --secondary: 234 30% 28%;
+    --secondary-foreground: 36 43% 94%;
+    --muted: 234 25% 35%;
+    --muted-foreground: 234 15% 65%;
     --accent: 53 100% 85%;
-    --accent-foreground: 223 30% 10%;
-    --muted: 0 0% 30%;
-    --muted-foreground: 0 0% 60%;
-    --destructive: 340 66% 70%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 227 30% 30%;
-    --input: 227 30% 18%;
-    --ring: 270 44% 82%;
+    --accent-foreground: 234 38% 16%;
+    --destructive: 351 51% 81%;
+    --destructive-foreground: 234 38% 16%;
+    --border: 234 30% 30%;
+    --input: 234 38% 18%;
+    --ring: 190 36% 52%;
 
-    --calendar-area-bg: 267 50% 96%;
-    --important-text: 248 43% 39%;
-    --pregnancy-growth: 128 41% 85%;
-    --calendar-current-day-bg-raw: 53 100% 85%;
-    --calendar-other-month-bg: 223 30% 10%;
-    --calendar-other-month-fg: 0 0% 50%;
-    --color-moon: 0 0% 75%;
-    --calendar-normal-text: 248 30% 80%;
-    --calendar-default-cell-bg: 223 30% 15%;
-    --calendar-bleeding-bg-raw: 340 66% 70%;
-    --calendar-bleeding-text: 0 0% 98%;
-    --calendar-bleeding-indicator: 340 66% 70%;
-    --calendar-today-text: 223 30% 10%;
-
-    --sidebar-background: 227 30% 18%;
-    --sidebar-foreground: 248 30% 80%;
-    --sidebar-primary: 270 44% 82%;
-    --sidebar-primary-foreground: 223 30% 10%;
+    --sidebar-background: 234 38% 20%;
+    --sidebar-foreground: 36 43% 94%;
+    --sidebar-primary: 190 36% 52%;
+    --sidebar-primary-foreground: 36 43% 94%;
     --sidebar-accent: 53 100% 85%;
-    --sidebar-accent-foreground: 223 30% 10%;
-    --sidebar-border: 227 30% 25%;
-    --sidebar-ring: 270 44% 82%;
+    --sidebar-accent-foreground: 234 38% 16%;
+    --sidebar-border: 234 30% 30%;
+    --sidebar-ring: 190 36% 52%;
+    /* --calendar-hover-bg: 234 30% 25%; /* Darker hover for dark mode */
+  }
+
+  .light {
+    /* These will be set by themes.ts for the light theme */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 20%;
+    --primary: 190 36% 52%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 0 0% 20%;
+    --muted: 220 13% 91%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 53 100% 85%;
+    --accent-foreground: 0 0% 25%;
+    --destructive: 351 51% 81%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 86%;
+    --input: 0 0% 100%;
+    --ring: 190 36% 52%;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 20%;
+    --sidebar-primary: 190 36% 52%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 53 100% 85%;
+    --sidebar-accent-foreground: 0 0% 25%;
+    --sidebar-border: 220 13% 86%;
+    --sidebar-ring: 190 36% 52%;
   }
 }
 
@@ -132,7 +115,6 @@
   }
   body {
     @apply bg-background text-foreground;
-    /* Using a common sans-serif font, can be replaced with a specific one like Inter or a custom font */
     font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     min-height: 100vh;
     display: flex;
@@ -160,7 +142,6 @@
     }
   }
 
-  /* Soft transitions */
   .transition-soft {
     transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
