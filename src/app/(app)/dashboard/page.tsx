@@ -8,74 +8,63 @@ import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
-import type { GeneratedImpulse, DailyEntryData, CycleInfo } from '@/lib/types';
-// import { calculateCycleInfo } from '@/lib/cycle-utils'; // Assuming this will be re-integrated or adapted
+import type { GeneratedImpulse, DailyEntryData } from '@/lib/types'; // Removed CycleInfo as FullCycleInfo is more comprehensive
 import { format, parseISO } from 'date-fns';
-import { Loader2, Sparkles, Info, CalendarDays, BookHeart } from 'lucide-react';
-
-// Placeholder for fetching all entries - adapt to new DailyEntryData structure
-async function fetchAllDailyEntries(userId: string): Promise<DailyEntryData[]> {
-  const storedEntries = JSON.parse(localStorage.getItem(`myLunaraCycle_dailyEntries_${userId}`) || '{}');
-  return Object.values(storedEntries);
-}
+import { Loader2, Sparkles, Info, CalendarDays, BookHeart, Moon, Droplet, Leaf, Sun, Activity } from 'lucide-react';
+import { getMoonPhase, getMoonEmoji } from '@/lib/moon-utils';
+import { calculateFullCycleInfoForDate, type FullCycleInfo, type CyclePhaseName } from '@/lib/cycle-utils';
 
 
 export default function DashboardPage() {
-  const { t, userPreferences } = useAppContext();
+  const { t, userPreferences, appData, loadAppData } = useAppContext();
   const { user } = useAuth();
   const [latestImpulse, setLatestImpulse] = useState<GeneratedImpulse | null>(null);
-  const [isLoadingImpulse, setIsLoadingImpulse] = useState(false); // Assuming not loading by default for now
-  const [currentCycleInfo, setCurrentCycleInfo] = useState<CycleInfo | null>(null);
-  const [isLoadingCycleInfo, setIsLoadingCycleInfo] = useState(false); // Assuming not loading by default
-
-  // const loadDashboardData = useCallback(async () => {
-  //   if (!user) return;
-  //   setIsLoadingCycleInfo(true);
-  //   try {
-  //     const allEntries = await fetchAllDailyEntries(user.id);
-  //     const todayStr = format(new Date(), 'yyyy-MM-dd');
-  //     // const cycleInfo = calculateCycleInfo(todayStr, allEntries); // This function needs to be adapted or re-implemented
-  //     // setCurrentCycleInfo(cycleInfo);
-  //     setCurrentCycleInfo({ phase: 'Follicular', cycleDay: 10, isFertile: false, isOvulationDay: false, nextPeriodStartDate: null }); // Placeholder
-  //   } catch (error) {
-  //     console.error("Error loading cycle info for dashboard:", error);
-  //     setCurrentCycleInfo(null);
-  //   } finally {
-  //     setIsLoadingCycleInfo(false);
-  //   }
-  // }, [user]);
+  const [isLoadingImpulse, setIsLoadingImpulse] = useState(false); 
   
+  const [currentMoon, setCurrentMoon] = useState<{ name: ReturnType<typeof getMoonPhase> | null; emoji: string | null }>({ name: null, emoji: null });
+  const [currentCycleDetails, setCurrentCycleDetails] = useState<FullCycleInfo | null>(null);
+  const [isLoadingDashboardData, setIsLoadingDashboardData] = useState(true);
+
+  const userId = user?.id;
 
   useEffect(() => {
-    // Mock loading for now
-    // loadDashboardData();
+    const today = new Date();
+    const phaseName = getMoonPhase(today);
+    setCurrentMoon({ name: phaseName, emoji: getMoonEmoji(phaseName) });
 
-    // Placeholder for impulse loading from localStorage if implemented
-    // const storedImpulse = localStorage.getItem(`myLunaraCycle_latestImpulse_${user?.id}`);
-    // if (storedImpulse) setLatestImpulse(JSON.parse(storedImpulse));
+    if (userId) {
+      setIsLoadingDashboardData(true);
+      loadAppData(userId).then(() => {
+        // This block runs after appData is loaded from context
+        if (userPreferences.appMode === 'cycle') {
+          const cycleInfo = calculateFullCycleInfoForDate(today, appData.dailyEntries);
+          setCurrentCycleDetails(cycleInfo);
+        } else {
+          setCurrentCycleDetails(null);
+        }
+        setIsLoadingDashboardData(false);
+      }).catch(() => {
+        setIsLoadingDashboardData(false); 
+      });
+    } else {
+      setCurrentCycleDetails(null);
+      setIsLoadingDashboardData(false); 
+    }
+  // Trigger recalc if user, mode, or the core dailyEntries data changes.
+  // Explicitly depending on appData.dailyEntries ensures re-calculation when entries are updated.
+  }, [userId, loadAppData, userPreferences.appMode, appData.dailyEntries]);
 
-    // const handleStorageChange = (event: StorageEvent) => {
-    //   if (event.key === `myLunaraCycle_latestImpulse_${user?.id}`) { /* ... */ }
-    //   if (event.key === `myLunaraCycle_dailyEntries_${user?.id}`) {
-    //     loadDashboardData();
-    //   }
-    // };
-    // window.addEventListener('storage', handleStorageChange);
-    // return () => window.removeEventListener('storage', handleStorageChange);
-  }, [user]); // Add loadDashboardData if re-enabled
 
-  // const getCyclePhaseTranslationKey = (phase?: CycleInfo['phase']): string => {
-  //   if (!phase) return 'cyclePhaseUnknown';
-  //   const keyMap: Record<CycleInfo['phase'], string> = {
-  //     Menstruation: 'cyclePhaseMenstruation',
-  //     Follicular: 'cyclePhaseFollicular',
-  //     Ovulation: 'cyclePhaseOvulation',
-  //     Luteal: 'cyclePhaseLuteal',
-  //     Premenstrual: 'cyclePhasePremenstrual',
-  //     Unknown: 'cyclePhaseUnknown',
-  //   };
-  //   return keyMap[phase] || 'cyclePhaseUnknown';
-  // };
+  const getPhaseDisplay = (phase: CyclePhaseName | undefined) => {
+    if (!phase || phase === 'Unknown') return { icon: <Info className="mr-2 h-4 w-4 text-muted-foreground" />, text: t('cyclePhaseUnknown') };
+    switch (phase) {
+        case 'Menstruation': return { icon: <Droplet className="mr-2 h-4 w-4 text-destructive" />, text: t('cyclePhaseMenstruation') };
+        case 'Follicular': return { icon: <Leaf className="mr-2 h-4 w-4 text-green-500" />, text: t('cyclePhaseFollicular') };
+        case 'Ovulation': return { icon: <Sun className="mr-2 h-4 w-4 text-yellow-500" />, text: t('cyclePhaseOvulation') };
+        case 'Luteal': return { icon: <Activity className="mr-2 h-4 w-4 text-purple-500" />, text: t('cyclePhaseLuteal') };
+        default: return { icon: <Info className="mr-2 h-4 w-4 text-muted-foreground" />, text: t('cyclePhaseUnknown') };
+    }
+  };
 
 
   return (
@@ -86,7 +75,7 @@ export default function DashboardPage() {
             {t('dashboard')} - {userPreferences.appMode === 'cycle' ? t('cycleMode') : t('pregnancyMode')}
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            {user?.displayName || user?.email}! {t('tagline')}
+            {t('welcomeMessage', { name: user?.displayName || user?.email || t('user', {defaultValue: 'User'}) })} {t('tagline')}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
@@ -95,7 +84,35 @@ export default function DashboardPage() {
               <CardTitle className="flex items-center gap-2 text-important-text"><CalendarDays className="h-6 w-6 text-primary"/>{t('calendar')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground mb-4">View your cycle, ovulation, or pregnancy milestones.</p>
+              {isLoadingDashboardData ? (
+                  <div className="flex items-center text-muted-foreground mb-3">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <span>{t('loadingData', { defaultValue: 'Loading...' })}</span>
+                  </div>
+              ) : (
+                  <>
+                      {currentMoon.name && (
+                          <div className="flex items-center text-sm text-muted-foreground mb-1">
+                              <Moon className="mr-2 h-4 w-4 text-primary" />
+                              {t('currentMoonPhaseLabel', { defaultValue: 'Moon' })}: {currentMoon.emoji} {t(`moonPhase${currentMoon.name.replace(/\s/g, '')}` as any, { defaultValue: currentMoon.name })}
+                          </div>
+                      )}
+                      {userPreferences.appMode === 'cycle' && currentCycleDetails && currentCycleDetails.phase !== 'Unknown' && (
+                          <div className="flex items-center text-sm text-muted-foreground mb-3">
+                              {getPhaseDisplay(currentCycleDetails.phase).icon}
+                              {t('currentCyclePhaseLabel', { defaultValue: 'Cycle' })}: {getPhaseDisplay(currentCycleDetails.phase).text}
+                              {currentCycleDetails.cycleDay && currentCycleDetails.cycleDay > 0 ? ` - ${t('dayAbbreviation', {defaultValue: 'D'})}${currentCycleDetails.cycleDay}` : ''}
+                          </div>
+                      )}
+                      {userPreferences.appMode === 'cycle' && (!currentCycleDetails || currentCycleDetails.phase === 'Unknown') && !isLoadingDashboardData && (
+                           <div className="flex items-center text-sm text-accent-foreground bg-accent/20 p-2 rounded-md mb-3">
+                              <Info className="mr-2 h-4 w-4 shrink-0" />
+                              <span>{t('logPeriodForCycleInfo', {defaultValue: 'Log period start in calendar to see cycle info.'})}</span>
+                          </div>
+                      )}
+                  </>
+              )}
+              <p className="text-muted-foreground mb-4">{t('viewYourCycleMilestones', {defaultValue: 'View your cycle, ovulation, or pregnancy milestones.'})}</p>
               <Image 
                 src="https://placehold.co/600x400.png" 
                 alt="Calendar placeholder" 
@@ -115,7 +132,7 @@ export default function DashboardPage() {
               <CardTitle className="flex items-center gap-2 text-important-text"><BookHeart className="h-6 w-6 text-primary"/>{t('journal')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground mb-4">Record your daily mood and journal entries.</p>
+              <p className="text-muted-foreground mb-4">{t('journalCardDescription', {defaultValue: 'Record your daily mood and journal entries.'})}</p>
                <Image 
                 src="https://placehold.co/600x400.png" 
                 alt="Journal placeholder" 
@@ -134,88 +151,15 @@ export default function DashboardPage() {
 
       {userPreferences.appMode === 'cycle' && (
         <>
-        {/* Cycle specific cards will be re-integrated once cycle calculation logic is robust */}
-        {/* <Card className="shadow-lg bg-card text-card-foreground">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl text-important-text">
-                <Info className="text-primary h-6 w-6" />
-                {t('currentCyclePhaseLabel')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoadingCycleInfo ? (
-                 <div className="flex items-center text-muted-foreground">
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    <span>Loading cycle information...</span>
-                </div>
-            ) : currentCycleInfo && currentCycleInfo.phase !== 'Unknown' ? (
-                <div>
-                    <p className="text-2xl font-semibold text-primary">
-                        {t(getCyclePhaseTranslationKey(currentCycleInfo.phase))}
-                        {currentCycleInfo.phase !== 'Ovulation' && ` - Day ${currentCycleInfo.cycleDay}`}
-                    </p>
-                     {currentCycleInfo.isOvulationDay && (
-                        <p className="text-sm text-accent">{t('ovulationDayLabel')}</p>
-                    )}
-                    {currentCycleInfo.isFertile && !currentCycleInfo.isOvulationDay && (
-                         <p className="text-sm text-accent">{t('fertileWindowLabel')}</p>
-                    )}
-                    {currentCycleInfo.nextPeriodStartDate && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                            {t('nextPeriodPredictionLabel')}: {format(parseISO(currentCycleInfo.nextPeriodStartDate), 'PPP', {locale: userPreferences.language === 'de' ? require('date-fns/locale/de').default : require('date-fns/locale/en-US').default })}
-                        </p>
-                    )}
-                </div>
-            ) : (
-                 <p className="text-muted-foreground">Log your period start in the calendar to see your cycle phase.</p>
-            )}
-          </CardContent>
-        </Card> */}
-
-        {/* <Card className="shadow-lg bg-card text-card-foreground">
-          <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-xl text-important-text">
-                <Sparkles className="text-primary h-6 w-6" /> 
-                {t('dailyImpulseTitle')}
-              </CardTitle>
-          </CardHeader>
-          <CardContent>
-             {isLoadingImpulse ? (
-              <div className="flex items-center text-muted-foreground">
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                <span>{t('dailyImpulseLoading')}</span>
-              </div>
-            ) : latestImpulse && latestImpulse.text ? (
-              <>
-                <p className="text-lg italic text-primary p-4 bg-primary/10 rounded-md">
-                  "{latestImpulse.text}"
-                </p>
-                 <div className="text-xs text-muted-foreground mt-2">
-                  <span>Phase: {t(getCyclePhaseTranslationKey(latestImpulse.cyclePhase))} &bull; Moon: {latestImpulse.moonPhase}</span>
-                  <br />
-                  <span>For entry on: {new Date(latestImpulse.date + 'T00:00:00').toLocaleDateString(userPreferences.language, { month: 'long', day: 'numeric' })}</span>
-                </div>
-              </>
-            ) : (
-              <p className="text-muted-foreground p-4 bg-muted/50 rounded-md">
-                {t('dailyImpulseUnavailable')}
-              </p>
-            )}
-            <Link href="/calendar" passHref className="mt-4 block">
-                <Button variant="link" className="text-primary">{t('viewCalendar')}</Button>
-            </Link>
-          </CardContent>
-        </Card> */}
+        {/* Removed the old Cycle specific cards that were commented out - new info is in calendar card */}
         </>
       )}
 
-      {/* Common Affirmation card for both modes, using the new AI flow */}
          <Card className="shadow-lg bg-card text-card-foreground">
           <CardHeader>
               <CardTitle className="text-important-text">{t('affirmationForToday')}</CardTitle>
           </CardHeader>
           <CardContent>
-              {/* This will be replaced by AI generated affirmation */}
               <p className="text-lg italic text-primary p-4 bg-primary/10 rounded-md">
                 "{t('sampleAffirmation')}" 
               </p>

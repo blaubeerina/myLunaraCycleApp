@@ -23,6 +23,8 @@ export const translations: AllTranslations = {
     loginWithGoogle: 'Login with Google',
     dontHaveAccount: "Don't have an account?",
     signUp: 'Sign Up',
+    user: 'User',
+    welcomeMessage: 'Welcome, {name}!',
     // Modes
     cycleMode: 'Cycle Mode',
     pregnancyMode: 'Pregnancy Mode',
@@ -78,19 +80,26 @@ export const translations: AllTranslations = {
     generateNewAffirmation: 'Generate New Affirmation',
     // Dashboard
     landingSubtitle: 'Welcome to your sacred space',
-    currentCyclePhaseLabel: 'Current Cycle Phase',
+    currentCyclePhaseLabel: 'Cycle',
     cyclePhaseMenstruation: 'Menstruation',
     cyclePhaseFollicular: 'Follicular Phase',
     cyclePhaseOvulation: 'Ovulation',
     cyclePhaseLuteal: 'Luteal Phase',
-    cyclePhasePremenstrual: 'Premenstrual', // Retained if used elsewhere, but new phases are more specific
-    cyclePhaseUnknown: 'Unknown Phase', // For when calculation is not possible
+    cyclePhasePremenstrual: 'Premenstrual', 
+    cyclePhaseUnknown: 'Unknown Phase', 
     ovulationDayLabel: 'Ovulation Day!',
     fertileWindowLabel: 'Fertile Window',
     nextPeriodPredictionLabel: 'Next Period expected around',
     dailyImpulseTitle: 'Daily Impulse',
     dailyImpulseLoading: 'Loading daily impulse...',
     dailyImpulseUnavailable: 'Daily impulse will be available once you start logging your entries.',
+    viewYourCycleMilestones: 'View your cycle, ovulation, or pregnancy milestones.',
+    journalCardDescription: 'Record your daily mood and journal entries.',
+    openJournal: 'Open Journal',
+    loadingData: 'Loading...',
+    currentMoonPhaseLabel: 'Moon',
+    dayAbbreviation: 'D',
+    logPeriodForCycleInfo: 'Log period start in calendar to see cycle info.',
     // Reminders
     remindersDescription: 'Configure personalized reminders.',
     // Mood Selector (for journal entries)
@@ -183,6 +192,8 @@ export const translations: AllTranslations = {
     loginWithGoogle: 'Mit Google anmelden',
     dontHaveAccount: 'Noch kein Konto?',
     signUp: 'Registrieren',
+    user: 'Benutzer',
+    welcomeMessage: 'Willkommen, {name}!',
     // Modes
     cycleMode: 'Zyklusmodus',
     pregnancyMode: 'Schwangerschaftsmodus',
@@ -238,7 +249,7 @@ export const translations: AllTranslations = {
     generateNewAffirmation: 'Neue Affirmation generieren',
     // Dashboard
     landingSubtitle: 'Willkommen in deinem heiligen Raum',
-    currentCyclePhaseLabel: 'Aktuelle Zyklusphase',
+    currentCyclePhaseLabel: 'Zyklus',
     cyclePhaseMenstruation: 'Menstruation',
     cyclePhaseFollicular: 'Follikelphase',
     cyclePhaseOvulation: 'Eisprung',
@@ -251,6 +262,13 @@ export const translations: AllTranslations = {
     dailyImpulseTitle: 'Täglicher Impuls',
     dailyImpulseLoading: 'Lade täglichen Impuls...',
     dailyImpulseUnavailable: 'Der tägliche Impuls ist verfügbar, sobald du mit dem Loggen deiner Einträge beginnst.',
+    viewYourCycleMilestones: 'Betrachte deinen Zyklus, Eisprung oder Schwangerschaftsmeilensteine.',
+    journalCardDescription: 'Halte deine tägliche Stimmung und Tagebucheinträge fest.',
+    openJournal: 'Tagebuch öffnen',
+    loadingData: 'Lade Daten...',
+    currentMoonPhaseLabel: 'Mond',
+    dayAbbreviation: 'T',
+    logPeriodForCycleInfo: 'Trage den Beginn deiner Periode im Kalender ein, um Zyklusinfos zu sehen.',
     // Reminders
     remindersDescription: 'Konfiguriere personalisierte Erinnerungen.',
     // Mood Selector (for journal entries)
