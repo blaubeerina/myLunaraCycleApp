@@ -8,8 +8,8 @@
  * - GenerateAffirmationOutput - The return type for the generateAffirmation function.
  */
 
-import { generateText } from '@/ai/server-ai';
-// Zod import removed as schemas are replaced with plain types for demo mode
+// Zod and schema definitions removed for demo mode to comply with 'use server' constraints.
+// Plain types are used instead.
 
 // Define the input type for the affirmation generation
 export type GenerateAffirmationInput = {
@@ -29,10 +29,11 @@ export type GenerateAffirmationOutput = {
 // Wrapper function to be called by the frontend
 export async function generateAffirmation(input: GenerateAffirmationInput): Promise<GenerateAffirmationOutput> {
   // DEMO MODE: Return a hardcoded affirmation
-  console.log("DEMO MODE: Affirmation generation skipped, returning static affirmation.");
+  console.log("DEMO MODE: Affirmation generation skipped, returning static affirmation based on request.");
+  
   const demoAffirmation = input.language === 'de'
-    ? "Dies ist eine Demo-Affirmation: Du bist wunderbar so wie du bist."
-    : "This is a demo affirmation: You are wonderful just as you are.";
+    ? "Jeder Moment birgt eine Lektion. Bist du bereit, sie zu erkennen?"
+    : "Whatever is happening might supposed to be happening, can you remain open to seeing why? - Teal Swan";
 
   // Simulate a slight delay as if an API call was made
   await new Promise(resolve => setTimeout(resolve, 300));
@@ -76,7 +77,7 @@ export async function generateAffirmation(input: GenerateAffirmationInput): Prom
   `;
 
   try {
-    const affirmationText = await generateText(promptContent);
+    const affirmationText = await generateText(promptContent); // generateText would be imported from @/ai/server-ai
 
     if (!affirmationText || affirmationText.trim() === "" || affirmationText === "AI text generation is currently unavailable." || affirmationText === "An error occurred while generating the affirmation.") {
       const fallbackAffirmation = input.language === 'de' ? "Jeder Tag birgt neue Chancen und Möglichkeiten." : "Every day holds new opportunities and chances.";
@@ -90,3 +91,4 @@ export async function generateAffirmation(input: GenerateAffirmationInput): Prom
   }
   */
 }
+
