@@ -13,7 +13,7 @@ import { ChevronLeft, ChevronRight, Loader2, Droplet, Sun, Leaf, Flower2, AlertT
 import { DayEntryDialog } from '@/components/calendar/DayEntryDialog';
 import { cn } from '@/lib/utils';
 import { 
-  getMostRecentPeriodStart, // Still used by dialog logic if not overridden
+  getMostRecentPeriodStart, 
   calculateCycleDayNumber,
   determineCyclePhase,
   DEFAULT_CYCLE_LENGTH,
@@ -22,11 +22,9 @@ import {
   getPredictedFertileWindow,
   getPredictedNextPeriodDates,
   getBleedingBackgroundClass,
-  calculateFullCycleInfoForDate, // Not directly used for grid, but can be for dialog context
+  calculateFullCycleInfoForDate, 
 } from '@/lib/cycle-utils';
 
-
-// Removed fetchMoonDataForMonth as moon data will be calculated directly or mocked
 
 export default function CalendarPage() {
   const { t, userPreferences, appData, saveDailyEntry, loadAppData } = useAppContext();
@@ -35,39 +33,31 @@ export default function CalendarPage() {
   // Mock current month to June 2025 for the demo
   const [currentMonth, setCurrentMonth] = useState(new Date('2025-06-01T00:00:00'));
   
-  // monthMoonData can be used by DayEntryDialog if needed, populate it statically.
   const [monthMoonData, setMonthMoonData] = useState<Record<string, MoonPhaseName>>({});
-  const [isLoadingMoonData, setIsLoadingMoonData] = useState(false); // Keep for consistency, but set to false
+  const [isLoadingMoonData, setIsLoadingMoonData] = useState(false); 
 
   const [isEntryDialogOpen, setIsEntryDialogOpen] = useState(false);
   const [selectedDateForEntry, setSelectedDateForEntry] = useState<Date | null>(null);
 
   const userId = user?.id;
 
-  // Mock "today" for consistent display in the mock-up
   const MOCK_TODAY_DATE = useMemo(() => new Date('2025-06-19T00:00:00'), []);
 
 
-  // Mock user preferences for the calendar view, forcing cycle mode
   const mockUserPreferences = useMemo(() => ({
     language: userPreferences.language,
     appMode: 'cycle' as AppMode,
     theme: userPreferences.theme,
   }), [userPreferences.language, userPreferences.theme]);
 
-  // Define the mock period
   const MOCK_PERIOD_START_DATE_STR = '2025-05-29';
   const MOCK_PERIOD_END_DATE_STR = '2025-06-01';
   const MOCK_PERIOD_START_DATE = useMemo(() => parseISO(MOCK_PERIOD_START_DATE_STR), []);
   const MOCK_PERIOD_END_DATE = useMemo(() => parseISO(MOCK_PERIOD_END_DATE_STR), []);
 
-  // Disable dynamic data loading effects for the mock-up
   useEffect(() => {
-    // console.log("DEMO MODE: Skipping appData load for calendar mock.");
-    // console.log("DEMO MODE: Skipping moon data load for calendar mock, calculating per cell or statically.");
-    setIsLoadingMoonData(false); // Ensure loading is false
+    setIsLoadingMoonData(false); 
 
-    // Statically populate monthMoonData for DayEntryDialog or other potential uses
     const monthStart = startOfMonth(currentMonth);
     const monthEndVal = endOfMonth(currentMonth);
     const gridStart = startOfWeek(monthStart, { weekStartsOn: 1, locale: mockUserPreferences.language === 'de' ? de : undefined });
@@ -97,8 +87,6 @@ export default function CalendarPage() {
 
   const handleSaveEntry = async (entryData: DailyEntryData) => {
     if (userId) {
-      // Note: This will save to the actual appData via context,
-      // but the calendar grid itself is based on mock data and won't visually update from this save.
       await saveDailyEntry(userId, entryData);
     }
     handleCloseEntryDialog();
@@ -147,8 +135,8 @@ export default function CalendarPage() {
 
   const calendarGridData = useMemo(() => {
     const monthStart = startOfMonth(currentMonth);
-    const monthEndValue = endOfMonth(monthStart); // Corrected: use monthStart
-    const weekStartsOn = 1; // Monday
+    const monthEndValue = endOfMonth(monthStart); 
+    const weekStartsOn = 1; 
     const startDate = startOfWeek(monthStart, { locale: mockUserPreferences.language === 'de' ? de : undefined, weekStartsOn });
     const endDate = endOfWeek(monthEndValue, { locale: mockUserPreferences.language === 'de' ? de : undefined, weekStartsOn });
     
@@ -173,11 +161,11 @@ export default function CalendarPage() {
         currentPhase = 'Menstruation';
         if (isSameDay(dayStartVal, MOCK_PERIOD_START_DATE)) {
           bleedingIntensity = 'medium'; isPeriodStartMarker = true;
-        } else if (isSameDay(dayStartVal, addDays(MOCK_PERIOD_START_DATE, 1))) { // May 30th
+        } else if (isSameDay(dayStartVal, addDays(MOCK_PERIOD_START_DATE, 1))) { 
           bleedingIntensity = 'heavy';
-        } else if (isSameDay(dayStartVal, addDays(MOCK_PERIOD_START_DATE, 2))) { // May 31st
+        } else if (isSameDay(dayStartVal, addDays(MOCK_PERIOD_START_DATE, 2))) { 
           bleedingIntensity = 'medium';
-        } else if (isSameDay(dayStartVal, MOCK_PERIOD_END_DATE)) { // June 1st
+        } else if (isSameDay(dayStartVal, MOCK_PERIOD_END_DATE)) { 
           bleedingIntensity = 'light'; isPeriodEndMarker = true;
         }
       }
@@ -186,12 +174,12 @@ export default function CalendarPage() {
         date: dateStr,
         dayOfMonth: dayPointer.getDate(),
         isCurrentMonth: isSameMonth(dayPointer, monthStart),
-        isToday: isSameDay(dayPointer, MOCK_TODAY_DATE), // Use mocked "today"
-        mood: undefined, notes: undefined, // No mood/notes in this static mock grid
+        isToday: isSameDay(dayPointer, MOCK_TODAY_DATE), 
+        mood: undefined, notes: undefined, 
         bleeding: bleedingIntensity ? { intensity: bleedingIntensity } : undefined,
         isPeriodStart: isPeriodStartMarker,
         isPeriodEnd: isPeriodEndMarker,
-        moonPhaseName: getMoonPhase(dayPointer), // Calculate moon phase
+        moonPhaseName: getMoonPhase(dayPointer), 
         currentCyclePhase: currentPhase,
         cycleDayNumber: cycleDay || undefined,
         isFertilePredicted: false,
@@ -328,7 +316,6 @@ export default function CalendarPage() {
           
           <div className="mt-auto flex flex-col items-start w-full space-y-0.5">
             {phaseIcon && <div className="self-start">{phaseIcon}</div>}
-            {/* Mood and notes display can be kept if dialog saves them, but grid is static for mock */}
             {cellInfo.isCurrentMonth && cellInfo.mood && (
                <div className="text-lg" title={cellInfo.mood}>
                   {cellInfo.mood}
@@ -357,7 +344,6 @@ export default function CalendarPage() {
     return <div className="border-l border-border/40 bg-background flex-grow">{rows}</div>;
   };
   
-  // Find initial data for dialog from the static grid data
   const getInitialDialogData = () => {
     if (!selectedDateForEntry) return undefined;
     const dateStr = format(selectedDateForEntry, 'yyyy-MM-dd');
@@ -367,7 +353,6 @@ export default function CalendarPage() {
 
   return (
     <div className="w-full h-full flex flex-col bg-card shadow-sm rounded-lg overflow-hidden">
-      {/* Removed the "Please log period start" notice for mock-up */}
       {renderHeader()}
       {renderDaysOfWeek()}
       <div className="flex-grow overflow-y-auto">
@@ -379,7 +364,7 @@ export default function CalendarPage() {
           isOpen={isEntryDialogOpen}
           onClose={handleCloseEntryDialog}
           selectedDate={selectedDateForEntry}
-          initialData={getInitialDialogData()} // Use data from the static grid
+          initialData={getInitialDialogData()} 
           onSaveEntry={handleSaveEntry}
           language={mockUserPreferences.language}
           t={t}
@@ -390,4 +375,3 @@ export default function CalendarPage() {
     </div>
   );
 }
-
