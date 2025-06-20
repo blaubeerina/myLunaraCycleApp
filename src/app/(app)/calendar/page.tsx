@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, parseISO, differenceInDays } from 'date-fns';
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, parseISO, differenceInDays, startOfDay } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { useAppContext } from '@/contexts/AppContext';
 import { useAuth } from '@/components/auth/AuthContext';
@@ -161,7 +161,7 @@ export default function CalendarPage() {
 
     while(dayPointer <= endDate) {
       const dateStr = format(dayPointer, 'yyyy-MM-dd');
-      const dayStart = startOfDay(dayPointer);
+      const dayStartVal = startOfDay(dayPointer);
 
       const cycleDay = calculateCycleDayNumber(MOCK_PERIOD_START_DATE_STR, dayPointer);
       let currentPhase = determineCyclePhase(dayPointer, MOCK_PERIOD_START_DATE_STR, DEFAULT_CYCLE_LENGTH, DEFAULT_PERIOD_LENGTH);
@@ -169,15 +169,15 @@ export default function CalendarPage() {
       let isPeriodStartMarker = false;
       let isPeriodEndMarker = false;
 
-      if (dayStart >= MOCK_PERIOD_START_DATE && dayStart <= MOCK_PERIOD_END_DATE) {
+      if (dayStartVal >= MOCK_PERIOD_START_DATE && dayStartVal <= MOCK_PERIOD_END_DATE) {
         currentPhase = 'Menstruation';
-        if (isSameDay(dayStart, MOCK_PERIOD_START_DATE)) {
+        if (isSameDay(dayStartVal, MOCK_PERIOD_START_DATE)) {
           bleedingIntensity = 'medium'; isPeriodStartMarker = true;
-        } else if (isSameDay(dayStart, addDays(MOCK_PERIOD_START_DATE, 1))) { // May 30th
+        } else if (isSameDay(dayStartVal, addDays(MOCK_PERIOD_START_DATE, 1))) { // May 30th
           bleedingIntensity = 'heavy';
-        } else if (isSameDay(dayStart, addDays(MOCK_PERIOD_START_DATE, 2))) { // May 31st
+        } else if (isSameDay(dayStartVal, addDays(MOCK_PERIOD_START_DATE, 2))) { // May 31st
           bleedingIntensity = 'medium';
-        } else if (isSameDay(dayStart, MOCK_PERIOD_END_DATE)) { // June 1st
+        } else if (isSameDay(dayStartVal, MOCK_PERIOD_END_DATE)) { // June 1st
           bleedingIntensity = 'light'; isPeriodEndMarker = true;
         }
       }
