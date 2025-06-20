@@ -46,7 +46,7 @@ export default function CalendarPage() {
 
   const mockUserPreferences = useMemo(() => ({
     language: userPreferences.language,
-    appMode: 'cycle' as AppMode,
+    appMode: 'cycle' as AppMode, // Hardcode to 'cycle' for consistent demo rendering of bleeding
     theme: userPreferences.theme,
   }), [userPreferences.language, userPreferences.theme]);
 
@@ -56,7 +56,7 @@ export default function CalendarPage() {
   const MOCK_PERIOD_END_DATE = useMemo(() => parseISO(MOCK_PERIOD_END_DATE_STR), []);
 
   useEffect(() => {
-    setIsLoadingMoonData(false); 
+    setIsLoadingMoonData(false); // Ensure loading indicator for moon is off for demo
 
     const monthStart = startOfMonth(currentMonth);
     const monthEndVal = endOfMonth(currentMonth);
@@ -87,7 +87,9 @@ export default function CalendarPage() {
 
   const handleSaveEntry = async (entryData: DailyEntryData) => {
     if (userId) {
-      await saveDailyEntry(userId, entryData);
+      // For demo, we don't persist or visually update the static grid with saved data
+      console.log("Demo: Save entry clicked for " + entryData.date, entryData);
+      // await saveDailyEntry(userId, entryData); 
     }
     handleCloseEntryDialog();
   };
@@ -159,13 +161,13 @@ export default function CalendarPage() {
 
       if (dayStartVal >= MOCK_PERIOD_START_DATE && dayStartVal <= MOCK_PERIOD_END_DATE) {
         currentPhase = 'Menstruation';
-        if (isSameDay(dayStartVal, MOCK_PERIOD_START_DATE)) {
+        if (isSameDay(dayStartVal, MOCK_PERIOD_START_DATE)) { // May 29
           bleedingIntensity = 'medium'; isPeriodStartMarker = true;
-        } else if (isSameDay(dayStartVal, addDays(MOCK_PERIOD_START_DATE, 1))) { 
+        } else if (isSameDay(dayStartVal, addDays(MOCK_PERIOD_START_DATE, 1))) { // May 30
           bleedingIntensity = 'heavy';
-        } else if (isSameDay(dayStartVal, addDays(MOCK_PERIOD_START_DATE, 2))) { 
+        } else if (isSameDay(dayStartVal, addDays(MOCK_PERIOD_START_DATE, 2))) { // May 31
           bleedingIntensity = 'medium';
-        } else if (isSameDay(dayStartVal, MOCK_PERIOD_END_DATE)) { 
+        } else if (isSameDay(dayStartVal, MOCK_PERIOD_END_DATE)) { // June 1
           bleedingIntensity = 'light'; isPeriodEndMarker = true;
         }
       }
@@ -175,7 +177,7 @@ export default function CalendarPage() {
         dayOfMonth: dayPointer.getDate(),
         isCurrentMonth: isSameMonth(dayPointer, monthStart),
         isToday: isSameDay(dayPointer, MOCK_TODAY_DATE), 
-        mood: undefined, notes: undefined, 
+        mood: undefined, notes: undefined, // These would come from actual user entries if not a mock
         bleeding: bleedingIntensity ? { intensity: bleedingIntensity } : undefined,
         isPeriodStart: isPeriodStartMarker,
         isPeriodEnd: isPeriodEndMarker,
@@ -187,17 +189,20 @@ export default function CalendarPage() {
         isNextPeriodPredicted: false,
       };
 
+      // Add mock predictions
       if (isSameDay(dayPointer, mockOvulationDate)) {
           cellData.isOvulationPredicted = true;
           if (cellData.currentCyclePhase !== 'Menstruation') cellData.currentCyclePhase = 'Ovulation';
       }
       if (dayPointer >= mockFertileWindow.start && dayPointer <= mockFertileWindow.end) {
           cellData.isFertilePredicted = true;
+           // Don't override Menstruation or Ovulation for phase name if fertile
            if (cellData.currentCyclePhase !== 'Menstruation' && cellData.currentCyclePhase !== 'Ovulation') cellData.currentCyclePhase = 'Follicular';
       }
       if (mockNextPeriodDates[0] && isSameDay(dayPointer, mockNextPeriodDates[0])) {
           cellData.isNextPeriodPredicted = true;
-           if (cellData.currentCyclePhase !== 'Menstruation') cellData.currentCyclePhase = 'Menstruation';
+           // Don't override Menstruation if predicted next period
+           if (cellData.currentCyclePhase !== 'Menstruation') cellData.currentCyclePhase = 'Menstruation'; // Show as predicted period
       }
       
       grid.push(cellData);
@@ -242,6 +247,7 @@ export default function CalendarPage() {
       let phaseIcon = null;
       let phaseTooltip = "";
 
+      // Ensure appMode is 'cycle' for this mock-up section to display correctly
       if (mockUserPreferences.appMode === 'cycle' && cellInfo.isCurrentMonth) {
         const isLoggedBleeding = cellInfo.bleeding && cellInfo.bleeding.intensity !== 'none';
         
@@ -250,41 +256,47 @@ export default function CalendarPage() {
             phaseIcon = <Droplet className="h-4 w-4 text-destructive-foreground/80" />;
             phaseTooltip = t('calendarPhaseMenstruation');
         } else { 
+            // Apply styling for other phases only if not a bleeding day
             switch (cellInfo.currentCyclePhase) {
                 case 'Follicular':
-                    cellClasses = cn(cellClasses, 'bg-green-500/10 dark:bg-green-800/20');
+                    cellClasses = cn(cellClasses, 'bg-green-500/10 dark:bg-green-800/20'); // Example Follicular color
                     phaseIcon = <Leaf className="h-3 w-3 text-green-600 dark:text-green-400" />;
                     phaseTooltip = t('calendarPhaseFollicular');
                     break;
                 case 'Ovulation':
-                    cellClasses = cn(cellClasses, 'bg-accent/30 dark:bg-accent/20');
+                    cellClasses = cn(cellClasses, 'bg-accent/30 dark:bg-accent/20'); // Ovulation color
                     phaseIcon = <Sun className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />;
                     phaseTooltip = t('calendarPhaseOvulation');
                     break;
                 case 'Luteal':
-                    cellClasses = cn(cellClasses, 'bg-purple-500/10 dark:bg-purple-800/20');
+                    cellClasses = cn(cellClasses, 'bg-purple-500/10 dark:bg-purple-800/20'); // Example Luteal color
+                    // No specific icon for Luteal in this mock-up, can be added if needed
                     phaseTooltip = t('calendarPhaseLuteal');
                     break;
             }
         }
 
+        // Add indicators for predicted fertile/ovulation days, ensuring they don't override bleeding display
         if (cellInfo.isFertilePredicted && !isLoggedBleeding && cellInfo.currentCyclePhase !== 'Ovulation') {
-             cellClasses = cn(cellClasses, 'bg-accent/20');
+             cellClasses = cn(cellClasses, 'bg-accent/20'); // Fertile window subtle highlight
              if (!phaseIcon) phaseIcon = <Flower2 className="h-3 w-3 text-yellow-700 dark:text-yellow-500 opacity-70" />;
              phaseTooltip = phaseTooltip ? `${phaseTooltip} - ${t('calendarPhaseFertile')}` : t('calendarPhaseFertile');
         }
         if (cellInfo.isOvulationPredicted && cellInfo.currentCyclePhase === 'Ovulation') {
-             if(!isLoggedBleeding) cellClasses = cn(cellClasses, 'bg-accent/40');
-             phaseIcon = <Sun className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />;
+             // Ovulation styling might be more prominent
+             if(!isLoggedBleeding) cellClasses = cn(cellClasses, 'bg-accent/40'); // More prominent for ovulation
+             phaseIcon = <Sun className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />; // Ensure ovulation icon
              phaseTooltip = `${t('calendarPhaseOvulation')} ${t('calendarPredicted')}`;
         }
          if (cellInfo.isNextPeriodPredicted && !isLoggedBleeding) {
-            cellClasses = cn(cellClasses, 'border-dashed border-destructive/70');
+            // Predicted next period start visual cue
+            cellClasses = cn(cellClasses, 'border-dashed border-destructive/70'); // Dashed border
             if (!phaseIcon) phaseIcon = <AlertTriangle className="h-3 w-3 text-destructive opacity-70" />;
             phaseTooltip = phaseTooltip ? `${phaseTooltip} - ${t('cyclePhaseMenstruation')} ${t('calendarPredicted')}` : `${t('cyclePhaseMenstruation')} ${t('calendarPredicted')}`;
         }
       }
       
+      // Period start/end markers
       if (cellInfo.isPeriodStart && cellInfo.isCurrentMonth) {
         cellClasses = cn(cellClasses, 'border-l-4 border-l-primary'); 
       }
@@ -316,9 +328,11 @@ export default function CalendarPage() {
           
           <div className="mt-auto flex flex-col items-start w-full space-y-0.5">
             {phaseIcon && <div className="self-start">{phaseIcon}</div>}
+            {/* Mood and notes are not part of this static mock-up, but could be added if DailyEntryData had mock values */}
             {cellInfo.isCurrentMonth && cellInfo.mood && (
                <div className="text-lg" title={cellInfo.mood}>
-                  {cellInfo.mood}
+                  {/* Display mood emoji if available from a mock entry */}
+                  {cellInfo.mood} 
                </div>
             )}
             {cellInfo.isCurrentMonth && cellInfo.notes && (
@@ -347,6 +361,7 @@ export default function CalendarPage() {
   const getInitialDialogData = () => {
     if (!selectedDateForEntry) return undefined;
     const dateStr = format(selectedDateForEntry, 'yyyy-MM-dd');
+    // For demo, dialog initial data comes from the static calendarGridData
     return calendarGridData.find(cell => cell.date === dateStr);
   };
 
@@ -364,14 +379,15 @@ export default function CalendarPage() {
           isOpen={isEntryDialogOpen}
           onClose={handleCloseEntryDialog}
           selectedDate={selectedDateForEntry}
-          initialData={getInitialDialogData()} 
+          initialData={getInitialDialogData()} // Provide current cell's mock data to dialog
           onSaveEntry={handleSaveEntry}
           language={mockUserPreferences.language}
           t={t}
-          appMode={mockUserPreferences.appMode}
+          appMode={mockUserPreferences.appMode} // Ensure this is 'cycle' for dialog functionality
           currentMoonPhase={monthMoonData[format(selectedDateForEntry, 'yyyy-MM-dd')]}
         />
       )}
     </div>
   );
 }
+
