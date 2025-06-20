@@ -86,34 +86,31 @@ export default function DashboardPage() {
               <CardTitle className="flex items-center gap-2 text-important-text"><CalendarDays className="h-6 w-6 text-primary"/>{t('calendar')}</CardTitle>
             </CardHeader>
             <CardContent>
-              {isLoadingDashboardData ? (
-                  <div className="flex items-center text-muted-foreground mb-3">
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      <span>{t('loadingData', { defaultValue: 'Loading...' })}</span>
+              {/* isLoadingDashboardData is false in demo mode, so the loading spinner won't show */}
+              {/* Display mocked moon phase */}
+              {currentMoon.name && (
+                  <div className="flex items-center text-sm text-muted-foreground mb-1">
+                      <Moon className="mr-2 h-4 w-4 text-primary" />
+                      {t('currentMoonPhaseLabel', { defaultValue: 'Moon' })}: {currentMoon.emoji} {t(`moonPhase${currentMoon.name.replace(/\s/g, '')}` as any, { defaultValue: currentMoon.name })}
                   </div>
-              ) : (
-                  <>
-                      {currentMoon.name && (
-                          <div className="flex items-center text-sm text-muted-foreground mb-1">
-                              <Moon className="mr-2 h-4 w-4 text-primary" />
-                              {t('currentMoonPhaseLabel', { defaultValue: 'Moon' })}: {currentMoon.emoji} {t(`moonPhase${currentMoon.name.replace(/\s/g, '')}` as any, { defaultValue: currentMoon.name })}
-                          </div>
-                      )}
-                      {userPreferences.appMode === 'cycle' && currentCycleDetails && currentCycleDetails.phase !== 'Unknown' && (
-                          <div className="flex items-center text-sm text-muted-foreground mb-3">
-                              {getPhaseDisplay(currentCycleDetails.phase).icon}
-                              {t('currentCyclePhaseLabel', { defaultValue: 'Cycle' })}: {getPhaseDisplay(currentCycleDetails.phase).text}
-                              {currentCycleDetails.cycleDay && currentCycleDetails.cycleDay > 0 ? ` - ${t('dayAbbreviation', {defaultValue: 'D'})}${currentCycleDetails.cycleDay}` : ''}
-                          </div>
-                      )}
-                      {userPreferences.appMode === 'cycle' && (!currentCycleDetails || currentCycleDetails.phase === 'Unknown') && !isLoadingDashboardData && (
-                           <div className="flex items-center text-sm text-accent-foreground bg-accent/20 p-2 rounded-md mb-3">
-                              <Info className="mr-2 h-4 w-4 shrink-0" />
-                              <span>{t('logPeriodForCycleInfo', {defaultValue: 'Log period start in calendar to see cycle info.'})}</span>
-                          </div>
-                      )}
-                  </>
               )}
+              {/* Always display mocked cycle details for the demo mock-up */}
+              {currentCycleDetails && currentCycleDetails.phase !== 'Unknown' && (
+                  <div className="flex items-center text-sm text-muted-foreground mb-3">
+                      {getPhaseDisplay(currentCycleDetails.phase).icon}
+                      {t('currentCyclePhaseLabel', { defaultValue: 'Cycle' })}: {getPhaseDisplay(currentCycleDetails.phase).text}
+                      {currentCycleDetails.cycleDay && currentCycleDetails.cycleDay > 0 ? ` - ${t('dayAbbreviation', {defaultValue: 'D'})}${currentCycleDetails.cycleDay}` : ''}
+                  </div>
+              )}
+              {/* The "log period for cycle info" prompt is commented out for a cleaner mock-up display */}
+              {/*
+              {userPreferences.appMode === 'cycle' && (!currentCycleDetails || currentCycleDetails.phase === 'Unknown') && !isLoadingDashboardData && (
+                   <div className="flex items-center text-sm text-accent-foreground bg-accent/20 p-2 rounded-md mb-3">
+                      <Info className="mr-2 h-4 w-4 shrink-0" />
+                      <span>{t('logPeriodForCycleInfo', {defaultValue: 'Log period start in calendar to see cycle info.'})}</span>
+                  </div>
+              )}
+              */}
               <p className="text-muted-foreground mb-4">{t('viewYourCycleMilestones', {defaultValue: 'View your cycle, ovulation, or pregnancy milestones.'})}</p>
               <Image 
                 src="https://placehold.co/600x400.png" 
@@ -174,3 +171,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
