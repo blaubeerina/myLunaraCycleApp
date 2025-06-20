@@ -13,8 +13,8 @@ import {
   BellRing, 
   Settings,
   Moon, 
-  Baby, // Lucide icon for pregnancy
-  Info // Icon for the new About page
+  Baby, 
+  Info 
 } from 'lucide-react';
 import {
   Sidebar,
@@ -28,6 +28,7 @@ import {
   SidebarGroupLabel,
 } from '@/components/ui/sidebar'; 
 import { LogoIcon } from '@/components/icons/LogoIcon';
+import React, { useMemo } from 'react'; // Import useMemo
 
 interface NavItem {
   href: string;
@@ -41,8 +42,57 @@ const navItems: NavItem[] = [
   { href: '/journal', labelKey: 'journal', icon: BookHeart },
   { href: '/reminders', labelKey: 'reminders', icon: BellRing },
   { href: '/settings', labelKey: 'settings', icon: Settings },
-  { href: '/about', labelKey: 'aboutApp', icon: Info }, // New menu item
+  { href: '/about', labelKey: 'aboutApp', icon: Info },
 ];
+
+// New sub-component to handle memoization of tooltipConfig
+const SidebarNavMenuItem = ({ 
+  item, 
+  pathname, 
+  t 
+}: { 
+  item: NavItem, 
+  pathname: string, 
+  t: (key: string, params?: Record<string, string | number>) => string 
+}) => {
+  const tooltipConfig = useMemo(() => ({
+    children: t(item.labelKey),
+    side: 'right' as const,
+    align: 'center' as const,
+  }), [t, item.labelKey]);
+
+  // Determine isActive based on current logic
+  let isActive = pathname === item.href;
+  if (item.href === '/dashboard' && pathname.startsWith('/dashboard')) {
+    isActive = true;
+  }
+  if (item.href === '/about' && pathname.startsWith('/about')) {
+    isActive = true;
+  }
+  // Add more specific conditions if needed, for example, for /journal ensuring it doesn't incorrectly match /journal/entry
+  if (item.href !== '/' && pathname.startsWith(item.href) && pathname !== item.href) {
+    // For nested routes, ensure base path is not active if a sub-path is active unless it's the intended behavior.
+    // This specific logic might need adjustment based on exact routing needs for "active" state.
+    // For now, the existing logic is maintained within the `isActive` calculation for the button.
+  }
+
+
+  return (
+    <SidebarMenuItem>
+      <Link href={item.href} passHref legacyBehavior>
+        <SidebarMenuButton
+          isActive={isActive}
+          tooltip={tooltipConfig}
+          className="justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground"
+        >
+          <item.icon className="h-5 w-5" />
+          <span className="truncate group-data-[collapsible=icon]:hidden">{t(item.labelKey)}</span>
+        </SidebarMenuButton>
+      </Link>
+    </SidebarMenuItem>
+  );
+};
+
 
 export function MainSidebar() {
   const { userPreferences, setUserPreferences, t } = useAppContext();
@@ -54,8 +104,8 @@ export function MainSidebar() {
 
   return (
     <Sidebar
-      variant="sidebar" // Default sidebar style
-      collapsible="icon" // Collapsible to icon mode on desktop
+      variant="sidebar" 
+      collapsible="icon" 
       className="border-r shadow-sm bg-sidebar text-sidebar-foreground"
     >
       <SidebarHeader className="p-3 h-16 flex items-center justify-center group-data-[collapsible=icon]:justify-center">
@@ -69,18 +119,12 @@ export function MainSidebar() {
       <SidebarContent className="flex flex-col p-2">
         <SidebarMenu className="flex-grow">
           {navItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <Link href={item.href} passHref legacyBehavior>
-                <SidebarMenuButton
-                  isActive={pathname === item.href || (item.href === '/dashboard' && pathname.startsWith('/dashboard')) || (item.href === '/about' && pathname.startsWith('/about'))}
-                  tooltip={{ children: t(item.labelKey), side: 'right', align: 'center' }}
-                  className="justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground"
-                >
-                  <item.icon className="h-5 w-5" />
-                  <span className="truncate group-data-[collapsible=icon]:hidden">{t(item.labelKey)}</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
+            <SidebarNavMenuItem 
+              key={item.href} 
+              item={item} 
+              pathname={pathname} 
+              t={t} 
+            />
           ))}
         </SidebarMenu>
         
@@ -113,7 +157,6 @@ export function MainSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="p-4 border-t border-sidebar-border">
-        {/* Footer content like version or help link can go here */}
         <p className="text-xs text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden text-center">
           v{process.env.npm_package_version || '0.1.0'}
         </p>
