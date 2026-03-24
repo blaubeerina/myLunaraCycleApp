@@ -1,0 +1,29 @@
+# Luna App — Cursor Regeln
+
+## Stack
+- Frontend: React / Next.js (TypeScript bevorzugt)
+- Backend: Python / FastAPI
+- Datenbank: MongoDB mit Motor (async)
+- AI: Claude API (Anthropic)
+- Mondberechnungen: Jean Meeus Algorithmus
+
+## Design
+- Dark Purple/Gold Ästhetik, mystisch
+- Mobile-first
+- Farb-Kategorien: Ritual, Gesundheit, Arbeit, Sozial, Persönlich, Mond
+
+## Agenten-Architektur
+- MoonAgent → Mondberechnungen (Phase, Auf-/Untergang, Kraft)
+- CycleAgent → Menstruations-/Zyklus-Tracking
+- CalendarAgent → Termine mit Farb-Kategorien + Detail-Ansicht
+- OracleAgent → AI-generierte Tages-Orakel via Claude API
+
+## Feedback-Loops (Pflicht)
+- MoonAgent → gibt Daten → OracleAgent nutzt sie
+- CycleAgent → gibt Zyklus → CalendarAgent hebt Tage hervor
+- OracleAgent → Text → Qualitätsprüfung vor Ausgabe
+
+## Besonderheiten
+- Mondphasen-Synchronizitäts-Analyse
+- Zyklus + Mondphasen kombiniert
+- Oracle Texte: poetisch, spirituell, nicht esoterisch-kitschig

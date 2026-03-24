@@ -1,0 +1,58 @@
+# Umgebungsvariablen — NIEMALS committen
+.env
+.env.local
+.env.*.local
+*.env
+
+# API Keys & Secrets
+*_secret.txt
+*secret*
+*.key
+*.pem
+*.crt
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Next.js / React Build
+.next/
+out/
+build/
+dist/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv/
+*.egg-info/
+dist/
+.pytest_cache/
+
+# IDEs & Editoren
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Supabase lokale Dev-Daten
+.supabase/
+
+# Temporäre Dateien
+*.tmp
+*.temp

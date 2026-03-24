@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lunaracycle — Design System</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --midnight: #0D0B1A;
+    --midnight-mid: #13102A;
+    --midnight-soft: #1C1836;
+    --ivory: #F4EFE6;
+    --ivory-dim: #D9D2C5;
+    --dusty-rose: #C4858A;
+    --dusty-rose-soft: #E8B4B8;
+    --lavender: #9B8EC4;
+    --lavender-soft: #C4BBE0;
+    --teal: #6BAAB0;
+    --teal-soft: #A8D0D4;
+    --gold: #C9A84C;
+    --gold-soft: #E2C87A;
+    --font-serif: 'Cormorant Garamond', serif;
+    --font-sans: 'DM Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--midnight);
+    color: var(--ivory);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE TEXTURE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.6;
+  }
+
+  .page { position: relative; z-index: 1; }
+
+  /* ── SECTION TITLES ── */
+  .section-label {
+    font-family: var(--font-sans);
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 2rem;
+    opacity: 0.8;
+  }
+
+  /* ══════════════════════════════════════
+     SECTION 1 — LOGO
+  ══════════════════════════════════════ */
+  .logo-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 2rem 60px;
+    text-align: center;
+  }
+
+  .logo-mark {
+    width: 90px;
+    height: 90px;
+    margin-bottom: 1.5rem;
+    position: relative;
+  }
+
+  .logo-mark svg { width: 100%; height: 100%; }
+
+  .logo-wordmark {
+    font-family: var(--font-serif);
+    font-size: clamp(2.2rem, 6vw, 3.5rem);
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    color: var(--ivory);
+    line-height: 1;
+  }
+
+  .logo-wordmark span {
+    color: var(--gold);
+    font-style: italic;
+  }
+
+  .logo-tagline {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--ivory-dim);
+    margin-top: 0.75rem;
+    opacity: 0.6;
+  }
+
+  /* ══════════════════════════════════════
+     SECTION 2 — COLOR PALETTE
+  ══════════════════════════════════════ */
+  .palette-section {
+    padding: 60px 2rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .palette-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .swatch {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .swatch-color {
+    height: 80px;
+    border-radius: 50px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .swatch-color.duo {
+    background: linear-gradient(135deg, var(--c1) 50%, var(--c2) 50%);
+  }
+
+  .swatch-name {
+    font-family: var(--font-serif);
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: var(--ivory);
+    line-height: 1.2;
+  }
+
+  .swatch-hex {
+    font-family: var(--font-sans);
+    font-size: 10px;
+    color: var(--ivory-dim);
+    opacity: 0.5;
+    letter-spacing: 0.1em;
+  }
+
+  .swatch-role {
+    font-family: var(--font-sans);
+    font-size: 10px;
+    color: var(--ivory-dim);
+    opacity: 0.4;
+    letter-spacing: 0.05em;
+  }
+
+  /* ══════════════════════════════════════
+     SECTION 3 — APP MOCKUP
+  ══════════════════════════════════════ */
+  .mockup-section {
+    padding: 60px 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .phone-frame {
+    width: 320px;
+    background: var(--midnight-mid);
+    border-radius: 44px;
+    padding: 12px;
+    box-shadow:
+      0 0 0 1px rgba(201, 168, 76, 0.15),
+      0 40px 80px rgba(0,0,0,0.6),
+      inset 0 1px 0 rgba(255,255,255,0.05);
+    position: relative;
+  }
+
+  .phone-screen {
+    background: var(--midnight);
+    border-radius: 36px;
+    overflow: hidden;
+    min-height: 620px;
+    position: relative;
+    padding: 0;
+  }
+
+  /* Status bar */
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 24px 0;
+    font-size: 10px;
+    color: var(--ivory-dim);
+    opacity: 0.4;
+    font-family: var(--font-sans);
+  }
+
+  /* Ambient glow behind moon */
+  .moon-glow {
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  /* Moon graphic */
+  .moon-graphic {
+    display: flex;
+    justify-content: center;
+    padding-top: 28px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .moon-graphic svg {
+    width: 110px;
+    height: 110px;
+    filter: drop-shadow(0 0 20px rgba(201,168,76,0.3));
+  }
+
+  /* Date greeting */
+  .app-greeting {
+    text-align: center;
+    padding: 16px 24px 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .app-greeting .cycle-day {
+    font-family: var(--font-serif);
+    font-size: 2.2rem;
+    font-weight: 300;
+    color: var(--ivory);
+    line-height: 1;
+  }
+
+  .app-greeting .cycle-label {
+    font-family: var(--font-sans);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ivory-dim);
+    opacity: 0.45;
+    margin-top: 4px;
+  }
+
+  /* Phase cards row */
+  .phase-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    padding: 20px 16px 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .phase-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 12px 8px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+  }
+
+  .phase-card .card-icon {
+    font-size: 18px;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .phase-card .card-title {
+    font-family: var(--font-sans);
+    font-size: 8px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ivory-dim);
+    opacity: 0.45;
+    margin-bottom: 3px;
+  }
+
+  .phase-card .card-value {
+    font-family: var(--font-serif);
+    font-size: 0.8rem;
+    color: var(--ivory);
+    line-height: 1.2;
+  }
+
+  .phase-card.moon { border-color: rgba(201,168,76,0.2); }
+  .phase-card.cycle { border-color: rgba(155,142,196,0.2); }
+  .phase-card.impulse { border-color: rgba(107,170,176,0.2); }
+
+  /* Daily impulse */
+  .daily-impulse {
+    margin: 16px 16px 0;
+    background: rgba(107,170,176,0.06);
+    border: 1px solid rgba(107,170,176,0.15);
+    border-radius: 20px;
+    padding: 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .impulse-label {
+    font-family: var(--font-sans);
+    font-size: 8px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--teal);
+    opacity: 0.7;
+    margin-bottom: 8px;
+  }
+
+  .impulse-text {
+    font-family: var(--font-serif);
+    font-size: 0.95rem;
+    font-style: italic;
+    color: var(--ivory);
+    line-height: 1.5;
+    font-weight: 300;
+  }
+
+  /* Check-in strip */
+  .checkin-strip {
+    margin: 16px 16px 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .checkin-label {
+    font-family: var(--font-sans);
+    font-size: 8px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ivory-dim);
+    opacity: 0.35;
+    margin-bottom: 10px;
+    padding: 0 4px;
+  }
+
+  .checkin-emojis {
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+    padding: 0 4px;
+  }
+
+  .emoji-btn {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 10px 6px 6px;
+    flex: 1;
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .emoji-btn .e { font-size: 18px; line-height: 1; }
+  .emoji-btn .e-label {
+    font-family: var(--font-sans);
+    font-size: 7px;
+    color: var(--ivory-dim);
+    opacity: 0.35;
+    margin-top: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Bottom nav */
+  .bottom-nav {
+    display: flex;
+    justify-content: space-around;
+    padding: 14px 20px 20px;
+    margin-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    position: relative;
+    z-index: 1;
+  }
+
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    opacity: 0.3;
+  }
+
+  .nav-item.active { opacity: 1; }
+  .nav-item.active .nav-dot { background: var(--gold); }
+
+  .nav-icon { font-size: 18px; }
+  .nav-dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
+
+  /* ══════════════════════════════════════
+     SECTION 4 — TYPOGRAPHY
+  ══════════════════════════════════════ */
+  .type-section {
+    padding: 60px 2rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .type-sample {
+    margin-bottom: 3rem;
+    padding-bottom: 3rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .type-sample:last-child { border-bottom: none; }
+
+  .type-meta {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    opacity: 0.6;
+    margin-bottom: 1rem;
+  }
+
+  .type-h1 {
+    font-family: var(--font-serif);
+    font-size: clamp(2.5rem, 8vw, 5rem);
+    font-weight: 300;
+    line-height: 1.05;
+    color: var(--ivory);
+    letter-spacing: 0.02em;
+  }
+
+  .type-h2 {
+    font-family: var(--font-serif);
+    font-size: clamp(1.4rem, 4vw, 2.2rem);
+    font-weight: 300;
+    font-style: italic;
+    color: var(--ivory);
+    line-height: 1.3;
+  }
+
+  .type-body {
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--ivory-dim);
+    opacity: 0.7;
+    max-width: 500px;
+    font-weight: 300;
+  }
+
+  .type-label {
+    font-family: var(--font-sans);
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--lavender);
+    opacity: 0.8;
+  }
+
+  /* ══════════════════════════════════════
+     SECTION 5 — PHASE COLORS
+  ══════════════════════════════════════ */
+  .phases-section {
+    padding: 60px 2rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .phases-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+  }
+
+  .phase-tile {
+    border-radius: 24px;
+    padding: 28px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .phase-tile::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    opacity: 0.15;
+  }
+
+  .phase-tile.menstruation { background: rgba(196,133,138,0.1); border: 1px solid rgba(196,133,138,0.2); }
+  .phase-tile.menstruation::before { background: var(--dusty-rose); }
+
+  .phase-tile.follikel { background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.15); }
+  .phase-tile.follikel::before { background: var(--gold); }
+
+  .phase-tile.ovulation { background: rgba(107,170,176,0.08); border: 1px solid rgba(107,170,176,0.15); }
+  .phase-tile.ovulation::before { background: var(--teal); }
+
+  .phase-tile.luteal { background: rgba(155,142,196,0.08); border: 1px solid rgba(155,142,196,0.15); }
+  .phase-tile.luteal::before { background: var(--lavender); }
+
+  .phase-icon { font-size: 1.8rem; margin-bottom: 12px; }
+
+  .phase-name {
+    font-family: var(--font-serif);
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: var(--ivory);
+    margin-bottom: 4px;
+  }
+
+  .phase-days {
+    font-family: var(--font-sans);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    opacity: 0.4;
+    color: var(--ivory-dim);
+    margin-bottom: 10px;
+  }
+
+  .phase-impulse {
+    font-family: var(--font-serif);
+    font-size: 0.85rem;
+    font-style: italic;
+    color: var(--ivory-dim);
+    opacity: 0.6;
+    line-height: 1.4;
+  }
+
+  .phase-hex {
+    margin-top: 12px;
+    font-family: var(--font-sans);
+    font-size: 9px;
+    opacity: 0.3;
+    letter-spacing: 0.1em;
+  }
+
+  /* divider */
+  .section-divider {
+    width: 1px;
+    height: 60px;
+    background: linear-gradient(to bottom, transparent, rgba(201,168,76,0.3), transparent);
+    margin: 0 auto;
+  }
+
+  /* footer */
+  .footer {
+    text-align: center;
+    padding: 60px 2rem 80px;
+    font-family: var(--font-serif);
+    font-size: 1.1rem;
+    font-style: italic;
+    color: var(--ivory-dim);
+    opacity: 0.3;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── LOGO ── -->
+  <section class="logo-section">
+    <div class="section-label">App Logo</div>
+    <div class="logo-mark">
+      <svg viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Outer ring -->
+        <circle cx="45" cy="45" r="42" stroke="#C9A84C" stroke-width="0.75" opacity="0.3"/>
+        <!-- Moon crescent -->
+        <path d="M45 15 C28 15 15 28 15 45 C15 62 28 75 45 75 C35 65 30 55 30 45 C30 35 35 25 45 15Z"
+              fill="#C9A84C" opacity="0.9"/>
+        <!-- Star dots -->
+        <circle cx="62" cy="28" r="1.5" fill="#F4EFE6" opacity="0.6"/>
+        <circle cx="70" cy="45" r="1" fill="#F4EFE6" opacity="0.4"/>
+        <circle cx="65" cy="62" r="1.2" fill="#F4EFE6" opacity="0.5"/>
+        <circle cx="55" cy="20" r="1" fill="#C9A84C" opacity="0.5"/>
+      </svg>
+    </div>
+    <div class="logo-wordmark">luna<span>r</span>acycle</div>
+    <div class="logo-tagline">your cosmic rhythm</div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ── COLOR PALETTE ── -->
+  <section class="palette-section">
+    <div class="section-label">Farbpalette — HEX Codes</div>
+    <div class="palette-grid">
+
+      <div class="swatch">
+        <div class="swatch-color" style="background:#0D0B1A;border:1px solid rgba(255,255,255,0.1)"></div>
+        <div class="swatch-name">Midnight Indigo</div>
+        <div class="swatch-hex">#0D0B1A</div>
+        <div class="swatch-role">Background</div>
+      </div>
+
+      <div class="swatch">
+        <div class="swatch-color" style="background:#1C1836;"></div>
+        <div class="swatch-name">Deep Cosmos</div>
+        <div class="swatch-hex">#1C1836</div>
+        <div class="swatch-role">Cards / Surfaces</div>
+      </div>
+
+      <div class="swatch">
+        <div class="swatch-color" style="background:#F4EFE6;"></div>
+        <div class="swatch-name">Moon Ivory</div>
+        <div class="swatch-hex">#F4EFE6</div>
+        <div class="swatch-role">Text / Headlines</div>
+      </div>
+
+      <div class="swatch">
+        <div class="swatch-color" style="background:#C9A84C;"></div>
+        <div class="swatch-name">Pale Gold</div>
+        <div class="swatch-hex">#C9A84C</div>
+        <div class="swatch-role">Moon / Akzent</div>
+      </div>
+
+      <div class="swatch">
+        <div class="swatch-color" style="background:#C4858A;"></div>
+        <div class="swatch-name">Dusty Rose</div>
+        <div class="swatch-hex">#C4858A</div>
+        <div class="swatch-role">Menstruation</div>
+      </div>
+
+      <div class="swatch">
+        <div class="swatch-color" style="background:#9B8EC4;"></div>
+        <div class="swatch-name">Muted Lavender</div>
+        <div class="swatch-hex">#9B8EC4</div>
+        <div class="swatch-role">Lutealphase</div>
+      </div>
+
+      <div class="swatch">
+        <div class="swatch-color" style="background:#6BAAB0;"></div>
+        <div class="swatch-name">Soft Teal</div>
+        <div class="swatch-hex">#6BAAB0</div>
+        <div class="swatch-role">Fruchtbare Phase</div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ── APP MOCKUP ── -->
+  <section class="mockup-section">
+    <div class="section-label">Startscreen Mockup</div>
+    <div class="phone-frame">
+      <div class="phone-screen">
+
+        <div class="status-bar">
+          <span>9:41</span>
+          <span>●●●</span>
+        </div>
+
+        <div class="moon-glow"></div>
+
+        <div class="moon-graphic">
+          <svg viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="55" cy="55" r="52" stroke="#C9A84C" stroke-width="0.5" opacity="0.2"/>
+            <circle cx="55" cy="55" r="40" stroke="#C9A84C" stroke-width="0.5" opacity="0.15"/>
+            <path d="M55 18 C38 18 22 34 22 55 C22 76 38 92 55 92 C42 80 36 68 36 55 C36 42 42 30 55 18Z"
+                  fill="#C9A84C" opacity="0.85"/>
+            <circle cx="72" cy="35" r="1.5" fill="#F4EFE6" opacity="0.5"/>
+            <circle cx="80" cy="55" r="1" fill="#F4EFE6" opacity="0.35"/>
+            <circle cx="75" cy="72" r="1.2" fill="#F4EFE6" opacity="0.4"/>
+          </svg>
+        </div>
+
+        <div class="app-greeting">
+          <div class="cycle-day">Zyklustag 12</div>
+          <div class="cycle-label">Follikelphase · Zunehmender Mond</div>
+        </div>
+
+        <div class="phase-cards">
+          <div class="phase-card moon">
+            <div class="card-icon">🌒</div>
+            <div class="card-title">Mond</div>
+            <div class="card-value">Zunehmend</div>
+          </div>
+          <div class="phase-card cycle">
+            <div class="card-icon">🌸</div>
+            <div class="card-title">Phase</div>
+            <div class="card-value">Follikel</div>
+          </div>
+          <div class="phase-card impulse">
+            <div class="card-icon">✨</div>
+            <div class="card-title">Energie</div>
+            <div class="card-value">Aufblühend</div>
+          </div>
+        </div>
+
+        <div class="daily-impulse">
+          <div class="impulse-label">Heutiger Impuls</div>
+          <div class="impulse-text">"Dein Körper öffnet sich. Lass neue Energie einströmen."</div>
+        </div>
+
+        <div class="checkin-strip">
+          <div class="checkin-label">Wie fühlst du dich?</div>
+          <div class="checkin-emojis">
+            <div class="emoji-btn"><div class="e">🙂</div><div class="e-label">Stimmung</div></div>
+            <div class="emoji-btn"><div class="e">🔥</div><div class="e-label">Energie</div></div>
+            <div class="emoji-btn"><div class="e">🌧</div><div class="e-label">Sensibel</div></div>
+            <div class="emoji-btn"><div class="e">🌊</div><div class="e-label">Intuition</div></div>
+          </div>
+        </div>
+
+        <div class="bottom-nav">
+          <div class="nav-item active">
+            <span class="nav-icon">🌙</span>
+            <div class="nav-dot"></div>
+          </div>
+          <div class="nav-item">
+            <span class="nav-icon">📅</span>
+            <div class="nav-dot"></div>
+          </div>
+          <div class="nav-item">
+            <span class="nav-icon">📓</span>
+            <div class="nav-dot"></div>
+          </div>
+          <div class="nav-item">
+            <span class="nav-icon">⚙️</span>
+            <div class="nav-dot"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ── TYPOGRAPHY ── -->
+  <section class="type-section">
+    <div class="section-label">Typografie</div>
+
+    <div class="type-sample">
+      <div class="type-meta">Display / Headlines — Cormorant Garamond Light</div>
+      <div class="type-h1">Dein kosmischer Rhythmus</div>
+    </div>
+
+    <div class="type-sample">
+      <div class="type-meta">Subheadline / Impulse — Cormorant Garamond Italic</div>
+      <div class="type-h2">"Heute ist dein Körper empfänglich für Stille."</div>
+    </div>
+
+    <div class="type-sample">
+      <div class="type-meta">Body Text — DM Sans Light</div>
+      <div class="type-body">Lunaracycle verbindet deinen Menstruationszyklus mit den Rhythmen des Mondes. Eine stille, intuitive Begleiterin für deine innere Welt.</div>
+    </div>
+
+    <div class="type-sample">
+      <div class="type-meta">Labels / UI — DM Sans Uppercase</div>
+      <div class="type-label">Zyklustag · Mondphase · Heutiger Impuls</div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ── PHASE COLORS ── -->
+  <section class="phases-section">
+    <div class="section-label">Zyklusphasen</div>
+    <div class="phases-grid">
+
+      <div class="phase-tile menstruation">
+        <div class="phase-icon">🌑</div>
+        <div class="phase-name">Menstruation</div>
+        <div class="phase-days">Tag 1–5</div>
+        <div class="phase-impulse">"Zeit für Rückzug und innere Stille."</div>
+        <div class="phase-hex">#C4858A — Dusty Rose</div>
+      </div>
+
+      <div class="phase-tile follikel">
+        <div class="phase-icon">🌒</div>
+        <div class="phase-name">Follikelphase</div>
+        <div class="phase-days">Tag 6–13</div>
+        <div class="phase-impulse">"Neue Energie entfaltet sich in dir."</div>
+        <div class="phase-hex">#C9A84C — Pale Gold</div>
+      </div>
+
+      <div class="phase-tile ovulation">
+        <div class="phase-icon">🌕</div>
+        <div class="phase-name">Eisprung</div>
+        <div class="phase-days">Tag 14–16</div>
+        <div class="phase-impulse">"Dein Leuchten ist heute am hellsten."</div>
+        <div class="phase-hex">#6BAAB0 — Soft Teal</div>
+      </div>
+
+      <div class="phase-tile luteal">
+        <div class="phase-icon">🌘</div>
+        <div class="phase-name">Lutealphase</div>
+        <div class="phase-days">Tag 17–28</div>
+        <div class="phase-impulse">"Deine Intuition führt dich nach innen."</div>
+        <div class="phase-hex">#9B8EC4 — Muted Lavender</div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="footer">
+    lunaracycle · a quiet cosmic ritual app · 2025
+  </div>
+
+</div>
+</body>
+</html>
