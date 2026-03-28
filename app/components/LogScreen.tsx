@@ -491,183 +491,289 @@ export default function LogScreen({ cycle, data, t, onDataChange, onNavigate }: 
 
   // ──────────────────────────────────────────────────────────────────────
 
+  // Shared card style — solid off-white, thin border, no heavy shadow
+  const TICKET: React.CSSProperties = {
+    background: '#FFFCF7',
+    border: '1px solid rgba(0,0,0,0.05)',
+    borderRadius: '20px',
+    overflow: 'hidden',
+  }
+
+  const phaseIcon = cycle.phase === 'menstruation' ? '🌑'
+    : cycle.phase === 'follicular' ? '🌒'
+    : cycle.phase === 'ovulation' ? '🌕'
+    : cycle.phase === 'luteal' ? '🌖' : '🌙'
+
+  const phaseColor = cycle.phase === 'menstruation' ? '#D4A5A5'
+    : cycle.phase === 'follicular' ? '#9CAF88'
+    : cycle.phase === 'ovulation' ? '#C8902A'
+    : cycle.phase === 'luteal' ? '#A99BC8' : '#B0BEC5'
+
+  const today_date = new Date().toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-US', {
+    weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+  })
+
   return (
     <>
-      {/* ===== Main Screen ===== */}
-      <div className="min-h-screen pb-24 px-5 pt-8 max-w-md mx-auto">
-        <h1 className="font-serif text-3xl italic text-gold mb-8">{t.log.title}</h1>
+      {/* ===== Main Screen — Day-Ticket ===== */}
+      <div className="min-h-screen pb-32 px-5 pt-6 max-w-md mx-auto">
+
+        {/* Screen label */}
+        <p className="font-sans uppercase tracking-widest mb-4"
+          style={{ fontSize: '9px', color: '#A0AEC0', letterSpacing: '0.22em' }}>
+          {lang === 'de' ? 'MEIN EINTRAG' : 'MY LOG'}
+        </p>
 
         {!data.lastPeriodStart ? (
-          <div className="bg-cosmos rounded-2xl p-6 border border-white/5 text-center">
-            <p className="text-4xl mb-4">🌹</p>
-            <p className="font-serif text-xl italic mb-6" style={{ color: 'rgba(74,85,104,0.7)' }}>
-              {lang === 'de'
-                ? 'Trag dein Periodendatum in den Einstellungen ein, um loszulegen.'
-                : 'Enter your period date in Settings to get started.'}
-            </p>
-            <button
-              onClick={() => onNavigate('settings')}
-              className="w-full py-4 rounded-2xl font-sans font-medium text-sm tracking-wide"
-              style={{ background: 'linear-gradient(135deg, #D4A5A5, #A99BC8)', color: '#0D0B1A' }}
-            >
-              {lang === 'de' ? '→ Einstellungen öffnen' : '→ Open Settings'}
-            </button>
+          <div style={TICKET}>
+            <div className="p-6 text-center">
+              <p className="text-4xl mb-4">🌹</p>
+              <p className="font-sans text-base mb-6" style={{ color: '#4A5568', lineHeight: 1.5 }}>
+                {lang === 'de'
+                  ? 'Trag dein Periodendatum in den Einstellungen ein, um loszulegen.'
+                  : 'Enter your period date in Settings to get started.'}
+              </p>
+              <button
+                onClick={() => onNavigate('settings')}
+                className="w-full py-4 rounded-2xl font-sans font-medium text-sm"
+                style={{ background: 'linear-gradient(135deg, #D4A5A5, #A99BC8)', color: '#fff' }}
+              >
+                {lang === 'de' ? '→ Einstellungen öffnen' : '→ Open Settings'}
+              </button>
+            </div>
           </div>
         ) : (
-          <div className="space-y-4">
-            {isPeriodActive ? (
-              <>
-                {/* Now Playing */}
-                <div className="rounded-2xl p-6 border" style={{ background: 'rgba(212,165,165,0.08)', borderColor: 'rgba(212,165,165,0.3)' }}>
-                  <div className="flex items-center gap-2 mb-5">
-                    <span className="animate-pulse inline-block w-3 h-3 rounded-full flex-shrink-0"
-                      style={{ background: '#D4A5A5', boxShadow: '0 0 8px rgba(212,165,165,0.6)' }} />
-                    <span className="text-xs font-sans uppercase tracking-widest" style={{ color: 'rgba(212,165,165,0.8)' }}>
-                      {lang === 'de' ? 'Periode läuft' : 'Period active'}
-                    </span>
+          <div className="space-y-3">
+
+            {/* ── DAY-TICKET CARD ── */}
+            <div style={TICKET}>
+              {/* Ticket Header */}
+              <div className="flex items-center justify-between px-5 pt-5 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center rounded-xl text-xl flex-shrink-0"
+                    style={{ width: '44px', height: '44px', background: `${phaseColor}18`, border: `1.5px solid ${phaseColor}50` }}>
+                    {phaseIcon}
                   </div>
-                  <div className="text-center mb-5">
-                    <p className="font-serif leading-none" style={{ fontSize: '72px', color: '#D4A5A5', lineHeight: 1 }}>
-                      {cycle.currentDay}
+                  <div>
+                    {/* "TAG 2 — MENSTRUATION" — bold headline */}
+                    <p className="font-sans font-bold"
+                      style={{ fontSize: '15px', color: '#2D3748', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+                      {lang === 'de' ? `TAG ${cycle.currentDay}` : `DAY ${cycle.currentDay}`}
                     </p>
-                    <p className="font-sans text-sm mt-1" style={{ color: 'rgba(74,85,104,0.5)' }}>
-                      {lang === 'de' ? `Tag von ca. ${data.periodLength} Tagen` : `Day of approx. ${data.periodLength} days`}
+                    <p className="font-sans font-bold uppercase tracking-wide"
+                      style={{ fontSize: '11px', color: phaseColor, letterSpacing: '0.06em' }}>
+                      {t.phase[cycle.phase]}
                     </p>
-                  </div>
-                  <div className="w-full rounded-full overflow-hidden" style={{ height: '4px', background: 'rgba(212,165,165,0.2)' }}>
-                    <div className="h-full rounded-full transition-all duration-500"
-                      style={{ width: `${progressPct}%`, background: 'linear-gradient(90deg, #D4A5A5, #A99BC8)' }} />
-                  </div>
-                  <div className="flex justify-between mt-1">
-                    <span className="text-xs" style={{ color: 'rgba(74,85,104,0.4)' }}>Tag 1</span>
-                    <span className="text-xs" style={{ color: 'rgba(74,85,104,0.4)' }}>~{data.periodLength}</span>
                   </div>
                 </div>
 
-                {/* Intensity */}
-                <div className="bg-cosmos rounded-2xl p-5 border border-white/5">
-                  <p className="text-xs uppercase tracking-widest mb-4" style={{ color: 'rgba(74,85,104,0.5)' }}>{t.log.intensity}</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    {(['light', 'medium', 'heavy', 'spotting'] as Intensity[]).map((i) => (
-                      <button
-                        key={i}
-                        onClick={() => saveIntensity(i)}
-                        className="py-3 rounded-xl text-sm font-sans transition-all border"
-                        style={{
-                          background: intensity === i ? 'rgba(212,165,165,0.15)' : 'transparent',
-                          borderColor: intensity === i ? '#D4A5A5' : 'rgba(74,85,104,0.15)',
-                          color: intensity === i ? '#D4A5A5' : 'rgba(74,85,104,0.55)',
-                        }}
-                      >
-                        {t.log[i]}
-                      </button>
-                    ))}
+                {/* Progress badge (period only) */}
+                {isPeriodActive && (
+                  <div className="text-right">
+                    <p className="font-sans" style={{ fontSize: '9px', color: '#A0AEC0', marginBottom: '2px' }}>
+                      {lang === 'de' ? 'VON CA.' : 'OF ~'}
+                    </p>
+                    <p className="font-sans font-bold text-lg" style={{ color: phaseColor }}>
+                      {data.periodLength}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Perforation ── */}
+              <div className="relative flex items-center">
+                <div className="rounded-full flex-shrink-0"
+                  style={{ width: '16px', height: '16px', background: 'linear-gradient(165deg, #FDFBF7, #D1D9E0)', marginLeft: '-8px' }} />
+                <div className="flex-1 mx-1" style={{ borderTop: '1.5px dashed rgba(0,0,0,0.08)' }} />
+                <div className="rounded-full flex-shrink-0"
+                  style={{ width: '16px', height: '16px', background: 'linear-gradient(165deg, #FDFBF7, #D1D9E0)', marginRight: '-8px' }} />
+              </div>
+
+              {/* Ticket Body — journey details */}
+              <div className="px-5 pt-4 pb-5">
+
+                {/* Two columns: Zyklus-Status → Nächste Phase */}
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span style={{ fontSize: '11px', color: phaseColor }}>📍</span>
+                      <p className="font-sans uppercase tracking-widest" style={{ fontSize: '7px', color: '#A0AEC0', letterSpacing: '0.14em' }}>
+                        {lang === 'de' ? 'ZYKLUS-STATUS' : 'CYCLE STATUS'}
+                      </p>
+                    </div>
+                    <p className="font-sans font-semibold" style={{ fontSize: '16px', color: '#2D3748' }}>
+                      {lang === 'de' ? 'Sanft' : 'Gentle'}
+                    </p>
+                  </div>
+                  <div style={{ color: '#CBD5E0', fontSize: '14px', marginTop: '16px' }}>›</div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span style={{ fontSize: '11px', color: phaseColor }}>🕐</span>
+                      <p className="font-sans uppercase tracking-widest" style={{ fontSize: '7px', color: '#A0AEC0', letterSpacing: '0.14em' }}>
+                        {lang === 'de' ? 'NÄCHSTE PHASE' : 'NEXT PHASE'}
+                      </p>
+                    </div>
+                    <p className="font-sans font-semibold" style={{ fontSize: '16px', color: '#2D3748' }}>
+                      {cycle.isLate
+                        ? (lang === 'de' ? `${cycle.daysLate} Tage später` : `${cycle.daysLate} days late`)
+                        : (lang === 'de' ? `in ${cycle.daysUntilNext} Tagen` : `in ${cycle.daysUntilNext} days`)}
+                    </p>
                   </div>
                 </div>
 
+                {/* Calendar + privacy rows */}
+                <div className="pt-3" style={{ borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span style={{ fontSize: '11px', color: '#A0AEC0' }}>📅</span>
+                    <p className="font-sans" style={{ fontSize: '13px', color: '#4A5568', fontWeight: 400, lineHeight: 1.5 }}>
+                      {today_date}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span style={{ fontSize: '11px', color: '#A0AEC0' }}>🔒</span>
+                    <p className="font-sans" style={{ fontSize: '11px', color: '#A0AEC0' }}>
+                      {lang === 'de' ? 'Deine Daten sind nur für dich sichtbar.' : 'Your data is only visible to you.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Intensity (period only) ── */}
+            {isPeriodActive && (
+              <div style={TICKET}>
+                <div className="px-5 pt-4 pb-1">
+                  <p className="font-sans uppercase tracking-widest"
+                    style={{ fontSize: '8px', color: '#A0AEC0', letterSpacing: '0.18em' }}>
+                    {t.log.intensity}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 px-5 pb-4 pt-3">
+                  {(['light', 'medium', 'heavy', 'spotting'] as Intensity[]).map((i) => (
+                    <button
+                      key={i}
+                      onClick={() => saveIntensity(i)}
+                      className="py-3 rounded-xl font-sans text-sm transition-all"
+                      style={{
+                        background: intensity === i ? `${phaseColor}18` : 'transparent',
+                        border: `1px solid ${intensity === i ? phaseColor : 'rgba(0,0,0,0.07)'}`,
+                        color: intensity === i ? phaseColor : '#718096',
+                        fontSize: '14px',
+                        lineHeight: 1.5,
+                        fontWeight: intensity === i ? 600 : 400,
+                      }}
+                    >
+                      {t.log[i]}
+                    </button>
+                  ))}
+                </div>
                 {ended ? (
-                  <div className="w-full py-4 rounded-2xl text-center font-sans text-sm border"
-                    style={{ color: '#9CAF88', borderColor: 'rgba(156,175,136,0.3)', background: 'rgba(156,175,136,0.05)' }}>
-                    ✓ {lang === 'de' ? 'Periode als beendet markiert' : 'Period marked as ended'}
+                  <div className="mx-5 mb-4 py-3 rounded-xl text-center font-sans text-sm"
+                    style={{ color: '#9CAF88', border: '1px solid rgba(156,175,136,0.3)', background: 'rgba(156,175,136,0.06)', fontSize: '14px' }}>
+                    ✓ {lang === 'de' ? 'Periode beendet' : 'Period ended'}
                   </div>
                 ) : (
                   <button
                     onClick={endPeriod}
-                    className="w-full py-4 rounded-2xl font-sans text-sm border transition-colors"
-                    style={{ borderColor: 'rgba(74,85,104,0.15)', color: 'rgba(74,85,104,0.55)' }}
+                    className="mx-5 mb-4 w-[calc(100%-40px)] py-3 rounded-xl font-sans text-sm"
+                    style={{ border: '1px solid rgba(0,0,0,0.07)', color: '#718096', fontSize: '14px', lineHeight: 1.5 }}
                   >
                     {t.log.periodEnd}
                   </button>
                 )}
-              </>
-            ) : (
-              <div className="bg-cosmos rounded-2xl p-6 border border-white/5 text-center">
-                <p className="text-4xl mb-4">
-                  {cycle.phase === 'follicular' ? '🌱' : cycle.phase === 'ovulation' ? '✨' : '🍂'}
-                </p>
-                <p className="font-serif text-xl italic mb-2" style={{ color: 'rgba(74,85,104,0.7)' }}>
-                  {t.phase[cycle.phase]}
-                </p>
-                <p className="text-sm mb-6" style={{ color: 'rgba(74,85,104,0.45)' }}>
-                  {cycle.isLate ? `${cycle.daysLate} ${t.home.late}` : `${cycle.daysUntilNext} ${t.home.daysUntil}`}
-                </p>
-                <button
-                  onClick={startPeriod}
-                  className="w-full py-4 rounded-2xl font-sans font-medium text-sm tracking-wide"
-                  style={{ background: 'linear-gradient(135deg, #D4A5A5, #A99BC8)', color: '#0D0B1A' }}
-                >
-                  {t.log.periodStart}
-                </button>
-                <button
-                  onClick={() => onNavigate('settings')}
-                  className="mt-3 w-full py-3 rounded-2xl font-sans text-xs border transition-colors"
-                  style={{ borderColor: 'rgba(74,85,104,0.1)', color: 'rgba(74,85,104,0.4)' }}
-                >
-                  {lang === 'de' ? 'Datum korrigieren → Einstellungen' : 'Correct date → Settings'}
-                </button>
               </div>
             )}
 
-            {/* Divider */}
-            <div className="flex items-center gap-3 pt-1">
-              <div className="flex-1 h-px" style={{ background: 'rgba(74,85,104,0.12)' }} />
-              <span className="text-xs uppercase tracking-widest font-sans" style={{ fontSize: '9px', color: 'rgba(74,85,104,0.4)' }}>
-                {lang === 'de' ? 'Tages-Check-in' : 'Daily Check-in'}
-              </span>
-              <div className="flex-1 h-px" style={{ background: 'rgba(74,85,104,0.12)' }} />
-            </div>
+            {/* ── Start period (non-active) ── */}
+            {!isPeriodActive && (
+              <div style={TICKET}>
+                <div className="p-5">
+                  <button
+                    onClick={startPeriod}
+                    className="w-full py-4 rounded-2xl font-sans font-semibold text-sm"
+                    style={{ background: 'linear-gradient(135deg, #D4A5A5, #A99BC8)', color: '#fff', fontSize: '16px' }}
+                  >
+                    {t.log.periodStart}
+                  </button>
+                  <button
+                    onClick={() => onNavigate('settings')}
+                    className="mt-2 w-full py-3 rounded-xl font-sans text-xs"
+                    style={{ border: '1px solid rgba(0,0,0,0.07)', color: '#A0AEC0', fontSize: '13px' }}
+                  >
+                    {lang === 'de' ? 'Datum korrigieren → Einstellungen' : 'Correct date → Settings'}
+                  </button>
+                </div>
+              </div>
+            )}
 
-            {/* Check-in Entry Button */}
+            {/* ── Symptoms — "Nearby Stops" list ── */}
+            {(todayLog.symptoms?.length ?? 0) > 0 && (
+              <div style={TICKET}>
+                <div className="px-5 pt-4 pb-2">
+                  <p className="font-sans uppercase tracking-widest"
+                    style={{ fontSize: '8px', color: '#A0AEC0', letterSpacing: '0.18em' }}>
+                    {lang === 'de' ? 'SYMPTOME HEUTE' : 'TODAY\'S SYMPTOMS'}
+                  </p>
+                </div>
+                {todayLog.symptoms!.map((sym, idx) => (
+                  <div key={sym}>
+                    {idx > 0 && (
+                      <div style={{ height: '1px', background: 'rgba(0,0,0,0.05)', marginLeft: '56px' }} />
+                    )}
+                    <div className="flex items-center gap-3 px-5 py-3.5">
+                      <div className="flex items-center justify-center rounded-full flex-shrink-0 text-sm"
+                        style={{ width: '32px', height: '32px', background: `${phaseColor}12`, border: `1px solid ${phaseColor}30` }}>
+                        {SYMPTOM_ICONS[sym as SymptomKey] ?? '·'}
+                      </div>
+                      <p className="font-sans" style={{ fontSize: '16px', color: '#4A5568', lineHeight: 1.5, fontWeight: 400 }}>
+                        {t.log.symptomLabels[sym as keyof typeof t.log.symptomLabels] ?? sym}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                <div className="pb-1" />
+              </div>
+            )}
+
+            {/* ── Check-in entry ticket ── */}
             <button
               onClick={openStory}
-              className="w-full rounded-2xl p-5 text-left transition-all"
-              style={{
-                background: 'rgba(255,255,255,0.45)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: '1.5px solid rgba(255,255,255,0.5)',
-                boxShadow: '0 10px 30px rgba(156,175,136,0.15)',
-              }}
+              className="w-full text-left transition-all"
+              style={{ ...TICKET, display: 'block' }}
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between px-5 py-4">
                 <div>
-                  <p className="font-serif text-lg italic mb-1" style={{ color: '#4A5568' }}>
+                  <p className="font-sans font-bold mb-1"
+                    style={{ fontSize: '15px', color: '#2D3748', letterSpacing: '-0.02em' }}>
                     {hasCheckin
-                      ? (lang === 'de' ? 'Heutiger Eintrag ✓' : "Today's entry ✓")
-                      : (lang === 'de' ? 'Wie geht es dir heute?' : 'How are you today?')}
+                      ? (lang === 'de' ? 'Eintrag bearbeiten' : 'Edit entry')
+                      : (lang === 'de' ? 'Tages-Check-in' : 'Daily Check-in')}
                   </p>
                   {hasCheckin ? (
-                    <div className="flex items-center gap-3">
-                      {todayLog.mood && <span style={{ fontSize: '18px' }}>{MOOD_EMOJIS[todayLog.mood - 1]}</span>}
+                    <div className="flex items-center gap-2">
+                      {todayLog.mood && <span style={{ fontSize: '16px' }}>{MOOD_EMOJIS[todayLog.mood - 1]}</span>}
                       {todayLog.energy && (
-                        <span className="text-xs font-sans" style={{ color: 'rgba(74,85,104,0.5)' }}>
+                        <span style={{ fontSize: '13px', color: '#718096' }}>
                           {['🔋', '🔋🔋', '🔋🔋🔋'][todayLog.energy - 1]}
-                        </span>
-                      )}
-                      {(todayLog.symptoms?.length ?? 0) > 0 && (
-                        <span className="text-xs font-sans" style={{ color: 'rgba(74,85,104,0.5)' }}>
-                          {todayLog.symptoms!.map(s => SYMPTOM_ICONS[s as SymptomKey] ?? '·').join(' ')}
                         </span>
                       )}
                     </div>
                   ) : (
-                    <p className="text-xs font-sans" style={{ color: 'rgba(74,85,104,0.4)' }}>
-                      {lang === 'de' ? 'Stimmung · Symptome · Energie · Foto · Notizen' : 'Mood · Symptoms · Energy · Photo · Notes'}
+                    <p className="font-sans" style={{ fontSize: '13px', color: '#A0AEC0', lineHeight: 1.5 }}>
+                      {lang === 'de' ? 'Stimmung · Energie · Notizen' : 'Mood · Energy · Notes'}
                     </p>
                   )}
                 </div>
-                <span style={{ fontSize: '24px', color: 'rgba(74,85,104,0.3)' }}>
-                  {hasCheckin ? '✎' : '→'}
-                </span>
+                <span style={{ fontSize: '20px', color: '#CBD5E0' }}>{hasCheckin ? '✎' : '›'}</span>
               </div>
             </button>
           </div>
         )}
 
         {saved && (
-          <div className="fixed top-6 left-0 right-0 flex justify-center z-50">
+          <div className="fixed top-6 left-0 right-0 flex justify-center z-50 pointer-events-none">
             <div className="px-6 py-3 rounded-2xl font-sans text-sm"
-              style={{ background: 'rgba(156,175,136,0.2)', border: '1px solid rgba(156,175,136,0.4)', color: '#9CAF88' }}>
+              style={{ background: 'rgba(156,175,136,0.9)', color: '#fff' }}>
               ✓ {t.log.saved}
             </div>
           </div>

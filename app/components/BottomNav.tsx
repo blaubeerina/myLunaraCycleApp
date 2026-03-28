@@ -1,40 +1,84 @@
 'use client'
-import { Translations } from '../lib/i18n'
 
 type Tab = 'home' | 'calendar' | 'log' | 'feedback' | 'settings'
 
 interface Props {
   active: Tab
   onNavigate: (tab: Tab) => void
-  t: Translations
 }
 
-const ICONS: Record<Tab, string> = {
-  home: '🌙',
-  calendar: '📅',
-  log: '➕',
-  feedback: '💌',
-  settings: '⚙️',
-}
+const NAV_ITEMS: { tab: Tab; icon: string; label: string }[] = [
+  { tab: 'home',     icon: '◐',  label: 'MONDSCHATZ' },
+  { tab: 'calendar', icon: '⊟',  label: 'KALENDER' },
+  { tab: 'feedback', icon: '◇',  label: 'FEEDBACK' },
+  { tab: 'settings', icon: '○',  label: 'PROFIL' },
+]
 
-export default function BottomNav({ active, onNavigate, t }: Props) {
+export default function BottomNav({ active, onNavigate }: Props) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-cosmos border-t border-white/5">
-      <div className="flex max-w-md mx-auto">
-        {(['home', 'calendar', 'log', 'feedback', 'settings'] as Tab[]).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => onNavigate(tab)}
-            className={`flex-1 flex flex-col items-center py-3 gap-1 transition-colors ${
-              active === tab ? 'text-gold' : 'text-ivory/40'
-            }`}
-          >
-            <span className="text-xl">{ICONS[tab]}</span>
-            <span className="text-xs font-sans tracking-wide uppercase" style={{ fontSize: '10px' }}>
-              {t.nav[tab]}
-            </span>
-          </button>
-        ))}
+    <nav className="fixed bottom-0 left-0 right-0 z-50">
+      <div className="max-w-md mx-auto px-4 pb-safe pb-4">
+        <div
+          className="flex overflow-hidden"
+          style={{
+            background: 'rgba(255,255,255,0.40)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            border: '1px solid rgba(255,255,255,0.65)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+            borderRadius: '20px',
+          }}
+        >
+          {NAV_ITEMS.map(({ tab, icon, label }) => {
+            const isActive = active === tab
+            return (
+              <button
+                key={tab}
+                onClick={() => onNavigate(tab)}
+                className="flex-1 flex flex-col items-center pt-2 pb-3 gap-1.5 relative transition-all"
+                style={isActive ? { background: 'rgba(253,251,247,0.88)' } : {}}
+              >
+                {/* Terracotta active indicator bar — DB red bar pattern */}
+                <div
+                  className="absolute top-0 left-1/2 -translate-x-1/2 rounded-full transition-all"
+                  style={{
+                    width: isActive ? '28px' : '0px',
+                    height: '2px',
+                    background: '#D4A5A5',
+                    opacity: isActive ? 1 : 0,
+                  }}
+                />
+
+                {/* Line-art icon */}
+                <span
+                  className="font-sans"
+                  style={{
+                    fontSize: '18px',
+                    lineHeight: 1,
+                    color: isActive ? '#2D3748' : '#A0AEC0',
+                    fontWeight: 300,
+                    transition: 'color 150ms',
+                  }}
+                >
+                  {icon}
+                </span>
+
+                {/* Label */}
+                <span
+                  className="font-sans font-medium"
+                  style={{
+                    fontSize: '8px',
+                    letterSpacing: '0.10em',
+                    color: isActive ? '#2D3748' : '#A0AEC0',
+                    transition: 'color 150ms',
+                  }}
+                >
+                  {label}
+                </span>
+              </button>
+            )
+          })}
+        </div>
       </div>
     </nav>
   )

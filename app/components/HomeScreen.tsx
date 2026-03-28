@@ -1,10 +1,9 @@
 'use client'
 import { getMoonPhase } from '../lib/moon'
 import { CycleState, StoredData } from '../lib/cycle'
-import { getTodayImpulse } from '../lib/impulses'
 import { getDayTip } from '../lib/dailytips'
 import { Translations } from '../lib/i18n'
-import { GCalEvent, eventsForDate } from '../lib/googleCalendar'
+import { GCalEvent } from '../lib/googleCalendar'
 
 type Tab = 'home' | 'calendar' | 'log' | 'feedback' | 'settings'
 
@@ -18,231 +17,320 @@ interface Props {
 }
 
 const PHASE_COLORS: Record<string, string> = {
-  menstruation: '#D4A5A5',   // Dusty Rose
-  follicular:   '#9CAF88',   // Sage Green
-  ovulation:    '#C8902A',   // Deep Amber
-  luteal:       '#A99BC8',   // Muted Lavender
-  unknown:      '#D1D9E0',   // Misty Blue-Grey
+  menstruation: '#D4A5A5',
+  follicular:   '#9CAF88',
+  ovulation:    '#C8902A',
+  luteal:       '#A99BC8',
+  unknown:      '#B0BEC5',
+}
+
+const PHASE_ICONS: Record<string, string> = {
+  menstruation: '🌑',
+  follicular:   '🌒',
+  ovulation:    '🌕',
+  luteal:       '🌖',
+  unknown:      '🌙',
 }
 
 const CHECKIN_EMOJIS = ['🙂', '😌', '🌧', '🌊', '🔥', '🌙', '💫', '🌸']
 
-const STICKY_COLORS = [
-  { bg: '#FFF4B8', text: '#3A2E00' },
-  { bg: '#FFD6D6', text: '#4A1818' },
-  { bg: '#C8E6FF', text: '#002040' },
-  { bg: '#C8F0D8', text: '#003020' },
-  { bg: '#E8D0FF', text: '#300050' },
-  { bg: '#FFE0C8', text: '#3A1000' },
-]
-
-function formatEventTime(start: string, locale: string): string | null {
-  if (!start.includes('T')) return null
-  return new Date(start).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
-}
-
-const GLASS_CARD = {
-  background: 'rgba(255,255,255,0.45)',
-  border: '1.5px solid rgba(255,255,255,0.5)',
+// Frosted Pearl card — shared style
+const CARD: React.CSSProperties = {
+  background: 'rgba(255,255,255,0.72)',
   backdropFilter: 'blur(20px)',
   WebkitBackdropFilter: 'blur(20px)',
-  boxShadow: '0 10px 30px rgba(156,175,136,0.15)',
-  color: '#4A5568',
+  boxShadow: '0 4px 15px rgba(0,0,0,0.04)',
+  borderRadius: '20px',
 }
 
-export default function HomeScreen({ cycle, data, t, onDataChange, onNavigate, googleEvents }: Props) {
+export default function HomeScreen({ cycle, data, t, onDataChange, onNavigate }: Props) {
   const moon = getMoonPhase()
-  const impulse = getTodayImpulse(cycle.phase, data.language)
   const dayTip = cycle.currentDay > 0 ? getDayTip(cycle.currentDay, data.language) : null
   const phaseColor = PHASE_COLORS[cycle.phase]
-  const today = new Date().toISOString().split('T')[0]
-  const todayCheckin = data.checkIns[today]
-  const todayEvents = eventsForDate(googleEvents ?? [], new Date())
+  const today = new Date()
+  const todayStr = today.toISOString().split('T')[0]
+  const todayCheckin = data.checkIns[todayStr]
+  const lang = data.language
+  const locale = lang === 'de' ? 'de-DE' : 'en-US'
+
+  const dateLabel = today.toLocaleDateString(locale, {
+    weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+  })
 
   function handleCheckin(emoji: string) {
-    onDataChange({ checkIns: { ...data.checkIns, [today]: emoji } })
+    onDataChange({ checkIns: { ...data.checkIns, [todayStr]: emoji } })
   }
 
+  // Tips list items — DB "Nearby Transit" style
+  const tipRows: { icon: string; text: string }[] = [
+    ...(dayTip ? [
+      { icon: '🫖', text: dayTip.tipp },
+      { icon: '✦', text: `Supplement: ${dayTip.supplement}` },
+    ] : []),
+    { icon: '🌙', text: `${moon.name[lang]} · ${moon.illumination}% ${t.home.illuminated}` },
+  ]
+
   return (
-    <div className="min-h-screen pb-24 px-5 pt-8 max-w-md mx-auto">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="font-serif text-2xl italic text-gold tracking-wide">lunaracycle</h1>
-        <span className="text-xs font-sans" style={{ color: 'var(--ivory-dim)', opacity: 0.6 }}>
-          {new Date().toLocaleDateString(data.language === 'de' ? 'de-DE' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long' })}
-        </span>
-      </div>
-
-      {/* Mond mit Ambient Glow */}
-      <div className="flex flex-col items-center mb-8 relative">
-        {/* Ambient gold glow */}
-        <div
-          className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none"
-          style={{
-            width: '200px',
-            height: '200px',
-            background: 'radial-gradient(circle, rgba(201,168,76,0.13) 0%, transparent 70%)',
-            borderRadius: '50%',
-          }}
-        />
-        <div
-          className="text-8xl mb-3 relative z-10"
-          style={{ filter: 'drop-shadow(0 0 20px rgba(201,168,76,0.3))' }}
-        >
-          {moon.emoji}
-        </div>
-        <p className="font-serif text-xl text-gold italic relative z-10">{moon.name[data.language]}</p>
-        <p className="text-xs mt-1 relative z-10" style={{ color: 'var(--ivory-dim)', opacity: 0.55 }}>
-          {moon.illumination}% {t.home.illuminated}
-        </p>
-      </div>
-
-      {/* Zyklus-Karte */}
-      {cycle.phase === 'unknown' ? (
-        <div className="rounded-2xl p-6 mb-4 text-center" style={GLASS_CARD}>
-          <p className="text-3xl mb-3">🌹</p>
-          <p className="font-serif text-lg italic mb-4" style={{ color: 'var(--ivory-dim)' }}>{t.home.noData}</p>
+    <div className="min-h-screen">
+      {/* Fixed Header — "MEIN ZYKLUS" */}
+      <header
+        className="fixed top-0 left-0 right-0 z-50"
+        style={{
+          background: 'rgba(253,251,247,0.88)',
+          backdropFilter: 'blur(14px)',
+          WebkitBackdropFilter: 'blur(14px)',
+          borderBottom: '1px solid rgba(0,0,0,0.06)',
+        }}
+      >
+        <div className="flex items-center justify-between px-5 py-4 max-w-md mx-auto">
+          <button
+            onClick={() => onNavigate('settings')}
+            aria-label="Einstellungen"
+            style={{ fontSize: '19px', color: '#718096', lineHeight: 1 }}
+          >
+            ⚙
+          </button>
+          <h1
+            className="font-sans font-semibold tracking-widest uppercase"
+            style={{ fontSize: '13px', color: '#2D3748', letterSpacing: '0.22em' }}
+          >
+            MEIN ZYKLUS
+          </h1>
           <button
             onClick={() => onNavigate('log')}
-            className="w-full py-3 rounded-xl font-sans text-sm font-medium"
-            style={{ background: 'linear-gradient(135deg, #C4858A, #9B8EC4)', color: '#0D0B1A' }}
+            aria-label="Neuer Eintrag"
+            style={{ fontSize: '24px', color: '#718096', lineHeight: 1, fontWeight: 300 }}
           >
-            {data.language === 'de' ? 'Ersten Eintrag machen →' : 'Make your first entry →'}
+            +
           </button>
         </div>
-      ) : (
-        <div className="rounded-2xl p-5 mb-4 border" style={{ background: 'rgba(255,255,255,0.45)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', boxShadow: '0 10px 30px rgba(156,175,136,0.15)', borderColor: `${phaseColor}70` }}>
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-xs uppercase tracking-widest mb-1" style={{ color: '#5A4A7A', opacity: 0.8 }}>{t.home.cycleDay}</p>
-              <p className="font-serif text-5xl font-light" style={{ color: phaseColor }}>{cycle.currentDay}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-xs uppercase tracking-widest mb-1" style={{ color: '#5A4A7A', opacity: 0.8 }}>Phase</p>
-              <p className="font-serif text-lg italic" style={{ color: phaseColor }}>
-                {t.phase[cycle.phase]}
-              </p>
-            </div>
-          </div>
-          <div className="mt-3 pt-3 border-t border-white/5">
-            {cycle.isLate ? (
-              <p className="text-xs" style={{ color: 'var(--rose)' }}>{cycle.daysLate} {t.home.late}</p>
-            ) : (
-              <p className="text-xs" style={{ color: 'var(--ivory-dim)', opacity: 0.65 }}>{cycle.daysUntilNext} {t.home.daysUntil}</p>
-            )}
-          </div>
-        </div>
-      )}
+      </header>
 
-      {/* Drei Info-Karten — Glassmorphism aus Moodboard */}
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        <div className="rounded-xl p-3 text-center" style={{ ...GLASS_CARD, borderColor: 'rgba(201,168,76,0.2)' }}>
-          <p className="text-xl mb-1">{moon.emoji}</p>
-          <p className="text-xs font-sans mb-0.5" style={{ color: 'var(--ivory-dim)', opacity: 0.55, fontSize: '8px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>{t.home.cards.moon}</p>
-          <p className="font-serif text-xs" style={{ color: 'var(--ivory)', fontSize: '0.75rem', lineHeight: 1.2 }}>{moon.name[data.language]}</p>
-        </div>
-        <div className="rounded-xl p-3 text-center" style={{ ...GLASS_CARD, borderColor: 'rgba(155,142,196,0.2)' }}>
-          <p className="text-xl mb-1">
-            {cycle.phase === 'menstruation' ? '🌹' : cycle.phase === 'follicular' ? '🌱' : cycle.phase === 'ovulation' ? '✨' : cycle.phase === 'luteal' ? '🍂' : '🌙'}
-          </p>
-          <p className="text-xs font-sans mb-0.5" style={{ color: 'var(--ivory-dim)', opacity: 0.55, fontSize: '8px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>{t.home.cards.phase}</p>
-          <p className="font-serif text-xs" style={{ color: 'var(--ivory)', fontSize: '0.75rem', lineHeight: 1.2 }}>{t.home.energy[cycle.phase]}</p>
-        </div>
-        <div className="rounded-xl p-3 text-center" style={{ ...GLASS_CARD, borderColor: 'rgba(107,170,176,0.2)' }}>
-          <p className="text-xl mb-1">{todayCheckin || '💫'}</p>
-          <p className="text-xs font-sans mb-0.5" style={{ color: 'var(--ivory-dim)', opacity: 0.55, fontSize: '8px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>{t.home.cards.energy}</p>
-          <p className="font-serif text-xs" style={{ color: 'var(--ivory)', fontSize: '0.75rem', lineHeight: 1.2 }}>{todayCheckin ? t.home.howAreYou.split(' ')[0] : '—'}</p>
-        </div>
-      </div>
+      {/* Scrollable content */}
+      <div className="pt-16 pb-32 px-5 max-w-md mx-auto">
 
-      {/* Impuls */}
-      <div className="rounded-2xl p-5 mb-3" style={{
-        background: 'rgba(107,170,176,0.07)',
-        border: '1px solid rgba(107,170,176,0.18)',
-      }}>
-        <p className="text-xs uppercase tracking-widest mb-3" style={{ color: 'var(--teal)', fontSize: '8px', letterSpacing: '0.2em' }}>{t.home.todayImpulse}</p>
-        <p className="font-serif text-base italic leading-relaxed" style={{ color: 'var(--ivory)' }}>"{impulse}"</p>
-      </div>
-
-      {/* Tipp + Supplement des Tages */}
-      {dayTip && (
-        <div className="rounded-2xl p-4 mb-3 flex items-center gap-3" style={{
-          background: 'rgba(201,168,76,0.06)',
-          border: '1px solid rgba(201,168,76,0.15)',
-        }}>
-          <span className="text-lg flex-shrink-0">🌿</span>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-sans" style={{ color: 'var(--ivory)', opacity: 0.85 }}>{dayTip.tipp}</p>
-            <p className="text-xs mt-0.5 font-sans" style={{ color: 'var(--gold-soft)', fontSize: '10px' }}>
-              Supplement: {dayTip.supplement}
-            </p>
+        {/* ── TICKET CARD — Phase Event (DB Navigator style) ── */}
+        {cycle.phase === 'unknown' ? (
+          /* Empty state */
+          <div className="mt-5 p-6 text-center" style={CARD}>
+            <p className="text-3xl mb-3">🌹</p>
+            <p className="font-sans text-base mb-4" style={{ color: '#4A5568' }}>{t.home.noData}</p>
+            <button
+              onClick={() => onNavigate('log')}
+              className="w-full py-3 rounded-xl font-sans text-sm font-medium"
+              style={{ background: 'linear-gradient(135deg, #D4A5A5, #A99BC8)', color: '#fff' }}
+            >
+              {lang === 'de' ? 'Ersten Eintrag machen →' : 'Make your first entry →'}
+            </button>
           </div>
-        </div>
-      )}
-
-      {/* Google-Kalender-Spiegel — Sticky Notes */}
-      {todayEvents.length > 0 && (
-        <div className="mb-3">
-          <div className="flex items-center gap-2 mb-3">
-            <p className="text-xs uppercase tracking-widest font-sans"
-              style={{ color: 'var(--ivory-dim)', opacity: 0.45, fontSize: '9px', letterSpacing: '0.18em' }}>
-              {t.home.todayEvents}
-            </p>
-            <span className="text-xs" style={{ opacity: 0.3 }}>🔒</span>
-          </div>
-          <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-            {todayEvents.map((ev, idx) => {
-              const color = STICKY_COLORS[idx % STICKY_COLORS.length]
-              const time = formatEventTime(ev.start, data.language === 'de' ? 'de-DE' : 'en-US')
-              return (
+        ) : (
+          <div
+            className="mt-5 overflow-hidden"
+            style={{ ...CARD, border: `1.5px solid ${phaseColor}45` }}
+          >
+            {/* ── Ticket Header ── */}
+            <div className="flex items-center justify-between px-5 pt-5 pb-4">
+              <div className="flex items-center gap-3">
+                {/* Terracotta moon cycle icon — replaces DB red square */}
                 <div
-                  key={ev.id}
-                  className="flex-shrink-0 rounded-xl p-3 flex flex-col justify-between"
+                  className="flex items-center justify-center rounded-xl text-xl flex-shrink-0"
                   style={{
-                    background: color.bg,
-                    minWidth: '110px',
-                    maxWidth: '150px',
-                    minHeight: '80px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
-                    transform: `rotate(${idx % 2 === 0 ? '-1.2' : '1.0'}deg)`,
+                    width: '44px',
+                    height: '44px',
+                    background: `${phaseColor}22`,
+                    border: `1.5px solid ${phaseColor}55`,
                   }}
                 >
-                  {time && (
-                    <p className="font-sans font-medium" style={{ fontSize: '9px', color: color.text, opacity: 0.6 }}>
-                      {time}
-                    </p>
-                  )}
-                  <p className="font-sans font-medium leading-tight"
-                    style={{ fontSize: '12px', color: color.text, marginTop: time ? '4px' : '0' }}>
-                    {ev.summary}
+                  {PHASE_ICONS[cycle.phase]}
+                </div>
+                <div>
+                  <p
+                    className="font-sans uppercase tracking-widest mb-0.5"
+                    style={{ fontSize: '8px', color: '#A0AEC0', letterSpacing: '0.18em' }}
+                  >
+                    {lang === 'de' ? 'AKTUELLE PHASE' : 'CURRENT PHASE'}
+                  </p>
+                  {/* Phase name — "Super Sparpreis, 1st Cl." equivalent */}
+                  <p className="font-sans font-semibold text-base" style={{ color: '#2D3748' }}>
+                    {t.phase[cycle.phase]}
                   </p>
                 </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
+              </div>
 
-      {/* Check-in */}
-      <div className="rounded-2xl p-5" style={GLASS_CARD}>
-        <p className="text-xs uppercase tracking-widest mb-3" style={{ color: 'var(--ivory-dim)', opacity: 0.5 }}>{t.home.howAreYou}</p>
-        <div className="flex justify-between">
-          {CHECKIN_EMOJIS.map((emoji) => (
-            <button
-              key={emoji}
-              onClick={() => handleCheckin(emoji)}
-              className={`text-2xl rounded-xl transition-all flex items-center justify-center ${
-                todayCheckin === emoji ? 'scale-110' : ''
-              }`}
-              style={{
-                minWidth: '44px',
-                minHeight: '44px',
-                ...(todayCheckin === emoji ? { background: 'rgba(200,144,42,0.15)' } : {}),
-              }}
-            >
-              {emoji}
-            </button>
-          ))}
+              {/* Day badge */}
+              {cycle.currentDay > 0 && (
+                <div className="text-right">
+                  <p
+                    className="font-sans uppercase tracking-widest mb-0.5"
+                    style={{ fontSize: '8px', color: '#A0AEC0' }}
+                  >
+                    TAG
+                  </p>
+                  <p className="font-sans font-bold text-2xl" style={{ color: phaseColor }}>
+                    {cycle.currentDay}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* ── Perforation — tear-off dashed line ── */}
+            <div className="relative flex items-center">
+              <div
+                className="rounded-full flex-shrink-0"
+                style={{
+                  width: '18px', height: '18px',
+                  background: 'linear-gradient(165deg, #FDFBF7, #D1D9E0)',
+                  marginLeft: '-9px',
+                }}
+              />
+              <div
+                className="flex-1 mx-1"
+                style={{ borderTop: '1.5px dashed rgba(0,0,0,0.10)' }}
+              />
+              <div
+                className="rounded-full flex-shrink-0"
+                style={{
+                  width: '18px', height: '18px',
+                  background: 'linear-gradient(165deg, #FDFBF7, #D1D9E0)',
+                  marginRight: '-9px',
+                }}
+              />
+            </div>
+
+            {/* ── Ticket Body ── */}
+            <div className="px-5 pt-4 pb-5">
+
+              {/* Journey row: Zyklustag → Nächste Periode (Berlin Hbf → Minden) */}
+              <div className="flex items-start gap-3 mb-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span style={{ fontSize: '12px', color: phaseColor }}>📍</span>
+                    <p
+                      className="font-sans uppercase tracking-widest"
+                      style={{ fontSize: '7px', color: '#A0AEC0', letterSpacing: '0.16em' }}
+                    >
+                      {lang === 'de' ? 'ZYKLUSTAG' : 'CYCLE DAY'}
+                    </p>
+                  </div>
+                  <p className="font-sans font-semibold text-sm" style={{ color: '#2D3748' }}>
+                    {lang === 'de' ? `Tag ${cycle.currentDay}` : `Day ${cycle.currentDay}`}
+                  </p>
+                </div>
+
+                <div style={{ color: '#CBD5E0', fontSize: '14px', marginTop: '18px' }}>›</div>
+
+                <div className="flex-1">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span style={{ fontSize: '12px', color: phaseColor }}>📍</span>
+                    <p
+                      className="font-sans uppercase tracking-widest"
+                      style={{ fontSize: '7px', color: '#A0AEC0', letterSpacing: '0.16em' }}
+                    >
+                      {lang === 'de' ? 'NÄCHSTE PERIODE' : 'NEXT PERIOD'}
+                    </p>
+                  </div>
+                  <p className="font-sans font-semibold text-sm" style={{ color: '#2D3748' }}>
+                    {cycle.isLate
+                      ? (lang === 'de' ? `${cycle.daysLate} Tage später` : `${cycle.daysLate} days late`)
+                      : (lang === 'de' ? `in ${cycle.daysUntilNext} Tagen` : `in ${cycle.daysUntilNext} days`)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Calendar row */}
+              <div
+                className="flex items-center gap-2 pt-3 mb-2"
+                style={{ borderTop: '1px solid rgba(0,0,0,0.05)' }}
+              >
+                <span style={{ fontSize: '12px', color: '#A0AEC0' }}>📅</span>
+                <p className="font-sans text-xs" style={{ color: '#4A5568', fontWeight: 400 }}>
+                  {dateLabel}
+                </p>
+              </div>
+
+              {/* Privacy row — replaces DB disclaimer */}
+              <div className="flex items-center gap-2">
+                <span style={{ fontSize: '12px', color: '#A0AEC0' }}>🔒</span>
+                <p className="font-sans" style={{ fontSize: '10px', color: '#A0AEC0' }}>
+                  {lang === 'de'
+                    ? 'Deine Daten sind nur für dich sichtbar.'
+                    : 'Your data is only visible to you.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── TIPS LIST — "Nearby Public Transit" style ── */}
+        {tipRows.length > 0 && (
+          <div className="mt-4 overflow-hidden" style={CARD}>
+            <div className="px-5 pt-4 pb-2">
+              <p
+                className="font-sans uppercase tracking-widest"
+                style={{ fontSize: '8px', color: '#A0AEC0', letterSpacing: '0.18em' }}
+              >
+                {lang === 'de' ? 'HEUTE FÜR DICH' : 'TODAY FOR YOU'}
+              </p>
+            </div>
+
+            {tipRows.map((tip, idx) => (
+              <div key={idx}>
+                {idx > 0 && (
+                  // Thin horizontal separator between list items (image_7 pattern)
+                  <div style={{ height: '1px', background: 'rgba(0,0,0,0.06)', marginLeft: '56px' }} />
+                )}
+                <div className="flex items-center gap-3 px-5 py-3.5">
+                  {/* Minimal icon — like bus icon in image_7 */}
+                  <div
+                    className="flex items-center justify-center rounded-full flex-shrink-0 text-sm"
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      background: 'rgba(212,165,165,0.12)',
+                      border: '1px solid rgba(212,165,165,0.25)',
+                    }}
+                  >
+                    {tip.icon}
+                  </div>
+                  <p
+                    className="font-sans text-sm"
+                    style={{ color: '#4A5568', lineHeight: 1.45, fontWeight: 400 }}
+                  >
+                    {tip.text}
+                  </p>
+                </div>
+              </div>
+            ))}
+            <div className="pb-1" />
+          </div>
+        )}
+
+        {/* ── CHECK-IN ── */}
+        <div className="mt-4 p-5" style={CARD}>
+          <p
+            className="font-sans uppercase tracking-widest mb-4"
+            style={{ fontSize: '8px', color: '#A0AEC0', letterSpacing: '0.18em' }}
+          >
+            {t.home.howAreYou}
+          </p>
+          <div className="flex justify-between">
+            {CHECKIN_EMOJIS.map((emoji) => (
+              <button
+                key={emoji}
+                onClick={() => handleCheckin(emoji)}
+                className="text-2xl rounded-xl transition-all flex items-center justify-center"
+                style={{
+                  minWidth: '40px',
+                  minHeight: '40px',
+                  ...(todayCheckin === emoji
+                    ? { background: `${phaseColor}22`, transform: 'scale(1.12)' }
+                    : {}),
+                }}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>

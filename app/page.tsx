@@ -103,7 +103,7 @@ export default function App() {
       {tab === 'settings' && (
         <SettingsScreen data={data} t={t} onDataChange={handleDataChange} onGoogleToken={setGoogleToken} />
       )}
-      <BottomNav active={tab} onNavigate={setTab} t={t} />
+      <BottomNav active={tab} onNavigate={setTab} />
     </main>
   )
 }
