@@ -1,0 +1,46 @@
+name: Ghost Weekly Post (Sundays 14–15h Berlin)
+
+on:
+  schedule:
+    # 13:00 UTC = 14:00 CET (winter) / 15:00 CEST (summer)
+    # Zufälliger Sleep 0–3599s sorgt für Verteilung innerhalb der Stunde
+    - cron: '0 13 * * 0'
+  workflow_dispatch:   # manuell auslösen falls nötig
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # für commit von ghost_published.json
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python Setup
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests PyJWT
+
+      - name: Random delay (innerhalb 14–15h Fenster)
+        run: |
+          SLEEP=$((RANDOM % 3600))
+          echo "Warte ${SLEEP} Sekunden..."
+          sleep $SLEEP
+
+      - name: Post to Ghost
+        env:
+          GHOST_ADMIN_KEY: ${{ secrets.GHOST_ADMIN_KEY }}
+          GROQ_API_KEY:    ${{ secrets.GROQ_API_KEY }}
+        run: python scripts/ghost_weekly_post.py
+
+      - name: Commit updated tracking file
+        run: |
+          git config user.name  "Luna Bot"
+          git config user.email "luna-bot@lunaracycle.app"
+          git add scripts/ghost_published.json
+          git diff --staged --quiet || git commit -m "chore: ghost_published.json — Sonntag $(date +%Y-%m-%d)"
+          git push
