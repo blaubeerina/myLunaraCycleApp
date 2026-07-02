@@ -1,6 +1,6 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
-import { CycleState, StoredData } from '../lib/cycle'
+import { CycleState, StoredData, getDayPhaseFromHistory } from '../lib/cycle'
 import { getMoonPhase, MoonPhaseName } from '../lib/moon'
 import { Translations } from '../lib/i18n'
 import { GCalEvent, eventsForDate } from '../lib/googleCalendar'
@@ -62,18 +62,18 @@ function getMoonRadial(illumination: number): string {
   return `radial-gradient(circle at center, rgba(${r},${g},${b},${alpha}) 5%, rgba(${r},${g},${b},${alpha * 0.38}) 45%, transparent 78%)`
 }
 
-// Zyklus-Overlays — Misty Morning Gold Palette
+// Zyklus-Overlays — Dark Editorial Palette
 const CYCLE_OVERLAY: Record<string, string> = {
-  menstruation: 'rgba(212,165,165,0.42)',  // Dusty Rose
-  ovulation:    'rgba(230,190,138,0.32)',   // Soft Amber
-  follicular:   'rgba(156,175,136,0.16)',   // Sage Green
-  luteal:       'rgba(169,155,200,0.16)',   // Muted Lavender
+  menstruation: 'rgba(196,122,122,0.38)',  // Rose on dark
+  ovulation:    'rgba(201,168,48,0.28)',    // Gold on dark
+  follicular:   'rgba(122,155,106,0.22)',   // Teal on dark
+  luteal:       'rgba(139,128,184,0.22)',   // Lavender on dark
 }
 
-// Prognose-Overlays (Zukunft) — ~35% der normalen Opazität
+// Prognose-Overlays (Zukunft) — ~30% der normalen Opazität
 const CYCLE_OVERLAY_FUTURE: Record<string, string> = {
-  follicular: 'rgba(156,175,136,0.05)',
-  luteal:     'rgba(169,155,200,0.05)',
+  follicular: 'rgba(122,155,106,0.07)',
+  luteal:     'rgba(139,128,184,0.07)',
 }
 
 // Erste-Hilfe-Koffer — Sofort-Tipps pro Symptom
@@ -86,10 +86,10 @@ const SYMPTOM_TIPS: Record<string, { de: string[], en: string[] }> = {
 }
 
 const PHASE_DOT: Record<string, string> = {
-  menstruation: '#D4A5A5',   // Dusty Rose
-  follicular:   '#9CAF88',   // Sage Green
-  ovulation:    '#C8902A',   // Deep Amber
-  luteal:       '#A99BC8',   // Muted Lavender
+  menstruation: '#C47A7A',   // Rose on dark
+  follicular:   '#7A9B6A',   // Teal on dark
+  ovulation:    '#C9A830',   // Gold on dark
+  luteal:       '#8B80B8',   // Lavender on dark
 }
 
 const SYMPTOM_ICONS: Record<string, string> = {
@@ -209,7 +209,8 @@ export default function CalendarScreen({ cycle, data, t, googleEvents = [], onDa
       >
         {days.map((day, i) => {
           if (!day) return <div key={i} />
-          const phase = getDayPhase(day, cycle)
+          const _p = getDayPhaseFromHistory(day, data)
+          const phase: DayPhase = (_p === 'unknown' ? null : _p)
           const moon = getMoonPhase(day)
           const isToday = day.getTime() === today.getTime()
 
@@ -228,10 +229,9 @@ export default function CalendarScreen({ cycle, data, t, googleEvents = [], onDa
           const dayLog = data.logs?.[dateStr]
           const hasLog = !!(dayLog?.mood || dayLog?.symptoms?.length || dayLog?.pain != null || dayLog?.energy)
 
-          // Misty Dawn: Vollmond (>85%) braucht dunklen Text, sonst hell
-          const dateColor = moon.illumination > 85
-            ? (isToday ? '#C9A84C' : '#2A1F3D')
-            : (isToday ? '#E2C87A' : '#EDE5CC')
+          // Dark theme: all numbers ivory/gold — text-shadow ensures contrast on bright moon glow
+          const dateColor = isToday ? '#C9A830' : '#EDE5CC'
+          const dateShadow = moon.illumination > 70 ? '0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6)' : 'none'
 
           return (
             <div
@@ -277,7 +277,7 @@ export default function CalendarScreen({ cycle, data, t, googleEvents = [], onDa
                 <div className="flex flex-col justify-between flex-1">
                   <span
                     className="font-sans leading-none"
-                    style={{ fontSize: '14px', fontWeight: isToday || phase ? 600 : 400, color: dateColor }}
+                    style={{ fontSize: '14px', fontWeight: isToday || phase ? 600 : 400, color: dateColor, textShadow: dateShadow }}
                   >
                     {day.getDate()}
                   </span>
@@ -355,7 +355,8 @@ export default function CalendarScreen({ cycle, data, t, googleEvents = [], onDa
       {/* Day Detail Modal — Structured Split-Screen */}
       {expandedDay && (() => {
         const exMoon = getMoonPhase(expandedDay)
-        const exPhase = getDayPhase(expandedDay, cycle)
+        const _ep = getDayPhaseFromHistory(expandedDay, data)
+        const exPhase: DayPhase = (_ep === 'unknown' ? null : _ep)
         const exDateStr = `${expandedDay.getFullYear()}-${String(expandedDay.getMonth() + 1).padStart(2, '0')}-${String(expandedDay.getDate()).padStart(2, '0')}`
         const exLog = data.logs?.[exDateStr]
         const exEvents = eventsForDate(googleEvents, expandedDay)
@@ -503,18 +504,18 @@ export default function CalendarScreen({ cycle, data, t, googleEvents = [], onDa
                 {/* Notizen-Preview — immer sichtbar auf Page 1 */}
                 <div className="mt-4" style={{ marginLeft: '15%', marginRight: '15%' }}>
                   <div style={{
-                    background: 'rgba(255,255,255,0.85)',
+                    background: 'rgba(36,32,24,0.92)',
                     borderRadius: '20px',
                     padding: '30px',
-                    boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
-                    borderLeft: '2px solid #D4A5A5',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.25)',
+                    borderLeft: '2px solid #C47A7A',
                   }}>
                     <p className="uppercase tracking-widest mb-3"
                       style={{ color: '#D4A5A5', fontSize: '9px', letterSpacing: '0.2em', fontWeight: 600 }}>
                       {data.language === 'de' ? 'Notiz' : 'Note'}
                     </p>
                     <p style={{
-                      color: '#333333',
+                      color: '#EDE5CC',
                       fontFamily: "'Playfair Display', 'Cormorant Garamond', serif",
                       fontSize: '1.1rem',
                       lineHeight: 1.7,
@@ -602,11 +603,11 @@ export default function CalendarScreen({ cycle, data, t, googleEvents = [], onDa
                     {t.dayDetail.notes}
                   </p>
                   <div style={{
-                    background: 'rgba(255,255,255,0.85)',
+                    background: 'rgba(36,32,24,0.92)',
                     borderRadius: '20px',
                     padding: '30px',
-                    boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
-                    borderLeft: '2px solid #D4A5A5',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.25)',
+                    borderLeft: '2px solid #C47A7A',
                   }}>
                     <textarea
                       rows={5}

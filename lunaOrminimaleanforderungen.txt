@@ -1,0 +1,42 @@
+ 
+Eine wirklich gute Perioden-App muss den schmalen Grat zwischen medizinischer Präzision und einfacher Usability meistern. Viele Apps auf dem Markt sind entweder zu verspielt ("pink und blumig") oder zu überladen.
+
+Um den Zyklus wirklich präzise zu tracken, geht es nicht nur um den Kalender, sondern um das Verständnis von biologischen Markern. Hier ist meine Analyse der 10 wichtigsten Funktionen:
+
+Die Top 10 Features für eine präzise Zyklus-App
+Smarter Algorithmus (Vorhersage):
+Die App sollte nicht nur den Durchschnitt berechnen, sondern lernfähig sein. Sie muss Zyklusschwankungen erkennen und die Prognosen für Periode und Eisprung dynamisch anpassen.
+
+Tracking von Basaltemperatur & Zervixschleim:
+Für eine echte Bestimmung des Eisprungs (NFP-Methode) sind diese zwei Marker essenziell. Ohne diese Daten ist jede App nur eine Schätzung basierend auf Statistiken.
+
+Symptom-Tagebuch (Körper & Psyche):
+Einfaches Loggen von Krämpfen, Hautveränderungen, Libido und vor allem Stimmungsschwankungen (PMS). Das hilft der Nutzerin, Muster zu erkennen (z. B. "Warum bin ich jeden Monat an Tag 22 so gereizt?").
+
+Individuelle Zyklus-Phasen-Analyse:
+Die App sollte erklären, in welcher Phase man sich befindet (Follikelphase, Ovulation, Lutealphase) und was das für das Energielevel oder die Ernährung bedeutet.
+
+Datenschutz & Verschlüsselung (Höchste Priorität):
+Zyklusdaten sind hochsensibel. Eine lokale Speicherung oder eine Ende-zu-Ende-Verschlüsselung ohne Verkauf der Daten an Drittanbieter ist heute ein absolutes Muss ("Privacy by Design").
+
+Export-Funktion für Mediziner:
+Ein PDF-Report, der die wichtigsten Daten (Regelmäßigkeit, Schmerzintensität) für den nächsten Frauenarztbesuch zusammenfasst.
+
+Anpassbare Benachrichtigungen:
+Diskrete Erinnerungen an die bevorstehende Periode oder das Messen der Temperatur – ohne dass der halbe Bus die Nachricht "Deine Tage kommen!" auf dem Sperrbildschirm liest.
+
+Berücksichtigung von Ausnahmezuständen:
+Modi für Schwangerschaft, Stillzeit, Perimenopause oder die Einnahme der Pille. Der Algorithmus muss wissen, wenn der "normale" Zyklus pausiert.
+
+Partner-Modus (Optional, aber gefragt):
+Die Möglichkeit, den Zyklusstatus mit dem Partner zu teilen, um Verständnis für hormonelle Schwankungen oder die Familienplanung zu fördern.
+
+Clean Design & Intuitive Eingabe:
+Kein unnötiger Schnickschnack. Die Eingabe der Blutung sollte mit zwei Klicks erledigt sein.
+
+Analyse & Hinterfragung
+Viel hilft nicht immer viel. Viele Apps scheitern daran, dass sie versuchen, gleichzeitig ein soziales Netzwerk, ein Shop und ein Tracker zu sein.
+
+Die kritische Frage ist: Vertraut die Nutzerin der App genug, um intime Details einzutragen? Wenn die App zu "werblich" wirkt, sinkt die Datenqualität, weil weniger geloggt wird. Eine gute App sollte sich wie ein neutrales, medizinisches Werkzeug anfühlen, das die Nutzerin empowert, ihren eigenen Körper besser zu verstehen.
+
+Wichtiger Hinweis: Keine App ersetzt eine ärztliche Diagnose oder eine hormonelle Untersuchung, besonders bei Beschwerden wie Endometriose oder PCOS.

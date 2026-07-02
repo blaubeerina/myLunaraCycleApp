@@ -4,6 +4,7 @@ import { loadData, saveData, calcCycle, StoredData } from './lib/cycle'
 import { checkAndNotify, registerServiceWorker } from './lib/notifications'
 import { T, Lang } from './lib/i18n'
 import { GCalEvent, fetchEvents, getStoredToken } from './lib/googleCalendar'
+import { fetchMoonData } from './lib/moon'
 import BottomNav from './components/BottomNav'
 import HomeScreen from './components/HomeScreen'
 import CalendarScreen from './components/CalendarScreen'
@@ -18,6 +19,7 @@ export default function App() {
   const [data, setData] = useState<StoredData | null>(null)
   const [tab, setTab] = useState<Tab>('home')
   const [googleToken, setGoogleToken] = useState<string | null>(null)
+  const [, setMoonReady] = useState(0)
   const [googleEvents, setGoogleEvents] = useState<GCalEvent[]>([])
 
   useEffect(() => {
@@ -25,6 +27,7 @@ export default function App() {
     const stored = getStoredToken()
     if (stored) setGoogleToken(stored)
     registerServiceWorker()
+    fetchMoonData().then(() => setMoonReady(n => n + 1))
   }, [])
 
   useEffect(() => {

@@ -19,6 +19,14 @@ type SymptomKey = typeof SYMPTOMS[number]
 
 const MOOD_EMOJIS = ['🌑', '🌒', '🌓', '🌔', '🌕'] as const
 
+const PHASE_DESC: Record<string, Record<'de' | 'en', string>> = {
+  menstruation: { de: 'Rückzug & Ruhe',       en: 'Rest & Retreat'        },
+  follicular:   { de: 'Energie fließt',         en: 'Energy Rising'         },
+  ovulation:    { de: 'Im vollen Strahlen',     en: 'In Full Bloom'         },
+  luteal:       { de: 'Kraft & Intuition',      en: 'Strength & Intuition'  },
+  unknown:      { de: 'Dein Rhythmus',          en: 'Your Rhythm'           },
+}
+
 const SYMPTOM_ICONS: Record<SymptomKey, string> = {
   cramps: '🌀', bloating: '💨', headache: '🤕', acne: '✦', tender: '🌸',
 }
@@ -55,7 +63,7 @@ function BatterySVG({ level }: { level: 0 | 1 | 2 | 3 }) {
   const fill = fills[level]
   const barH = Math.round(36 * fill)
   const barY = 44 - barH
-  const colors: Record<number, string> = { 0: 'rgba(255,255,255,0.2)', 1: '#D4A5A5', 2: '#E6BE8A', 3: '#9CAF88' }
+  const colors: Record<number, string> = { 0: 'rgba(237,229,204,0.15)', 1: '#C47A7A', 2: '#C9A830', 3: '#7A9B6A' }
   const color = colors[level]
   return (
     <svg width="28" height="56" viewBox="0 0 28 56" fill="none">
@@ -140,7 +148,14 @@ export default function LogScreen({ cycle, data, t, onDataChange, onNavigate }: 
     onDataChange({ logs: { [today]: patch } })
   }
 
-  function startPeriod() { onDataChange({ lastPeriodStart: today }); showSaved() }
+  function startPeriod() {
+    const history = [
+      ...(data.periodHistory ?? []),
+      ...(data.lastPeriodStart ? [data.lastPeriodStart] : []),
+    ]
+    onDataChange({ lastPeriodStart: today, periodHistory: history })
+    showSaved()
+  }
 
   function endPeriod() {
     patchLog({ endedToday: true })
@@ -429,7 +444,7 @@ export default function LogScreen({ cycle, data, t, onDataChange, onNavigate }: 
               </p>
               {calmQuote ? (
                 <div className="text-center py-2">
-                  <p className="font-serif text-base italic leading-relaxed" style={{ color: '#A99BC8' }}>
+                  <p className="font-serif text-base italic leading-relaxed" style={{ color: '#8B80B8' }}>
                     &ldquo;{calmQuote}&rdquo;
                   </p>
                 </div>
@@ -491,10 +506,12 @@ export default function LogScreen({ cycle, data, t, onDataChange, onNavigate }: 
 
   // ──────────────────────────────────────────────────────────────────────
 
-  // Shared card style — solid off-white, thin border, no heavy shadow
   const TICKET: React.CSSProperties = {
-    background: '#FFFCF7',
-    border: '1px solid rgba(0,0,0,0.05)',
+    background: 'rgba(46,42,30,0.75)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    boxShadow: '0 4px 15px rgba(0,0,0,0.35)',
     borderRadius: '20px',
     overflow: 'hidden',
   }
@@ -519,8 +536,8 @@ export default function LogScreen({ cycle, data, t, onDataChange, onNavigate }: 
       <div className="min-h-screen pb-32 px-5 pt-6 max-w-md mx-auto">
 
         {/* Screen label */}
-        <p className="font-sans uppercase tracking-widest mb-4"
-          style={{ fontSize: '9px', color: '#A0AEC0', letterSpacing: '0.22em' }}>
+        <p className="font-serif-display uppercase tracking-widest mb-4"
+          style={{ fontSize: '9px', color: '#C9A830', letterSpacing: '0.22em' }}>
           {lang === 'de' ? 'MEIN EINTRAG' : 'MY LOG'}
         </p>
 
@@ -528,7 +545,7 @@ export default function LogScreen({ cycle, data, t, onDataChange, onNavigate }: 
           <div style={TICKET}>
             <div className="p-6 text-center">
               <p className="text-4xl mb-4">🌹</p>
-              <p className="font-sans text-base mb-6" style={{ color: '#4A5568', lineHeight: 1.5 }}>
+              <p className="font-sans text-base mb-6" style={{ color: '#EDE5CC', lineHeight: 1.5 }}>
                 {lang === 'de'
                   ? 'Trag dein Periodendatum in den Einstellungen ein, um loszulegen.'
                   : 'Enter your period date in Settings to get started.'}
@@ -546,95 +563,83 @@ export default function LogScreen({ cycle, data, t, onDataChange, onNavigate }: 
           <div className="space-y-3">
 
             {/* ── DAY-TICKET CARD ── */}
-            <div style={TICKET}>
+            <div style={{ ...TICKET, border: `1.5px solid ${phaseColor}40` }}>
+              {/* Phase-colored top accent bar */}
+              <div style={{ height: '3px', background: `linear-gradient(90deg, ${phaseColor}90, ${phaseColor}20)` }} />
+
               {/* Ticket Header */}
-              <div className="flex items-center justify-between px-5 pt-5 pb-4">
+              <div className="flex items-center justify-between px-5 pt-4 pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center rounded-xl text-xl flex-shrink-0"
-                    style={{ width: '44px', height: '44px', background: `${phaseColor}18`, border: `1.5px solid ${phaseColor}50` }}>
+                  <div className="flex items-center justify-center rounded-xl text-2xl flex-shrink-0"
+                    style={{ width: '52px', height: '52px', background: `${phaseColor}18`, border: `1.5px solid ${phaseColor}45` }}>
                     {phaseIcon}
                   </div>
                   <div>
-                    {/* "TAG 2 — MENSTRUATION" — bold headline */}
-                    <p className="font-sans font-bold"
-                      style={{ fontSize: '15px', color: '#2D3748', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
-                      {lang === 'de' ? `TAG ${cycle.currentDay}` : `DAY ${cycle.currentDay}`}
+                    <p className="font-serif-display uppercase"
+                      style={{ fontSize: '9px', color: '#A0AEC0', letterSpacing: '0.18em', lineHeight: 1.4 }}>
+                      {lang === 'de' ? `TAG ${cycle.currentDay} · ${t.phase[cycle.phase].toUpperCase()}` : `DAY ${cycle.currentDay} · ${t.phase[cycle.phase].toUpperCase()}`}
                     </p>
-                    <p className="font-sans font-bold uppercase tracking-wide"
-                      style={{ fontSize: '11px', color: phaseColor, letterSpacing: '0.06em' }}>
-                      {t.phase[cycle.phase]}
+                    <p className="font-script"
+                      style={{ fontSize: '22px', color: phaseColor, lineHeight: 1.25 }}>
+                      {PHASE_DESC[cycle.phase]?.[lang] ?? PHASE_DESC.unknown[lang]}
                     </p>
                   </div>
                 </div>
 
-                {/* Progress badge (period only) */}
-                {isPeriodActive && (
-                  <div className="text-right">
-                    <p className="font-sans" style={{ fontSize: '9px', color: '#A0AEC0', marginBottom: '2px' }}>
-                      {lang === 'de' ? 'VON CA.' : 'OF ~'}
-                    </p>
-                    <p className="font-sans font-bold text-lg" style={{ color: phaseColor }}>
-                      {data.periodLength}
-                    </p>
-                  </div>
-                )}
+                {/* Cycle progress badge */}
+                <div className="text-right flex-shrink-0">
+                  <p className="font-serif-display uppercase" style={{ fontSize: '8px', color: '#A0AEC0', letterSpacing: '0.14em', marginBottom: '2px' }}>
+                    {lang === 'de' ? 'NÄCHSTE' : 'NEXT'}
+                  </p>
+                  <p className="font-sans font-semibold text-sm" style={{ color: '#EDE5CC' }}>
+                    {cycle.isLate
+                      ? (lang === 'de' ? `+${cycle.daysLate}d` : `+${cycle.daysLate}d`)
+                      : (lang === 'de' ? `${cycle.daysUntilNext}d` : `${cycle.daysUntilNext}d`)}
+                  </p>
+                </div>
               </div>
 
               {/* ── Perforation ── */}
               <div className="relative flex items-center">
                 <div className="rounded-full flex-shrink-0"
-                  style={{ width: '16px', height: '16px', background: 'linear-gradient(165deg, #FDFBF7, #D1D9E0)', marginLeft: '-8px' }} />
-                <div className="flex-1 mx-1" style={{ borderTop: '1.5px dashed rgba(0,0,0,0.08)' }} />
+                  style={{ width: '18px', height: '18px', background: '#18160f', marginLeft: '-9px' }} />
+                <div className="flex-1 mx-1" style={{ borderTop: `1.5px dashed ${phaseColor}35` }} />
                 <div className="rounded-full flex-shrink-0"
-                  style={{ width: '16px', height: '16px', background: 'linear-gradient(165deg, #FDFBF7, #D1D9E0)', marginRight: '-8px' }} />
+                  style={{ width: '18px', height: '18px', background: '#18160f', marginRight: '-9px' }} />
               </div>
 
-              {/* Ticket Body — journey details */}
+              {/* Ticket Body */}
               <div className="px-5 pt-4 pb-5">
-
-                {/* Two columns: Zyklus-Status → Nächste Phase */}
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <span style={{ fontSize: '11px', color: phaseColor }}>📍</span>
-                      <p className="font-sans uppercase tracking-widest" style={{ fontSize: '7px', color: '#A0AEC0', letterSpacing: '0.14em' }}>
-                        {lang === 'de' ? 'ZYKLUS-STATUS' : 'CYCLE STATUS'}
-                      </p>
-                    </div>
-                    <p className="font-sans font-semibold" style={{ fontSize: '16px', color: '#2D3748' }}>
-                      {lang === 'de' ? 'Sanft' : 'Gentle'}
+                {/* Cycle progress bar */}
+                <div className="mb-4">
+                  <div className="flex justify-between mb-1.5">
+                    <p className="font-serif-display uppercase" style={{ fontSize: '7px', color: '#A0AEC0', letterSpacing: '0.14em' }}>
+                      {lang === 'de' ? 'ZYKLUS-FORTSCHRITT' : 'CYCLE PROGRESS'}
+                    </p>
+                    <p className="font-sans" style={{ fontSize: '9px', color: '#B8B0A0' }}>
+                      {lang === 'de' ? `Tag ${cycle.currentDay} von ${data.cycleLength}` : `Day ${cycle.currentDay} of ${data.cycleLength}`}
                     </p>
                   </div>
-                  <div style={{ color: '#CBD5E0', fontSize: '14px', marginTop: '16px' }}>›</div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <span style={{ fontSize: '11px', color: phaseColor }}>🕐</span>
-                      <p className="font-sans uppercase tracking-widest" style={{ fontSize: '7px', color: '#A0AEC0', letterSpacing: '0.14em' }}>
-                        {lang === 'de' ? 'NÄCHSTE PHASE' : 'NEXT PHASE'}
-                      </p>
-                    </div>
-                    <p className="font-sans font-semibold" style={{ fontSize: '16px', color: '#2D3748' }}>
-                      {cycle.isLate
-                        ? (lang === 'de' ? `${cycle.daysLate} Tage später` : `${cycle.daysLate} days late`)
-                        : (lang === 'de' ? `in ${cycle.daysUntilNext} Tagen` : `in ${cycle.daysUntilNext} days`)}
-                    </p>
+                  <div className="rounded-full overflow-hidden" style={{ height: '4px', background: 'rgba(255,255,255,0.08)' }}>
+                    <div className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${Math.min(100, Math.round((cycle.currentDay / data.cycleLength) * 100))}%`,
+                        background: `linear-gradient(90deg, ${phaseColor}, ${phaseColor}80)`,
+                      }} />
                   </div>
                 </div>
 
-                {/* Calendar + privacy rows */}
-                <div className="pt-3" style={{ borderTop: '1px solid rgba(0,0,0,0.05)' }}>
-                  <div className="flex items-center gap-2 mb-2">
+                {/* Date + today's mood if set */}
+                <div className="flex items-center justify-between pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                  <div className="flex items-center gap-2">
                     <span style={{ fontSize: '11px', color: '#A0AEC0' }}>📅</span>
-                    <p className="font-sans" style={{ fontSize: '13px', color: '#4A5568', fontWeight: 400, lineHeight: 1.5 }}>
+                    <p className="font-sans" style={{ fontSize: '12px', color: '#B8B0A0', lineHeight: 1.5 }}>
                       {today_date}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span style={{ fontSize: '11px', color: '#A0AEC0' }}>🔒</span>
-                    <p className="font-sans" style={{ fontSize: '11px', color: '#A0AEC0' }}>
-                      {lang === 'de' ? 'Deine Daten sind nur für dich sichtbar.' : 'Your data is only visible to you.'}
-                    </p>
-                  </div>
+                  {todayLog.mood && (
+                    <span style={{ fontSize: '18px' }}>{MOOD_EMOJIS[todayLog.mood - 1]}</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -656,8 +661,8 @@ export default function LogScreen({ cycle, data, t, onDataChange, onNavigate }: 
                       className="py-3 rounded-xl font-sans text-sm transition-all"
                       style={{
                         background: intensity === i ? `${phaseColor}18` : 'transparent',
-                        border: `1px solid ${intensity === i ? phaseColor : 'rgba(0,0,0,0.07)'}`,
-                        color: intensity === i ? phaseColor : '#718096',
+                        border: `1px solid ${intensity === i ? phaseColor : 'rgba(255,255,255,0.10)'}`,
+                        color: intensity === i ? phaseColor : '#B8B0A0',
                         fontSize: '14px',
                         lineHeight: 1.5,
                         fontWeight: intensity === i ? 600 : 400,
@@ -676,7 +681,7 @@ export default function LogScreen({ cycle, data, t, onDataChange, onNavigate }: 
                   <button
                     onClick={endPeriod}
                     className="mx-5 mb-4 w-[calc(100%-40px)] py-3 rounded-xl font-sans text-sm"
-                    style={{ border: '1px solid rgba(0,0,0,0.07)', color: '#718096', fontSize: '14px', lineHeight: 1.5 }}
+                    style={{ border: '1px solid rgba(255,255,255,0.10)', color: '#B8B0A0', fontSize: '14px', lineHeight: 1.5 }}
                   >
                     {t.log.periodEnd}
                   </button>
@@ -698,7 +703,7 @@ export default function LogScreen({ cycle, data, t, onDataChange, onNavigate }: 
                   <button
                     onClick={() => onNavigate('settings')}
                     className="mt-2 w-full py-3 rounded-xl font-sans text-xs"
-                    style={{ border: '1px solid rgba(0,0,0,0.07)', color: '#A0AEC0', fontSize: '13px' }}
+                    style={{ border: '1px solid rgba(255,255,255,0.10)', color: '#B8B0A0', fontSize: '13px' }}
                   >
                     {lang === 'de' ? 'Datum korrigieren → Einstellungen' : 'Correct date → Settings'}
                   </button>
@@ -718,14 +723,14 @@ export default function LogScreen({ cycle, data, t, onDataChange, onNavigate }: 
                 {todayLog.symptoms!.map((sym, idx) => (
                   <div key={sym}>
                     {idx > 0 && (
-                      <div style={{ height: '1px', background: 'rgba(0,0,0,0.05)', marginLeft: '56px' }} />
+                      <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', marginLeft: '56px' }} />
                     )}
                     <div className="flex items-center gap-3 px-5 py-3.5">
                       <div className="flex items-center justify-center rounded-full flex-shrink-0 text-sm"
                         style={{ width: '32px', height: '32px', background: `${phaseColor}12`, border: `1px solid ${phaseColor}30` }}>
                         {SYMPTOM_ICONS[sym as SymptomKey] ?? '·'}
                       </div>
-                      <p className="font-sans" style={{ fontSize: '16px', color: '#4A5568', lineHeight: 1.5, fontWeight: 400 }}>
+                      <p className="font-sans" style={{ fontSize: '16px', color: '#EDE5CC', lineHeight: 1.5, fontWeight: 400 }}>
                         {t.log.symptomLabels[sym as keyof typeof t.log.symptomLabels] ?? sym}
                       </p>
                     </div>
@@ -744,7 +749,7 @@ export default function LogScreen({ cycle, data, t, onDataChange, onNavigate }: 
               <div className="flex items-center justify-between px-5 py-4">
                 <div>
                   <p className="font-sans font-bold mb-1"
-                    style={{ fontSize: '15px', color: '#2D3748', letterSpacing: '-0.02em' }}>
+                    style={{ fontSize: '15px', color: '#EDE5CC', letterSpacing: '-0.02em' }}>
                     {hasCheckin
                       ? (lang === 'de' ? 'Eintrag bearbeiten' : 'Edit entry')
                       : (lang === 'de' ? 'Tages-Check-in' : 'Daily Check-in')}
@@ -759,12 +764,12 @@ export default function LogScreen({ cycle, data, t, onDataChange, onNavigate }: 
                       )}
                     </div>
                   ) : (
-                    <p className="font-sans" style={{ fontSize: '13px', color: '#A0AEC0', lineHeight: 1.5 }}>
+                    <p className="font-sans" style={{ fontSize: '13px', color: '#B8B0A0', lineHeight: 1.5 }}>
                       {lang === 'de' ? 'Stimmung · Energie · Notizen' : 'Mood · Energy · Notes'}
                     </p>
                   )}
                 </div>
-                <span style={{ fontSize: '20px', color: '#CBD5E0' }}>{hasCheckin ? '✎' : '›'}</span>
+                <span style={{ fontSize: '20px', color: '#B8B0A0' }}>{hasCheckin ? '✎' : '›'}</span>
               </div>
             </button>
           </div>

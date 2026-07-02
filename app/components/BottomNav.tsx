@@ -21,11 +21,11 @@ export default function BottomNav({ active, onNavigate }: Props) {
         <div
           className="flex overflow-hidden"
           style={{
-            background: 'rgba(255,255,255,0.40)',
+            background: 'rgba(46,42,30,0.85)',
             backdropFilter: 'blur(24px)',
             WebkitBackdropFilter: 'blur(24px)',
-            border: '1px solid rgba(255,255,255,0.65)',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+            border: '1px solid rgba(201,168,48,0.15)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.40)',
             borderRadius: '20px',
           }}
         >
@@ -36,7 +36,7 @@ export default function BottomNav({ active, onNavigate }: Props) {
                 key={tab}
                 onClick={() => onNavigate(tab)}
                 className="flex-1 flex flex-col items-center pt-2 pb-3 gap-1.5 relative transition-all"
-                style={isActive ? { background: 'rgba(253,251,247,0.88)' } : {}}
+                style={isActive ? { background: 'rgba(201,168,48,0.12)' } : {}}
               >
                 {/* Terracotta active indicator bar — DB red bar pattern */}
                 <div
@@ -44,7 +44,7 @@ export default function BottomNav({ active, onNavigate }: Props) {
                   style={{
                     width: isActive ? '28px' : '0px',
                     height: '2px',
-                    background: '#D4A5A5',
+                    background: '#C9A830',
                     opacity: isActive ? 1 : 0,
                   }}
                 />
@@ -55,7 +55,7 @@ export default function BottomNav({ active, onNavigate }: Props) {
                   style={{
                     fontSize: '18px',
                     lineHeight: 1,
-                    color: isActive ? '#2D3748' : '#A0AEC0',
+                    color: isActive ? '#EDE5CC' : '#B8B0A0',
                     fontWeight: 300,
                     transition: 'color 150ms',
                   }}
@@ -69,7 +69,7 @@ export default function BottomNav({ active, onNavigate }: Props) {
                   style={{
                     fontSize: '8px',
                     letterSpacing: '0.10em',
-                    color: isActive ? '#2D3748' : '#A0AEC0',
+                    color: isActive ? '#EDE5CC' : '#B8B0A0',
                     transition: 'color 150ms',
                   }}
                 >

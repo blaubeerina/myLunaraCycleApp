@@ -8,33 +8,36 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Misty Morning Gold palette
-        midnight:      '#FDFBF7',   // misty pearl — page base & input backgrounds
-        'midnight-mid':'#EEE5C8',   // warm vanilla mid
-        cosmos:        '#FFFFFF',   // frosted pearl card (overridden by CSS to glass)
+        // Dark Editorial palette — warm charcoal + gold
+        midnight:      '#18160f',   // warm near-black — page base
+        'midnight-mid':'#242018',   // slightly lighter dark
+        cosmos:        '#2e2a1e',   // card background
+        surface:       '#3d3929',   // secondary panels / olive
         ivory: {
-          DEFAULT: '#4A5568',       // Slate Blue-Grey — primary readable text
-          dim:     '#718096',       // secondary text
+          DEFAULT: '#EDE5CC',       // warm light text
+          dim:     '#B8B0A0',       // secondary text
         },
         gold: {
-          DEFAULT: '#C8902A',       // Deep Amber — visible on light backgrounds (title, CTAs)
-          soft:    '#E6BE8A',       // Soft Amber — subtle card accents (ovulation)
+          DEFAULT: '#C9A830',       // warm gold — accent / CTA
+          soft:    '#E6C86A',       // lighter gold
         },
         rose: {
-          DEFAULT: '#D4A5A5',       // Dusty Rose — menstruation
-          soft:    '#E8C8C8',
+          DEFAULT: '#C47A7A',       // menstruation — visible on dark
+          soft:    '#D4A5A5',
         },
         lavender: {
-          DEFAULT: '#A99BC8',       // muted lavender
-          soft:    '#D4CCE8',
+          DEFAULT: '#8B80B8',       // luteal — visible on dark
+          soft:    '#A99BC8',
         },
         teal: {
-          DEFAULT: '#9CAF88',       // Sage Green — positive / Google calendar
-          soft:    '#BDD4B4',
+          DEFAULT: '#7A9B6A',       // follicular — visible on dark
+          soft:    '#9CAF88',
         },
       },
       fontFamily: {
+        'serif-display': ['Cinzel', 'Playfair Display', 'serif'],  // editorial all-caps
         serif: ['Playfair Display', 'Cormorant Garamond', 'serif'],
+        script: ['Great Vibes', 'cursive'],                         // gold script accent
         sans:  ['DM Sans', 'sans-serif'],
       },
     },

@@ -36,6 +36,7 @@ export interface StoredData {
   checkIns: Record<string, string> // date → emoji
   logs: Record<string, PeriodLog>  // date → period log entry
   notificationsEnabled?: boolean
+  periodHistory?: string[]          // past period start dates, oldest first
 }
 
 export const DEFAULT_DATA: StoredData = {
@@ -45,6 +46,7 @@ export const DEFAULT_DATA: StoredData = {
   language: 'de',
   checkIns: {},
   logs: {},
+  periodHistory: [],
 }
 
 export function loadData(): StoredData {
@@ -120,4 +122,63 @@ export function addToDate(base: Date, days: number): Date {
   const d = new Date(base)
   d.setDate(d.getDate() + days)
   return d
+}
+
+export function getDayPhaseFromHistory(date: Date, data: StoredData): CyclePhase {
+  if (!data.lastPeriodStart) return 'unknown'
+
+  // All known cycle starts sorted oldest → newest
+  const allStarts: Date[] = [
+    ...(data.periodHistory ?? []).map(s => { const d = new Date(s); d.setHours(0,0,0,0); return d }),
+    (() => { const d = new Date(data.lastPeriodStart!); d.setHours(0,0,0,0); return d })(),
+  ].sort((a, b) => a.getTime() - b.getTime())
+
+  const target = new Date(date); target.setHours(0,0,0,0)
+  const { cycleLength, periodLength } = data
+
+  // Find which cycle the date belongs to
+  let cycleStart: Date | null = null
+  let nextStart: Date | null = null
+
+  for (let i = 0; i < allStarts.length; i++) {
+    const s = allStarts[i]
+    const n = allStarts[i + 1] ?? null
+    if (target >= s && (n === null || target < n)) {
+      cycleStart = s
+      nextStart = n
+      break
+    }
+  }
+
+  // Date is before all known history — use first known cycle
+  if (!cycleStart && allStarts.length > 0 && target < allStarts[0]) {
+    cycleStart = allStarts[0]
+  }
+
+  if (!cycleStart) return 'unknown'
+
+  const actualCycleLength = nextStart
+    ? Math.round((nextStart.getTime() - cycleStart.getTime()) / 86400000)
+    : cycleLength
+
+  const dayInCycle = Math.floor((target.getTime() - cycleStart.getTime()) / 86400000) + 1
+  const ovDay = actualCycleLength - 14
+
+  // Check manual period end for this cycle
+  const endedEntry = Object.entries(data.logs ?? {})
+    .filter(([, log]) => log.endedToday)
+    .map(([d]) => { const dt = new Date(d); dt.setHours(0,0,0,0); return dt })
+    .filter(d => d >= cycleStart! && d < new Date(cycleStart!.getTime() + periodLength * 86400000))
+    .sort((a, b) => a.getTime() - b.getTime())
+    .at(0)
+
+  const effectivePeriodLength = endedEntry
+    ? Math.floor((endedEntry.getTime() - cycleStart.getTime()) / 86400000) + 1
+    : periodLength
+
+  if (dayInCycle >= 1 && dayInCycle <= effectivePeriodLength) return 'menstruation'
+  if (dayInCycle < ovDay - 1) return 'follicular'
+  if (dayInCycle <= ovDay + 1) return 'ovulation'
+  if (dayInCycle <= actualCycleLength) return 'luteal'
+  return 'unknown'
 }

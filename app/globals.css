@@ -1,27 +1,27 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* Misty Morning Gold */
-  --midnight:      #FDFBF7;
-  --midnight-mid:  #EEE5C8;
-  --cosmos:        #FFFFFF;
-  --ivory:         #4A5568;   /* Slate Blue-Grey — primary text */
-  --ivory-dim:     #718096;
-  --gold:          #C8902A;   /* Deep Amber — visible on light bg */
-  --gold-soft:     #E6BE8A;   /* Soft Amber — subtle card accents */
-  --rose:          #D4A5A5;   /* Dusty Rose */
-  --rose-soft:     #E8C8C8;
-  --lavender:      #A99BC8;
-  --lavender-soft: #D4CCE8;
-  --teal:          #9CAF88;   /* Sage Green */
-  --teal-soft:     #BDD4B4;
+  /* Dark Editorial — warm charcoal + gold */
+  --midnight:      #18160f;
+  --midnight-mid:  #242018;
+  --cosmos:        #2e2a1e;
+  --surface:       #3d3929;
+  --ivory:         #EDE5CC;   /* warm light text */
+  --ivory-dim:     #B8B0A0;
+  --gold:          #C9A830;   /* warm gold accent */
+  --gold-soft:     #E6C86A;
+  --rose:          #C47A7A;   /* menstruation */
+  --rose-soft:     #D4A5A5;
+  --lavender:      #8B80B8;   /* luteal */
+  --lavender-soft: #A99BC8;
+  --teal:          #7A9B6A;   /* follicular */
+  --teal-soft:     #9CAF88;
 
-  /* Frosted Pearl shadow */
-  --card-shadow: 0 10px 30px rgba(156,175,136,0.15);
+  --card-shadow: 0 10px 30px rgba(0,0,0,0.35);
 }
 
 /* Global font rendering */
@@ -34,7 +34,7 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Subtle paper-grain texture */
+/* Subtle grain texture — mix-blend-mode screen works on dark bg */
 body::before {
   content: '';
   position: fixed;
@@ -42,90 +42,101 @@ body::before {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
   pointer-events: none;
   z-index: 0;
-  opacity: 0.4;
-  mix-blend-mode: multiply;
+  opacity: 0.25;
+  mix-blend-mode: screen;
 }
 
 /* All content above the grain */
 main, nav { position: relative; z-index: 1; }
 
 html, body {
-  /* Misty Morning Gold — sunlight breaking through morning mist */
-  background:
-    linear-gradient(165deg, #FDFBF7 0%, #F3E5AB 40%, #D1D9E0 100%);
-  background-attachment: fixed;
-  color: #4A5568;
+  background: #18160f;
+  color: #EDE5CC;
   font-family: 'DM Sans', sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
 }
 
-/* Frosted Pearl Glassmorphism */
+/* Dark glassmorphism card */
 .glass {
-  background: rgba(255, 255, 255, 0.45);
+  background: rgba(46,42,30,0.75);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(201,168,48,0.12);
   box-shadow: var(--card-shadow);
-  color: #4A5568;
+  color: #EDE5CC;
 }
 .glass * { color: inherit; }
 
-/* bg-cosmos → Frosted Pearl card */
+/* bg-cosmos → dark glass card */
 .bg-cosmos {
-  background: rgba(255, 255, 255, 0.45) !important;
+  background: rgba(46,42,30,0.75) !important;
   backdrop-filter: blur(20px) !important;
   -webkit-backdrop-filter: blur(20px) !important;
-  border-color: rgba(255, 255, 255, 0.5) !important;
+  border-color: rgba(201,168,48,0.12) !important;
   box-shadow: var(--card-shadow) !important;
-  color: #4A5568 !important;
+  color: #EDE5CC !important;
 }
 
-/* Dark inputs inside glass cards → warm translucent light */
+/* Inputs inside dark cards */
 .bg-cosmos .bg-midnight {
-  background: rgba(74,85,104,0.07) !important;
-  color: #4A5568 !important;
+  background: rgba(24,22,15,0.6) !important;
+  color: #EDE5CC !important;
 }
-.bg-cosmos .bg-midnight::placeholder { color: rgba(74,85,104,0.32) !important; }
+.bg-cosmos .bg-midnight::placeholder { color: rgba(237,229,204,0.32) !important; }
 .bg-cosmos .bg-midnight * { color: inherit !important; }
 
-/* Ivory text utilities inside glass cards — already dark with new token,
-   keeping overrides for any hardcoded legacy values */
-.bg-cosmos .text-ivory\/20 { color: rgba(74,85,104,0.22) !important; }
-.bg-cosmos .text-ivory\/30 { color: rgba(74,85,104,0.32) !important; }
-.bg-cosmos .text-ivory\/40 { color: rgba(74,85,104,0.50) !important; }
-.bg-cosmos .text-ivory\/50 { color: rgba(74,85,104,0.55) !important; }
-.bg-cosmos .text-ivory\/60 { color: rgba(74,85,104,0.60) !important; }
-.bg-cosmos .text-ivory\/70 { color: rgba(74,85,104,0.70) !important; }
-.bg-cosmos .text-ivory\/80 { color: rgba(74,85,104,0.82) !important; }
-.bg-cosmos .text-ivory     { color: rgba(74,85,104,0.90) !important; }
+/* Ivory text utilities — dark theme values */
+.bg-cosmos .text-ivory\/20 { color: rgba(237,229,204,0.20) !important; }
+.bg-cosmos .text-ivory\/30 { color: rgba(237,229,204,0.30) !important; }
+.bg-cosmos .text-ivory\/40 { color: rgba(237,229,204,0.40) !important; }
+.bg-cosmos .text-ivory\/50 { color: rgba(237,229,204,0.50) !important; }
+.bg-cosmos .text-ivory\/60 { color: rgba(237,229,204,0.60) !important; }
+.bg-cosmos .text-ivory\/70 { color: rgba(237,229,204,0.70) !important; }
+.bg-cosmos .text-ivory\/80 { color: rgba(237,229,204,0.80) !important; }
+.bg-cosmos .text-ivory     { color: rgba(237,229,204,0.92) !important; }
 
-/* Bottom nav — Sage Green top border instead of white */
+/* Bottom nav — gold border top */
 nav.bg-cosmos {
-  border-top-color: rgba(156,175,136,0.25) !important;
-  box-shadow: 0 -4px 16px rgba(156,175,136,0.08);
+  border-top-color: rgba(201,168,48,0.15) !important;
+  box-shadow: 0 -4px 16px rgba(0,0,0,0.25);
 }
 
 h1, h2, h3 {
   font-family: 'Playfair Display', 'Cormorant Garamond', serif;
 }
 
-/* Interactive elements — pill softness */
+/* Interactive elements — touch target */
 button, input, textarea, select {
-  min-height: 44px;  /* accessibility touch target */
+  min-height: 44px;
 }
 textarea { min-height: unset; }
 
-/* Scrollbar — light sage */
+/* Scrollbar — dark gold */
 ::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: rgba(156,175,136,0.08); }
-::-webkit-scrollbar-thumb { background: rgba(156,175,136,0.35); border-radius: 2px; }
+::-webkit-scrollbar-track { background: rgba(201,168,48,0.05); }
+::-webkit-scrollbar-thumb { background: rgba(201,168,48,0.25); border-radius: 2px; }
 
-/* Phase accent patches */
-.phase-menstruation { background-color: rgba(212,165,165,0.22); border-color: #D4A5A5; }
-.phase-follicular   { background-color: rgba(156,175,136,0.18); border-color: #9CAF88; }
-.phase-ovulation    { background-color: rgba(230,190,138,0.22); border-color: #E6BE8A; }
-.phase-luteal       { background-color: rgba(169,155,200,0.18); border-color: #A99BC8; }
+/* Phase accent patches — dark theme */
+.phase-menstruation { background-color: rgba(196,122,122,0.22); border-color: #C47A7A; }
+.phase-follicular   { background-color: rgba(122,155,106,0.18); border-color: #7A9B6A; }
+.phase-ovulation    { background-color: rgba(201,168,48,0.22);  border-color: #C9A830; }
+.phase-luteal       { background-color: rgba(139,128,184,0.18); border-color: #8B80B8; }
+
+/* Note-Cards — dark paper style (CalendarScreen day-detail) */
+.note-card {
+  background: rgba(36,32,24,0.92) !important;
+  border-left-color: #C47A7A !important;
+  color: #EDE5CC !important;
+}
+.note-card textarea,
+.note-card p {
+  color: #EDE5CC !important;
+  background: transparent !important;
+}
+.note-card textarea::placeholder {
+  color: rgba(237,229,204,0.35) !important;
+}
 
 /* Story-Interface Slide-Animationen */
 @keyframes slideInFromRight {

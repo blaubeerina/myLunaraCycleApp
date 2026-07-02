@@ -17,11 +17,11 @@ interface Props {
 }
 
 const PHASE_COLORS: Record<string, string> = {
-  menstruation: '#D4A5A5',
-  follicular:   '#9CAF88',
-  ovulation:    '#C8902A',
-  luteal:       '#A99BC8',
-  unknown:      '#B0BEC5',
+  menstruation: '#C47A7A',
+  follicular:   '#7A9B6A',
+  ovulation:    '#C9A830',
+  luteal:       '#8B80B8',
+  unknown:      '#B8B0A0',
 }
 
 const PHASE_ICONS: Record<string, string> = {
@@ -34,12 +34,12 @@ const PHASE_ICONS: Record<string, string> = {
 
 const CHECKIN_EMOJIS = ['🙂', '😌', '🌧', '🌊', '🔥', '🌙', '💫', '🌸']
 
-// Frosted Pearl card — shared style
+// Dark glass card — shared style
 const CARD: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.72)',
+  background: 'rgba(46,42,30,0.75)',
   backdropFilter: 'blur(20px)',
   WebkitBackdropFilter: 'blur(20px)',
-  boxShadow: '0 4px 15px rgba(0,0,0,0.04)',
+  boxShadow: '0 4px 15px rgba(0,0,0,0.35)',
   borderRadius: '20px',
 }
 
@@ -76,30 +76,30 @@ export default function HomeScreen({ cycle, data, t, onDataChange, onNavigate }:
       <header
         className="fixed top-0 left-0 right-0 z-50"
         style={{
-          background: 'rgba(253,251,247,0.88)',
+          background: 'rgba(24,22,15,0.88)',
           backdropFilter: 'blur(14px)',
           WebkitBackdropFilter: 'blur(14px)',
-          borderBottom: '1px solid rgba(0,0,0,0.06)',
+          borderBottom: '1px solid rgba(201,168,48,0.10)',
         }}
       >
         <div className="flex items-center justify-between px-5 py-4 max-w-md mx-auto">
           <button
             onClick={() => onNavigate('settings')}
             aria-label="Einstellungen"
-            style={{ fontSize: '19px', color: '#718096', lineHeight: 1 }}
+            style={{ fontSize: '19px', color: '#B8B0A0', lineHeight: 1 }}
           >
             ⚙
           </button>
           <h1
-            className="font-sans font-semibold tracking-widest uppercase"
-            style={{ fontSize: '13px', color: '#2D3748', letterSpacing: '0.22em' }}
+            className="font-serif-display font-semibold tracking-widest uppercase"
+            style={{ fontSize: '12px', color: '#C9A830', letterSpacing: '0.28em' }}
           >
             MEIN ZYKLUS
           </h1>
           <button
             onClick={() => onNavigate('log')}
             aria-label="Neuer Eintrag"
-            style={{ fontSize: '24px', color: '#718096', lineHeight: 1, fontWeight: 300 }}
+            style={{ fontSize: '24px', color: '#B8B0A0', lineHeight: 1, fontWeight: 300 }}
           >
             +
           </button>
@@ -114,7 +114,7 @@ export default function HomeScreen({ cycle, data, t, onDataChange, onNavigate }:
           /* Empty state */
           <div className="mt-5 p-6 text-center" style={CARD}>
             <p className="text-3xl mb-3">🌹</p>
-            <p className="font-sans text-base mb-4" style={{ color: '#4A5568' }}>{t.home.noData}</p>
+            <p className="font-sans text-base mb-4" style={{ color: '#EDE5CC' }}>{t.home.noData}</p>
             <button
               onClick={() => onNavigate('log')}
               className="w-full py-3 rounded-xl font-sans text-sm font-medium"
@@ -145,13 +145,13 @@ export default function HomeScreen({ cycle, data, t, onDataChange, onNavigate }:
                 </div>
                 <div>
                   <p
-                    className="font-sans uppercase tracking-widest mb-0.5"
+                    className="font-serif-display uppercase tracking-widest mb-0.5"
                     style={{ fontSize: '8px', color: '#A0AEC0', letterSpacing: '0.18em' }}
                   >
                     {lang === 'de' ? 'AKTUELLE PHASE' : 'CURRENT PHASE'}
                   </p>
-                  {/* Phase name — "Super Sparpreis, 1st Cl." equivalent */}
-                  <p className="font-sans font-semibold text-base" style={{ color: '#2D3748' }}>
+                  {/* Phase name — script font for a feminine, editorial feel */}
+                  <p className="font-script" style={{ fontSize: '22px', color: phaseColor, lineHeight: 1.2 }}>
                     {t.phase[cycle.phase]}
                   </p>
                 </div>
@@ -161,7 +161,7 @@ export default function HomeScreen({ cycle, data, t, onDataChange, onNavigate }:
               {cycle.currentDay > 0 && (
                 <div className="text-right">
                   <p
-                    className="font-sans uppercase tracking-widest mb-0.5"
+                    className="font-serif-display uppercase tracking-widest mb-0.5"
                     style={{ fontSize: '8px', color: '#A0AEC0' }}
                   >
                     TAG
@@ -206,30 +206,30 @@ export default function HomeScreen({ cycle, data, t, onDataChange, onNavigate }:
                   <div className="flex items-center gap-1.5 mb-1">
                     <span style={{ fontSize: '12px', color: phaseColor }}>📍</span>
                     <p
-                      className="font-sans uppercase tracking-widest"
+                      className="font-serif-display uppercase tracking-widest"
                       style={{ fontSize: '7px', color: '#A0AEC0', letterSpacing: '0.16em' }}
                     >
                       {lang === 'de' ? 'ZYKLUSTAG' : 'CYCLE DAY'}
                     </p>
                   </div>
-                  <p className="font-sans font-semibold text-sm" style={{ color: '#2D3748' }}>
+                  <p className="font-sans font-semibold text-sm" style={{ color: '#EDE5CC' }}>
                     {lang === 'de' ? `Tag ${cycle.currentDay}` : `Day ${cycle.currentDay}`}
                   </p>
                 </div>
 
-                <div style={{ color: '#CBD5E0', fontSize: '14px', marginTop: '18px' }}>›</div>
+                <div style={{ color: '#B8B0A0', fontSize: '14px', marginTop: '18px' }}>›</div>
 
                 <div className="flex-1">
                   <div className="flex items-center gap-1.5 mb-1">
                     <span style={{ fontSize: '12px', color: phaseColor }}>📍</span>
                     <p
-                      className="font-sans uppercase tracking-widest"
+                      className="font-serif-display uppercase tracking-widest"
                       style={{ fontSize: '7px', color: '#A0AEC0', letterSpacing: '0.16em' }}
                     >
                       {lang === 'de' ? 'NÄCHSTE PERIODE' : 'NEXT PERIOD'}
                     </p>
                   </div>
-                  <p className="font-sans font-semibold text-sm" style={{ color: '#2D3748' }}>
+                  <p className="font-sans font-semibold text-sm" style={{ color: '#EDE5CC' }}>
                     {cycle.isLate
                       ? (lang === 'de' ? `${cycle.daysLate} Tage später` : `${cycle.daysLate} days late`)
                       : (lang === 'de' ? `in ${cycle.daysUntilNext} Tagen` : `in ${cycle.daysUntilNext} days`)}
@@ -243,7 +243,7 @@ export default function HomeScreen({ cycle, data, t, onDataChange, onNavigate }:
                 style={{ borderTop: '1px solid rgba(0,0,0,0.05)' }}
               >
                 <span style={{ fontSize: '12px', color: '#A0AEC0' }}>📅</span>
-                <p className="font-sans text-xs" style={{ color: '#4A5568', fontWeight: 400 }}>
+                <p className="font-sans text-xs" style={{ color: '#EDE5CC', fontWeight: 400 }}>
                   {dateLabel}
                 </p>
               </div>
@@ -266,7 +266,7 @@ export default function HomeScreen({ cycle, data, t, onDataChange, onNavigate }:
           <div className="mt-4 overflow-hidden" style={CARD}>
             <div className="px-5 pt-4 pb-2">
               <p
-                className="font-sans uppercase tracking-widest"
+                className="font-serif-display uppercase tracking-widest"
                 style={{ fontSize: '8px', color: '#A0AEC0', letterSpacing: '0.18em' }}
               >
                 {lang === 'de' ? 'HEUTE FÜR DICH' : 'TODAY FOR YOU'}
@@ -294,7 +294,7 @@ export default function HomeScreen({ cycle, data, t, onDataChange, onNavigate }:
                   </div>
                   <p
                     className="font-sans text-sm"
-                    style={{ color: '#4A5568', lineHeight: 1.45, fontWeight: 400 }}
+                    style={{ color: '#EDE5CC', lineHeight: 1.45, fontWeight: 400 }}
                   >
                     {tip.text}
                   </p>
@@ -308,7 +308,7 @@ export default function HomeScreen({ cycle, data, t, onDataChange, onNavigate }:
         {/* ── CHECK-IN ── */}
         <div className="mt-4 p-5" style={CARD}>
           <p
-            className="font-sans uppercase tracking-widest mb-4"
+            className="font-serif-display uppercase tracking-widest mb-4"
             style={{ fontSize: '8px', color: '#A0AEC0', letterSpacing: '0.18em' }}
           >
             {t.home.howAreYou}
